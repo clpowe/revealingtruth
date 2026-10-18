@@ -4,7 +4,8 @@ import cloudflare from "@astrojs/cloudflare";
 
 // https://astro.build/config
 export default defineConfig({
-	adapter: cloudflare(),
+	// No sessions: skips the SESSION KV binding, which `wrangler preview` can't auto-provision
+	adapter: cloudflare({ session: false }),
 	fonts: [
 		{
 			provider: fontProviders.google(),
