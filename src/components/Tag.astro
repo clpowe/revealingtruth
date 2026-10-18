@@ -1,0 +1,23 @@
+---
+---
+
+<span class="tag">
+  <slot />
+</span>
+
+<style>
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.05em 0.55em;
+    font-family: var(--ff-accent);
+    font-size: 22px;
+    font-style: italic;
+    font-weight: var(--fw-regular);
+    line-height: 1.2;
+    white-space: nowrap;
+    color: var(--tag-color, var(--background-main));
+    background-color: var(--tag-background, var(--text-high-contrast));
+    border-radius: var(--border-radius-pill);
+  }
+</style>

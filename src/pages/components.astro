@@ -1,0 +1,69 @@
+---
+import Tag from "../components/Tag.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="componets">
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Tag</h3>
+        <code>.tag</code>
+        <p style="max-inline-size: 34em;">
+          Serif-italic pill that labels a section. Its colours come from the
+          theme: black on light grounds, white on dark.
+        </p>
+      </header>
+      <div class="equal-columns">
+        <figure class="flow">
+          <figcaption>Light</figcaption>
+          <div class="fig-content cluster" data-theme="light">
+            <Tag>our mission</Tag>
+            <Tag>visit us</Tag>
+          </div>
+        </figure>
+        <figure class="flow">
+          <figcaption>Dark</figcaption>
+          <div class="fig-content cluster" data-theme="dark">
+            <Tag>our mission</Tag>
+            <Tag>visit us</Tag>
+          </div>
+        </figure>
+      </div>
+    </article>
+  </section>
+</BaseLayout>
+
+<style>
+  .fig-content {
+    padding: var(--size-600);
+    border-radius: var(--border-radius-2);
+    border: 1px solid var(--clr-neutral-200);
+  }
+  figcaption {
+    font-family: var(--ff-ui);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--clr-neutral-600);
+  }
+
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    padding: 0.15em 0.5em;
+    color: var(--clr-neutral-800);
+    background: var(--clr-brand-400);
+    border-radius: var(--border-radius-1);
+  }
+
+  .h3 {
+    font-size: var(--fs-600);
+    line-height: 1.1;
+    font-family: var(--ff-heading);
+    font-weight: var(--fw-semi-bold);
+    line-height: var(--lh-heading);
+    color: var(--text-high-contrast);
+  }
+</style>
