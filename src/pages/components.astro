@@ -1,6 +1,7 @@
 ---
 import Tag from "../components/Tag.astro";
 import Button from "../components/Button.astro";
+import Statement from "../components/Statement.astro";
 
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
@@ -60,6 +61,45 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             <Button>Connect with us</Button>
             <Button type="accent">Connect with us</Button>
             <Button type="outline">Connect with us</Button>
+          </div>
+        </figure>
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Statement</h3>
+        <code>.statement</code>
+        <p style="max-inline-size: 34em;">
+          The large editorial sentence that opens a section. Mix in .font-accent
+          for serif phrases and .text-brand for lime.
+        </p>
+      </header>
+      <div class="equal-columns">
+        <figure class="flow">
+          <figcaption>Light</figcaption>
+          <div class="fig-content cluster" data-theme="light">
+            <Statement>
+              To reveal Christ so people experience a
+              <span class="font-accent">new life of peace and truth,</span>{" "}
+              discover their divine design, and be equipped to advance God's
+              Kingdom.
+            </Statement>
+          </div>
+        </figure>
+        <figure class="flow">
+          <figcaption>Dark</figcaption>
+          <div class="fig-content cluster" data-theme="dark">
+            <Statement>
+              To reveal Christ so people experience a
+              <span class="font-accent text-brand">
+                new life of peace and truth,
+              </span>{" "}
+              discover their divine design, and be equipped to advance God's
+              Kingdom.
+            </Statement>
           </div>
         </figure>
       </div>
