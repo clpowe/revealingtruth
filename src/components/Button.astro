@@ -1,0 +1,66 @@
+---
+interface Props {
+  type?: "outline" | "accent";
+}
+
+const { type } = Astro.props;
+---
+
+<button class="button" data-type={type}>
+  <slot />
+</button>
+
+<style>
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    padding: 0.85em 2em;
+    font-family: var(--ff-ui);
+    font-size: var(--font-size-sm);
+    font-weight: var(--fw-bold);
+    line-height: 1.2;
+    text-decoration: none;
+    color: var(--button-color, var(--background-main));
+    background-color: var(--button-background, var(--text-high-contrast));
+    border: var(--border-width-2) solid var(--button-border, transparent);
+    border-radius: var(--border-radius-pill);
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      scale var(--duration-fast) var(--ease-out);
+  }
+
+  .button[data-type="accent"] {
+    --button-color: var(--text-on-accent);
+    --button-background: var(--background-accent);
+  }
+
+  .button[data-type="outline"] {
+    --button-color: var(--text-high-contrast);
+    --button-background: transparent;
+    --button-border: currentColor;
+  }
+
+  /* Hover: blend 20% of the text colour into the variant's own background
+     (solid fills shift visibly, outline gets a tint). sRGB, not oklab:
+     oklab barely moves black (#000 -> #0b0b0b at 15%) */
+  .button:hover {
+    background-color: color-mix(
+      in srgb,
+      var(--button-background, var(--text-high-contrast)) 80%,
+      var(--button-color, var(--background-main))
+    );
+  }
+
+  .button:focus-visible {
+    outline: var(--border-width-2) solid var(--focus-ring);
+    outline-offset: 3px;
+  }
+
+  .button:active {
+    scale: 0.97;
+  }
+</style>

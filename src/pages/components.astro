@@ -1,5 +1,7 @@
 ---
 import Tag from "../components/Tag.astro";
+import Button from "../components/Button.astro";
+
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
@@ -46,11 +48,19 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       <div class="equal-columns">
         <figure class="flow">
           <figcaption>Light</figcaption>
-          <div class="fig-content cluster" data-theme="light"></div>
+          <div class="fig-content cluster" data-theme="light">
+            <Button>Connect with us</Button>
+            <Button type="accent">Connect with us</Button>
+            <Button type="outline">Connect with us</Button>
+          </div>
         </figure>
         <figure class="flow">
           <figcaption>Dark</figcaption>
-          <div class="fig-content cluster" data-theme="dark"></div>
+          <div class="fig-content cluster" data-theme="dark">
+            <Button>Connect with us</Button>
+            <Button type="accent">Connect with us</Button>
+            <Button type="outline">Connect with us</Button>
+          </div>
         </figure>
       </div>
     </article>
