@@ -2,6 +2,8 @@
 import Tag from "../components/Tag.astro";
 import Button from "../components/Button.astro";
 import Statement from "../components/Statement.astro";
+import Citation from "../components/Citation.astro";
+import Icon from "../components/Icon.astro";
 
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
@@ -100,6 +102,81 @@ import BaseLayout from "../layouts/BaseLayout.astro";
               discover their divine design, and be equipped to advance God's
               Kingdom.
             </Statement>
+          </div>
+        </figure>
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Citation</h3>
+        <code>.citation</code>
+        <p style="max-inline-size: 34em;">
+          Scripture reference in expanded black Archivo, followed by a summary
+          line.
+        </p>
+      </header>
+      <div class="equal-columns">
+        <figure class="flow">
+          <figcaption>Light</figcaption>
+          <div class="fig-content cluster" data-theme="light">
+            <Citation cite="Jeremiah 33:6">
+              Peace, Prosperity, Security, Stability, Health, Healing and Truth
+            </Citation>
+          </div>
+        </figure>
+        <figure class="flow">
+          <figcaption>Dark</figcaption>
+          <div class="fig-content cluster" data-theme="dark">
+            <Citation cite="Jeremiah 33:6">
+              Peace, Prosperity, Security, Stability, Health, Healing and Truth
+            </Citation>
+          </div>
+        </figure>
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Icon</h3>
+        <code>.icon</code>
+        <p style="max-inline-size: 34em;">
+          Brand glyphs drawn with a CSS mask, so they take currentColor.
+        </p>
+      </header>
+      <div class="equal-columns">
+        <figure class="flow">
+          <figcaption>Light · 14px and 32px</figcaption>
+          <div class="fig-content flow" data-theme="light">
+            <div class="cluster text-high-contrast">
+              <Icon name="youtube" label="YouTube" />
+              <Icon name="instagram" label="Instagram" />
+              <Icon name="facebook" label="Facebook" />
+            </div>
+            <div class="cluster text-high-contrast" style="--icon-size: 2rem;">
+              <Icon name="youtube" label="YouTube" />
+              <Icon name="instagram" label="Instagram" />
+              <Icon name="facebook" label="Facebook" />
+            </div>
+          </div>
+        </figure>
+        <figure class="flow">
+          <figcaption>Dark · lime via currentColor</figcaption>
+          <div class="fig-content flow" data-theme="dark">
+            <div class="cluster text-high-contrast">
+              <Icon name="youtube" label="YouTube" />
+              <Icon name="instagram" label="Instagram" />
+              <Icon name="facebook" label="Facebook" />
+            </div>
+            <div class="cluster text-brand" style="--icon-size: 2rem;">
+              <Icon name="youtube" label="YouTube" />
+              <Icon name="instagram" label="Instagram" />
+              <Icon name="facebook" label="Facebook" />
+            </div>
           </div>
         </figure>
       </div>
