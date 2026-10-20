@@ -1,9 +1,262 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from "../components/Hero.astro";
+import SocialFollow from "../components/SocialFollow.astro";
+import Tag from "../components/Tag.astro";
+import Statement from "../components/Statement.astro";
+import Citation from "../components/Citation.astro";
+import MediaStrip from "../components/MediaStrip.astro";
+import Media from "../components/Media.astro";
+import ListA, { type Item } from "../components/ListA/ListA.astro";
+import ListB from "../components/ListB/ListB.astro";
+import ListBItem from "../components/ListB/ListBItem.astro";
+import Button from "../components/Button.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+import pastorBryanImage from "../assets/images/PastorBryan.jpg";
+import mediaStripImage from "../assets/images/media-strip.png";
+import leaderImage from "../assets/images/placeholder-leader.jpg";
+
+const locations: Item[] = [
+  {
+    index: "tp",
+    title: "Tampa",
+    href: "#",
+    metadata: {
+      time: "Sun 9:00 & 11:00AM",
+      location: "5201 N. Armenia Ave. Tampa, FL 33603",
+    },
+  },
+  {
+    index: "wc",
+    title: "Wesley Chapel",
+    href: "#",
+    metadata: {
+      time: "Sun 9:00 & 11:00AM",
+      location: "5201 N. Armenia Ave. Tampa, FL 33603",
+    },
+  },
+  {
+    index: "sp",
+    title: "St. Petersburg",
+    href: "#",
+    metadata: {
+      time: "Sun 9:00 & 11:00AM",
+      location: "5201 N. Armenia Ave. Tampa, FL 33603",
+    },
+  },
+];
+
+const ministries: Item[] = [
+  { index: "ck", title: "Creative Kids", href: "#" },
+  { index: "ur", title: "UR Student Ministries", href: "#" },
+  { index: "cc", title: "Creative Collective", href: "#" },
+  { index: "og", title: "Outreach & Global Missions", href: "#" },
+];
 ---
 
 <BaseLayout title="Revealing Truth Ministries">
   <main>
-    <h1>Revealing Truth Ministries</h1>
+    <Hero
+      image={pastorBryanImage}
+      alt=""
+      video={[
+        { src: "/hero.mp4", type: "video/mp4", media: "(width <= 720px)" },
+        { src: "/hero.mp4", type: "video/mp4" },
+      ]}
+    >
+      Experience <br />
+      <span class="font-accent text-brand">new</span> life!
+      <SocialFollow
+        slot="aside"
+        links={[
+          { name: "youtube", label: "YouTube", href: "#" },
+          { name: "instagram", label: "Instagram", href: "#" },
+          { name: "facebook", label: "Facebook", href: "#" },
+        ]}
+      />
+    </Hero>
+
+    <section class="section">
+      <div class="wrapper flow">
+        <Statement>
+          <Tag>our mission</Tag> To reveal Christ so people experience a
+          <span class="font-accent">new life of peace and truth,</span>{" "}
+          discover their divine design, and be equipped to advance God's
+          Kingdom.
+        </Statement>
+        <Citation cite="Jeremiah 33:6">
+          Peace, Prosperity, Security, Stability, Health, Healing and Truth
+        </Citation>
+      </div>
+    </section>
+
+    <MediaStrip
+      src={mediaStripImage}
+      alt="Worship team singing on stage beneath an Infinitely More banner"
+    />
+
+    <section class="section flow">
+      <div class="wrapper">
+        <Statement>
+          <Tag>visit us</Tag> Three locations
+          <span class="font-accent">one family</span>. Come as you are this
+          Sunday. We saved you a seat.
+        </Statement>
+      </div>
+      <ListA items={locations} />
+    </section>
+
+    <section class="section flow" data-theme="dark">
+      <div class="wrapper">
+        <Statement>
+          <Tag>our community</Tag>
+          <span class="font-accent text-brand">Church is better together.</span>{" "}
+          Find your people in a ministry built for every age, every gift and
+          every corner of the world.
+        </Statement>
+      </div>
+      <ListA items={ministries} />
+    </section>
+
+    <section class="section">
+      <div class="wrapper equal-columns" data-align="start">
+        <div class="flow" data-sticky>
+          <Statement>
+            <Tag>our values</Tag> Our core values are who we are.
+            <span class="font-accent text-brand">
+              They are not just what we do,
+            </span>{" "}
+            they are part of our ethos.
+          </Statement>
+          <Media
+            src={pastorBryanImage}
+            alt="Pastor Bryan speaking on stage under spotlights"
+            sizes="(width > 720px) 50vw, 100vw"
+          />
+        </div>
+        <ListB>
+          <ListBItem>
+            <Fragment slot="title">
+              We ask <span class="font-accent">why</span>
+            </Fragment>
+            Because where purpose is unknown, abuse is inevitable.
+          </ListBItem>
+          <ListBItem>
+            <Fragment slot="title">
+              We <span class="font-accent">serve</span> with hope
+            </Fragment>
+            Because we have a confident expectation of good from our good God.
+          </ListBItem>
+          <ListBItem>
+            <Fragment slot="title">
+              We freely <span class="font-accent">give</span>
+            </Fragment>
+            To seal our love with action so that others can experience the
+            generosity of Christ.
+          </ListBItem>
+          <ListBItem>
+            <Fragment slot="title">
+              We <span class="font-accent">value</span> people
+            </Fragment>
+            This is the space to showcase the specific characteristics and
+            capabilities that make your product stand out.
+          </ListBItem>
+          <ListBItem>
+            <Fragment slot="title">
+              We believe in the <span class="font-accent">great</span> commission
+            </Fragment>
+            So we don't limit how God can use us, where God can send us or who
+            God can reach through us.
+          </ListBItem>
+          <ListBItem>
+            <Fragment slot="title">
+              We believe <span class="font-accent">big</span> &amp; start small
+            </Fragment>
+            Because where there's big vision there will always be big provision.
+          </ListBItem>
+          <ListBItem>
+            <Fragment slot="title">
+              We value <span class="font-accent">servant</span> leadership
+            </Fragment>
+            So we build off of the BLUEPRINT that is Jesus Christ, for even the
+            Son of Man did not come to be served, but to serve.
+          </ListBItem>
+          <ListBItem>
+            <Fragment slot="title">
+              We never <span class="font-accent">quit</span>
+            </Fragment>
+            Because defeat is not an option for the believer; we live in and
+            from victory, trusting God with what's next.
+          </ListBItem>
+          <ListBItem>
+            <Fragment slot="title">
+              We <span class="font-accent">pray</span> first
+            </Fragment>
+            Because peace does not come from the absence of trouble, but from
+            the presence of God.
+          </ListBItem>
+          <ListBItem>
+            <Fragment slot="title">
+              We <span class="font-accent">study</span> the word
+            </Fragment>
+            So we can stand unashamed in the work that God has called us to.
+          </ListBItem>
+        </ListB>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrapper equal-columns">
+        <article class="flow">
+          <Media
+            src={leaderImage}
+            alt="Pastors Bryan and Rashida Powe"
+            shape="rounded"
+            style="--media-ratio: 2 / 1;"
+            sizes="(width > 720px) 50vw, 100vw"
+          />
+          <Statement>
+            <Tag>senior pastors</Tag> Bryan &amp; Rashida
+            <span class="font-accent">Powe</span>
+          </Statement>
+          <p>
+            A heart for people. A passion for God's Word. Our pastors are
+            committed to helping you experience new life, discover your purpose,
+            and grow in a community of faith.
+          </p>
+        </article>
+        <article class="flow">
+          <Media
+            src={leaderImage}
+            alt="Pastor Deborah Powe"
+            shape="rounded"
+            style="--media-ratio: 2 / 1;"
+            sizes="(width > 720px) 50vw, 100vw"
+          />
+          <Statement>
+            <Tag>overseeing pastor</Tag> Pastor
+            <span class="font-accent">Deborah</span> Powe
+          </Statement>
+          <p>
+            A heart for people. A passion for God's Word. Our pastors are
+            committed to helping you experience new life, discover your purpose,
+            and grow in a community of faith.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" data-theme="dark">
+      <div class="wrapper repel" data-align="end">
+        <h2 class="font-display fs-1000 text-high-contrast">
+          Join us this <br />
+          <span class="font-accent text-brand">Sunday</span>
+        </h2>
+        <div class="cluster">
+          <Button type="accent">Connect with us</Button>
+          <Button type="outline">Give</Button>
+        </div>
+      </div>
+    </section>
   </main>
 </BaseLayout>

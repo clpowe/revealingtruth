@@ -1,0 +1,69 @@
+---
+import type { ComponentProps } from "astro/types";
+import Icon from "./Icon.astro";
+
+interface Link {
+  name: ComponentProps<typeof Icon>["name"];
+  label: string;
+  href: string;
+}
+
+interface Props {
+  links: Link[];
+}
+
+const { links } = Astro.props;
+---
+
+<div class="social-follow cluster">
+  <span class="label">Follow</span>
+  <ul role="list" class="cluster">
+    {links.map(({ name, label, href }) => (
+      <li>
+        <a class="link" href={href}>
+          <Icon name={name} label={label} />
+        </a>
+      </li>
+    ))}
+  </ul>
+</div>
+
+<style>
+  .social-follow {
+    --cluster-gap: var(--size-300);
+  }
+
+  .label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--size-500);
+    font-family: var(--ff-ui);
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .label::after {
+    content: "";
+    inline-size: 4.5rem;
+    border-block-start: var(--border-width-hairline) solid currentColor;
+  }
+
+  /* 24px minimum target around the 14px glyph */
+  .link {
+    display: grid;
+    place-items: center;
+    min-inline-size: 1.5rem;
+    min-block-size: 1.5rem;
+    color: inherit;
+  }
+
+  .link:hover {
+    color: var(--text-brand);
+  }
+
+  .link:focus-visible {
+    outline: var(--border-width-2) solid var(--focus-ring);
+    outline-offset: 3px;
+  }
+</style>
