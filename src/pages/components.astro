@@ -1,5 +1,10 @@
 ---
 import Tag from "../components/Tag.astro";
+import Button from "../components/Button.astro";
+import Statement from "../components/Statement.astro";
+import Citation from "../components/Citation.astro";
+import Icon from "../components/Icon.astro";
+
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
@@ -27,6 +32,151 @@ import BaseLayout from "../layouts/BaseLayout.astro";
           <div class="fig-content cluster" data-theme="dark">
             <Tag>our mission</Tag>
             <Tag>visit us</Tag>
+          </div>
+        </figure>
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Button</h3>
+        <code>.button</code>
+        <p style="max-inline-size: 34em;">
+          Pill link or button in DM Sans bold. Hover and focus fill it with the
+          high-contrast colour; pressing scales it to 97%.
+        </p>
+      </header>
+      <div class="equal-columns">
+        <figure class="flow">
+          <figcaption>Light</figcaption>
+          <div class="fig-content cluster" data-theme="light">
+            <Button>Connect with us</Button>
+            <Button type="accent">Connect with us</Button>
+            <Button type="outline">Connect with us</Button>
+          </div>
+        </figure>
+        <figure class="flow">
+          <figcaption>Dark</figcaption>
+          <div class="fig-content cluster" data-theme="dark">
+            <Button>Connect with us</Button>
+            <Button type="accent">Connect with us</Button>
+            <Button type="outline">Connect with us</Button>
+          </div>
+        </figure>
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Statement</h3>
+        <code>.statement</code>
+        <p style="max-inline-size: 34em;">
+          The large editorial sentence that opens a section. Mix in .font-accent
+          for serif phrases and .text-brand for lime.
+        </p>
+      </header>
+      <div class="equal-columns">
+        <figure class="flow">
+          <figcaption>Light</figcaption>
+          <div class="fig-content cluster" data-theme="light">
+            <Statement>
+              To reveal Christ so people experience a
+              <span class="font-accent">new life of peace and truth,</span>{" "}
+              discover their divine design, and be equipped to advance God's
+              Kingdom.
+            </Statement>
+          </div>
+        </figure>
+        <figure class="flow">
+          <figcaption>Dark</figcaption>
+          <div class="fig-content cluster" data-theme="dark">
+            <Statement>
+              To reveal Christ so people experience a
+              <span class="font-accent text-brand">
+                new life of peace and truth,
+              </span>{" "}
+              discover their divine design, and be equipped to advance God's
+              Kingdom.
+            </Statement>
+          </div>
+        </figure>
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Citation</h3>
+        <code>.citation</code>
+        <p style="max-inline-size: 34em;">
+          Scripture reference in expanded black Archivo, followed by a summary
+          line.
+        </p>
+      </header>
+      <div class="equal-columns">
+        <figure class="flow">
+          <figcaption>Light</figcaption>
+          <div class="fig-content cluster" data-theme="light">
+            <Citation cite="Jeremiah 33:6">
+              Peace, Prosperity, Security, Stability, Health, Healing and Truth
+            </Citation>
+          </div>
+        </figure>
+        <figure class="flow">
+          <figcaption>Dark</figcaption>
+          <div class="fig-content cluster" data-theme="dark">
+            <Citation cite="Jeremiah 33:6">
+              Peace, Prosperity, Security, Stability, Health, Healing and Truth
+            </Citation>
+          </div>
+        </figure>
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Icon</h3>
+        <code>.icon</code>
+        <p style="max-inline-size: 34em;">
+          Brand glyphs drawn with a CSS mask, so they take currentColor.
+        </p>
+      </header>
+      <div class="equal-columns">
+        <figure class="flow">
+          <figcaption>Light · 14px and 32px</figcaption>
+          <div class="fig-content flow" data-theme="light">
+            <div class="cluster text-high-contrast">
+              <Icon name="youtube" label="YouTube" />
+              <Icon name="instagram" label="Instagram" />
+              <Icon name="facebook" label="Facebook" />
+            </div>
+            <div class="cluster text-high-contrast" style="--icon-size: 2rem;">
+              <Icon name="youtube" label="YouTube" />
+              <Icon name="instagram" label="Instagram" />
+              <Icon name="facebook" label="Facebook" />
+            </div>
+          </div>
+        </figure>
+        <figure class="flow">
+          <figcaption>Dark · lime via currentColor</figcaption>
+          <div class="fig-content flow" data-theme="dark">
+            <div class="cluster text-high-contrast">
+              <Icon name="youtube" label="YouTube" />
+              <Icon name="instagram" label="Instagram" />
+              <Icon name="facebook" label="Facebook" />
+            </div>
+            <div class="cluster text-brand" style="--icon-size: 2rem;">
+              <Icon name="youtube" label="YouTube" />
+              <Icon name="instagram" label="Instagram" />
+              <Icon name="facebook" label="Facebook" />
+            </div>
           </div>
         </figure>
       </div>
