@@ -1,0 +1,38 @@
+---
+---
+
+<li class="list-B-item">
+  <div class="wrapper content flow">
+    <h4 class="title">
+      <slot name="title" />
+    </h4>
+    <p class="description">
+      <slot />
+    </p>
+  </div>
+</li>
+
+<style>
+  .list-B-item {
+    border-block-end: var(--border-width-hairline) solid var(--border-subtle);
+  }
+
+  .content {
+    --flow-space: var(--size-300);
+
+    padding-block: var(--size-500);
+  }
+
+  .title {
+    font-family: var(--ff-heading);
+    font-size: var(--font-size-heading-sm);
+    font-weight: var(--fw-bold);
+    line-height: 1.2;
+    color: var(--text-high-contrast);
+  }
+
+  .description {
+    font-size: var(--font-size-regular);
+    color: var(--text-main);
+  }
+</style>

@@ -1,0 +1,76 @@
+---
+export type MetaData = {
+  time: string;
+  location: string;
+};
+
+export type Item = {
+  index: string;
+  title: string;
+  href: string;
+  metadata?: MetaData;
+};
+
+type Props = Item;
+
+const { index, title, href, metadata } = Astro.props;
+---
+
+<li class="list-A-item">
+  <a href={href} class="wrapper link repel">
+    <div class="repel">
+      <span class="index">{index}</span>
+      <h4 class="title font-display">{title}</h4>
+    </div>
+
+    <div class="meta">
+      <p>{metadata?.time}</p>
+      <p>{metadata?.location}</p>
+    </div>
+  </a>
+</li>
+
+<style>
+  .list-A-item {
+    border-block-start: var(--border-width-hairline) solid var(--border-subtle);
+  }
+
+  .link {
+    padding-block: var(
+      --directory-padding,
+      clamp(1.5rem, 1.15rem + 1vw, 2.125rem)
+    );
+    color: inherit;
+    text-decoration: none;
+
+    &:hover .title,
+    &:focus-visible .title {
+      color: var(--text-brand);
+    }
+  }
+
+  .index {
+    padding-block-start: 0.1em;
+    font-family: var(--ff-accent);
+    font-size: var(--font-size-md);
+    font-style: italic;
+    line-height: 1;
+    color: var(--directory-index-color, var(--text-high-contrast));
+    transition: translate var(--duration-base) var(--ease-out);
+  }
+
+  .title {
+    font-size: var(--font-size-heading-md);
+    color: var(--text-high-contrast);
+    transition: color var(--duration-fast) var(--ease-out);
+  }
+
+  .meta {
+    grid-column: 2;
+    display: grid;
+    font-family: var(--ff-ui);
+    font-size: var(--font-size-sm);
+    line-height: 1.8;
+    color: var(--text-main);
+  }
+</style>
