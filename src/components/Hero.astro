@@ -55,8 +55,27 @@ const { image, alt, video } = Astro.props;
     connection?: { saveData?: boolean };
   };
 
+  const HLS_TYPE = "application/x-mpegURL";
+
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const saveData = (navigator as ConnectionNavigator).connection?.saveData;
+
+  // Safari plays HLS from <source>; elsewhere hls.js feeds the manifest
+  // through MSE. Imported on demand so it only loads when a video will play
+  async function attachHls(video: HTMLVideoElement) {
+    const source = video.querySelector<HTMLSourceElement>(
+      `source[type="${HLS_TYPE}"]`,
+    );
+    if (!source || video.canPlayType(HLS_TYPE)) return;
+
+    const { default: Hls } = await import("hls.js");
+    if (!Hls.isSupported()) return;
+
+    // Cap renditions to the element's size so phones get the small one
+    const hls = new Hls({ capLevelToPlayerSize: true });
+    hls.loadSource(source.src);
+    hls.attachMedia(video);
+  }
 
   // Video is an enhancement: without JS, with reduced motion or Save-Data,
   // the image stays and preload="none" means no video bytes are fetched
@@ -74,13 +93,21 @@ const { image, alt, video } = Astro.props;
       video.addEventListener("pause", () => {
         toggle.textContent = "Play";
       });
+      // Stream's audio track runs a few ms past the video, so under MSE
+      // playback stalls just short of duration and `loop` never fires
+      video.addEventListener("waiting", () => {
+        if (video.duration - video.currentTime < 0.5) video.currentTime = 0;
+      });
       toggle.addEventListener("click", () => {
         if (video.paused) video.play();
         else video.pause();
       });
 
       toggle.hidden = false;
-      video.play().catch(() => {});
+      attachHls(video)
+        .catch(() => {})
+        .then(() => video.play())
+        .catch(() => {});
     }
   }
 </script>
