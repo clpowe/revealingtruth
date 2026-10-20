@@ -1,0 +1,38 @@
+---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+
+interface Props {
+  src: ImageMetadata;
+  alt: string;
+  shape?: "rounded";
+  sizes?: string;
+  style?: string;
+}
+
+const { src, alt, shape, sizes, style } = Astro.props;
+---
+
+<Image
+  class="media"
+  src={src}
+  alt={alt}
+  data-shape={shape}
+  layout="full-width"
+  sizes={sizes}
+  style={style}
+/>
+
+<style>
+  .media {
+    inline-size: 100%;
+    block-size: auto;
+    aspect-ratio: var(--media-ratio, auto);
+    object-fit: cover;
+    border-radius: var(--media-radius, 0);
+  }
+
+  .media[data-shape="rounded"] {
+    --media-radius: var(--border-radius-2);
+  }
+</style>

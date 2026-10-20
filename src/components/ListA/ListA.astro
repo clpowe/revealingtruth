@@ -1,0 +1,23 @@
+---
+import ListAItem, { type Item } from "./ListAItem.astro";
+
+export type { Item, MetaData } from "./ListAItem.astro";
+
+interface Props {
+  items: Item[];
+}
+
+const { items } = Astro.props;
+---
+
+<ul role="list" class="list-A">
+  {items.map((item) => (
+    <ListAItem {...item} />
+  ))}
+</ul>
+
+<style>
+  .list-A {
+    border-block-end: var(--border-width-hairline) solid var(--border-subtle);
+  }
+</style>

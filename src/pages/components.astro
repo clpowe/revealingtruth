@@ -4,11 +4,43 @@ import Button from "../components/Button.astro";
 import Statement from "../components/Statement.astro";
 import Citation from "../components/Citation.astro";
 import Icon from "../components/Icon.astro";
+import { type Item } from "../components/ListA/ListA.astro";
+import ListA from "../components/ListA/ListA.astro";
+import ListB from "../components/ListB/ListB.astro";
+import ListBItem from "../components/ListB/ListBItem.astro";
+import Media from "../components/Media.astro";
+import MediaStrip from "../components/MediaStrip.astro";
+
+import pastorBryanImage from "../assets/images/PastorBryan.jpg";
+import mediaimage from "../assets/images/media-strip.png";
 
 import BaseLayout from "../layouts/BaseLayout.astro";
+
+// Data
+const listAData: Item[] = [
+  {
+    index: "tp",
+    title: "Tampa",
+    href: "/",
+    metadata: {
+      time: "Sun 9:00 & 11:00AM",
+      location: "5201 N. Armenia Ave. Tampa, FL 33603",
+    },
+  },
+
+  {
+    index: "wc",
+    title: "Wesley Chapel",
+    href: "/",
+    metadata: {
+      time: "Sun 9:00 & 11:00AM",
+      location: "5201 N. Armenia Ave. Tampa, FL 33603",
+    },
+  },
+];
 ---
 
-<BaseLayout title="componets">
+<BaseLayout title="Components">
   <section class="section flow wrapper" data-padding="compact">
     <article class="flow">
       <header class="flow">
@@ -44,8 +76,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         <h3 class="h3">Button</h3>
         <code>.button</code>
         <p style="max-inline-size: 34em;">
-          Pill link or button in DM Sans bold. Hover and focus fill it with the
-          high-contrast colour; pressing scales it to 97%.
+          Pill link or button in DM Sans bold. Hover blends 20% of the text
+          colour into the fill, focus shows the focus ring, and pressing scales
+          it to 97%.
         </p>
       </header>
       <div class="equal-columns">
@@ -182,6 +215,139 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       </div>
     </article>
   </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">List A</h3>
+        <code>.list-A</code>
+        <p style="max-inline-size: 34em;">
+          Linked directory rows: serif-italic index, expanded display title, and
+          time and location meta. Hover and focus turn the title lime.
+        </p>
+      </header>
+      <div class="">
+        <figure class="flow">
+          <figcaption>Light</figcaption>
+          <div class="fig-content-b flow" data-theme="light">
+            <ListA items={listAData} />
+          </div>
+        </figure>
+        <figure class="flow">
+          <figcaption>Dark</figcaption>
+          <div class="fig-content-b flow" data-theme="dark">
+            <ListA items={listAData} />
+          </div>
+        </figure>
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">List B</h3>
+        <code>.list-B</code>
+        <p style="max-inline-size: 34em;">
+          Bold heading with a serif-italic accent word, a short line of copy,
+          and a hairline rule beneath each item.
+        </p>
+      </header>
+      <div class="">
+        <figure class="flow">
+          <figcaption>Light</figcaption>
+          <div class="fig-content-b flow" data-theme="light">
+            <ListB>
+              <ListBItem>
+                <Fragment slot="title">
+                  We ask <span class="font-accent">why</span>
+                </Fragment>
+                Because where purpose is unknown, abuse is inevitable.
+              </ListBItem>
+              <ListBItem>
+                <Fragment slot="title">
+                  <span class="font-accent">Truth</span> sets us free
+                </Fragment>
+                The accent can sit anywhere in the heading.
+              </ListBItem>
+            </ListB>
+          </div>
+        </figure>
+        <figure class="flow">
+          <figcaption>Dark</figcaption>
+          <div class="fig-content-b flow" data-theme="dark">
+            <ListB>
+              <ListBItem>
+                <Fragment slot="title">
+                  We ask <span class="font-accent">why</span>
+                </Fragment>
+                Because where purpose is unknown, abuse is inevitable.
+              </ListBItem>
+              <ListBItem>
+                <Fragment slot="title">
+                  <span class="font-accent">Truth</span> sets us free
+                </Fragment>
+                The accent can sit anywhere in the heading.
+              </ListBItem>
+            </ListB>
+          </div>
+        </figure>
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Media</h3>
+        <code>.media</code>
+        <p style="max-inline-size: 34em;">
+          Photography inside the grid. Set the crop with --media-ratio;
+          data-shape="rounded" adds the 12px radius used on leader photos.
+        </p>
+      </header>
+      <div class="equal-columns">
+        <figure class="flow">
+          <Media
+            src={pastorBryanImage}
+            alt="Pastor Bryan speaking on stage under spotlights"
+            style="--media-ratio: 3 / 2;"
+            sizes="(width > 720px) 50vw, 100vw"
+          />
+          <figcaption>Default · --media-ratio: 3 / 2</figcaption>
+        </figure>
+        <figure class="flow">
+          <Media
+            src={pastorBryanImage}
+            alt="Pastor Bryan speaking on stage under spotlights"
+            shape="rounded"
+            style="--media-ratio: 3 / 2;"
+            sizes="(width > 720px) 50vw, 100vw"
+          />
+          <figcaption>data-shape="rounded"</figcaption>
+        </figure>
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Media strip</h3>
+        <code>.media-strip</code>
+        <p style="max-inline-size: 34em;">
+          Full-bleed black-and-white photograph between sections. The ratio
+          widens at each breakpoint.
+        </p>
+      </header>
+      <div class="fig-content-b">
+        <MediaStrip
+          src={mediaimage}
+          alt="Pastor Bryan speaking on stage under spotlights"
+        />
+      </div>
+    </article>
+  </section>
 </BaseLayout>
 
 <style>
@@ -190,6 +356,12 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     border-radius: var(--border-radius-2);
     border: 1px solid var(--clr-neutral-200);
   }
+  .fig-content-b {
+    border-radius: var(--border-radius-2);
+    border: 1px solid var(--clr-neutral-200);
+    overflow: clip;
+  }
+
   figcaption {
     font-family: var(--ff-ui);
     font-size: 0.75rem;
