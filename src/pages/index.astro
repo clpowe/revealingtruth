@@ -1,5 +1,6 @@
 ---
 import Hero from "../components/Hero.astro";
+import { heroVideo } from "../config/hero-video";
 import SocialFollow from "../components/SocialFollow.astro";
 import Tag from "../components/Tag.astro";
 import Statement from "../components/Statement.astro";
@@ -59,12 +60,7 @@ const ministries: Item[] = [
     <Hero
       image={pastorBryanImage}
       alt=""
-      video={[
-        {
-          src: "https://customer-zhgkktyyuixgwrdb.cloudflarestream.com/5387f70307a41eedf1b2447193ddde87/manifest/video.m3u8",
-          type: "application/x-mpegURL",
-        },
-      ]}
+      video={heroVideo}
     >
       Experience <br />
       <span class="font-accent text-brand">new</span> life!

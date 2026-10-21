@@ -21,7 +21,7 @@ const { image, alt, video } = Astro.props;
   {/* The image is the LCP element and the video's poster: priority makes it
       eager, high fetchpriority and responsive, which a poster attribute is not */}
   <Image class="media" src={image} alt={alt} layout="full-width" priority />
-  {video && (
+  {video?.length ? (
     <video
       class="media"
       data-hero-video
@@ -33,81 +33,132 @@ const { image, alt, video } = Astro.props;
       tabindex="-1"
     >
       {video.map((source) => (
-        <source src={source.src} type={source.type} media={source.media} />
+        <source data-src={source.src} type={source.type} media={source.media} />
       ))}
     </video>
-  )}
+  ) : null}
   <div class="hero__content wrapper repel" data-align="end">
     <h1 class="hero__title font-display">
       <slot />
     </h1>
     <slot name="aside" />
   </div>
-  {video && (
+  {video?.length ? (
     <button class="toggle" type="button" data-hero-toggle hidden>
       Pause
     </button>
-  )}
+  ) : null}
 </section>
 
 <script>
   type ConnectionNavigator = Navigator & {
-    connection?: { saveData?: boolean };
+    connection?: EventTarget & { saveData?: boolean };
   };
 
-  const HLS_TYPE = "application/x-mpegURL";
+  const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+  const connection = (navigator as ConnectionNavigator).connection;
 
-  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const saveData = (navigator as ConnectionNavigator).connection?.saveData;
+  for (const hero of document.querySelectorAll(".hero")) {
+    const video = hero.querySelector<HTMLVideoElement>("[data-hero-video]");
+    const toggle = hero.querySelector<HTMLButtonElement>("[data-hero-toggle]");
+    if (!video || !toggle) continue;
 
-  // Safari plays HLS from <source>; elsewhere hls.js feeds the manifest
-  // through MSE. Imported on demand so it only loads when a video will play
-  async function attachHls(video: HTMLVideoElement) {
-    const source = video.querySelector<HTMLSourceElement>(
-      `source[type="${HLS_TYPE}"]`,
-    );
-    if (!source || video.canPlayType(HLS_TYPE)) return;
+    let pageReady = document.readyState === "complete";
+    let inView = false;
+    let sourceAttached = false;
+    let pausedByUser = false;
+    let autoplayBlocked = false;
+    let failed = false;
+    video.muted = true;
 
-    const { default: Hls } = await import("hls.js");
-    if (!Hls.isSupported()) return;
+    function syncPlayback() {
+      if (!video || !toggle) return;
+      const disabled = reducedMotion.matches || connection?.saveData;
+      toggle.hidden = !sourceAttached || !!disabled || failed;
 
-    // Cap renditions to the element's size so phones get the small one
-    const hls = new Hls({ capLevelToPlayerSize: true });
-    hls.loadSource(source.src);
-    hls.attachMedia(video);
-  }
+      if (disabled || failed) delete video.dataset.playing;
+      if (
+        !pageReady ||
+        !inView ||
+        document.hidden ||
+        disabled ||
+        pausedByUser ||
+        autoplayBlocked ||
+        failed
+      ) {
+        video.pause();
+        return;
+      }
 
-  // Video is an enhancement: without JS, with reduced motion or Save-Data,
-  // the image stays and preload="none" means no video bytes are fetched
-  if (!reduceMotion && !saveData) {
-    for (const hero of document.querySelectorAll(".hero")) {
-      const video = hero.querySelector<HTMLVideoElement>("[data-hero-video]");
-      const toggle =
-        hero.querySelector<HTMLButtonElement>("[data-hero-toggle]");
-      if (!video || !toggle) continue;
+      if (!sourceAttached) {
+        // Choose once before fetching: resizing must not restart the loop
+        // or download a second rendition. No src means no speculative fetch.
+        const source = Array.from(video.querySelectorAll("source")).find(
+          (source) =>
+            (!source.media || matchMedia(source.media).matches) &&
+            video.canPlayType(source.type),
+        );
+        if (!source?.dataset.src) {
+          failed = true;
+          return;
+        }
+        sourceAttached = true;
+        video.src = source.dataset.src;
+        toggle.hidden = false;
+      }
 
-      video.addEventListener("playing", () => {
-        video.dataset.playing = "";
-        toggle.textContent = "Pause";
-      });
-      video.addEventListener("pause", () => {
-        toggle.textContent = "Play";
-      });
-      // Stream's audio track runs a few ms past the video, so under MSE
-      // playback stalls just short of duration and `loop` never fires
-      video.addEventListener("waiting", () => {
-        if (video.duration - video.currentTime < 0.5) video.currentTime = 0;
-      });
-      toggle.addEventListener("click", () => {
-        if (video.paused) video.play();
-        else video.pause();
-      });
+      if (video.paused) {
+        void video.play().catch((error: DOMException) => {
+          // Scrolling away while play() is pending legitimately aborts it.
+          if (error.name === "AbortError") return;
+          autoplayBlocked = true;
+          toggle.textContent = "Play";
+          toggle.setAttribute("aria-label", "Play background video");
+        });
+      }
+    }
 
-      toggle.hidden = false;
-      attachHls(video)
-        .catch(() => {})
-        .then(() => video.play())
-        .catch(() => {});
+    video.addEventListener("playing", () => {
+      video.dataset.playing = "";
+      autoplayBlocked = false;
+      toggle.textContent = "Pause";
+      toggle.setAttribute("aria-label", "Pause background video");
+      syncPlayback();
+    });
+    video.addEventListener("pause", () => {
+      toggle.textContent = "Play";
+      toggle.setAttribute("aria-label", "Play background video");
+    });
+    video.addEventListener("error", () => {
+      failed = true;
+      syncPlayback();
+    });
+    toggle.addEventListener("click", () => {
+      pausedByUser = !video.paused;
+      autoplayBlocked = false;
+      syncPlayback();
+    });
+
+    const observer = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      syncPlayback();
+    });
+    observer.observe(hero);
+    document.addEventListener("visibilitychange", syncPlayback);
+    reducedMotion.addEventListener("change", syncPlayback);
+    connection?.addEventListener("change", syncPlayback);
+
+    // Let the initial page and priority image finish before video competes
+    // for bandwidth. Native loop reuses buffered frames without reloading.
+    if (!pageReady) {
+      window.addEventListener(
+        "load",
+        () => {
+          pageReady = true;
+          syncPlayback();
+        },
+        { once: true },
+      );
     }
   }
 </script>
