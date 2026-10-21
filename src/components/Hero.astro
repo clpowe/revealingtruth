@@ -164,26 +164,6 @@ const { image, alt, video } = Astro.props;
 </script>
 
 <style>
-  .media-overlay {
-    position: relative;
-    display: grid;
-    isolation: isolate;
-    overflow: clip;
-    color: var(--text-on-media);
-    background-color: var(--background-dark);
-  }
-
-  /* Absolute so the media's intrinsic size never sets the block's height */
-  .media {
-    position: absolute;
-    inset: 0;
-    z-index: -2;
-    inline-size: 100%;
-    block-size: 100%;
-    object-fit: cover;
-    object-position: var(--media-focus, 50% 50%);
-  }
-
   /* Video sits over the image and fades in once frames are playing */
   video.media {
     opacity: 0;
@@ -192,19 +172,6 @@ const { image, alt, video } = Astro.props;
 
   video.media[data-playing] {
     opacity: 1;
-  }
-
-  .media-overlay::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background: linear-gradient(
-      to top,
-      rgb(0 0 0 / 0.75),
-      rgb(0 0 0 / 0.2) 50%,
-      rgb(0 0 0 / 0)
-    );
   }
 
   .hero {

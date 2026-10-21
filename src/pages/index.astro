@@ -11,11 +11,14 @@ import ListA, { type Item } from "../components/ListA/ListA.astro";
 import ListB from "../components/ListB/ListB.astro";
 import ListBItem from "../components/ListB/ListBItem.astro";
 import Button from "../components/Button.astro";
+import Testimony from "../components/Testimony.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 
 import pastorBryanImage from "../assets/images/PastorBryan.jpg";
 import mediaStripImage from "../assets/images/media-strip.png";
-import leaderImage from "../assets/images/placeholder-leader.jpg";
+import bryanandRashida from "../assets/images/bryan-rashida-powe.png";
+import pastordeborahPowe from "../assets/images/pastordeborahpowe.png";
+import testimonialImage from "../assets/images/testimonial.png";
 
 const locations: Item[] = [
   {
@@ -57,11 +60,7 @@ const ministries: Item[] = [
 
 <BaseLayout title="Revealing Truth Ministries">
   <main>
-    <Hero
-      image={pastorBryanImage}
-      alt=""
-      video={heroVideo}
-    >
+    <Hero image={pastorBryanImage} alt="" video={heroVideo}>
       Experience <br />
       <span class="font-accent text-brand">new</span> life!
       <SocialFollow
@@ -77,10 +76,12 @@ const ministries: Item[] = [
     <section class="section">
       <div class="wrapper flow">
         <Statement>
-          <Tag>our mission</Tag> To reveal Christ so people experience a
-          <span class="font-accent">new life of peace and truth,</span>{" "}
-          discover their divine design, and be equipped to advance God's
-          Kingdom.
+          <Tag slot="tag" as="h2">
+            our mission
+          </Tag>{" "}
+          To reveal Christ so people experience a
+          <span class="font-accent">new life of peace and truth,</span> discover
+          their divine design, and be equipped to advance God's Kingdom.
         </Statement>
         <Citation cite="Jeremiah 33:6">
           Peace, Prosperity, Security, Stability, Health, Healing and Truth
@@ -96,7 +97,10 @@ const ministries: Item[] = [
     <section class="section flow">
       <div class="wrapper">
         <Statement>
-          <Tag>visit us</Tag> Three locations
+          <Tag slot="tag" as="h2">
+            visit us
+          </Tag>{" "}
+          Three locations
           <span class="font-accent">one family</span>. Come as you are this
           Sunday. We saved you a seat.
         </Statement>
@@ -104,10 +108,21 @@ const ministries: Item[] = [
       <ListA items={locations} />
     </section>
 
+    <Testimony
+      image={testimonialImage}
+      alt="A boy celebrating as he is baptised in a pool"
+    >
+      “We are Revealing Truth Church—where lives are changed, communities are
+      impacted, and Christ is put on display through the Simple Truth of God’s
+      Word.”
+    </Testimony>
+
     <section class="section flow" data-theme="dark">
       <div class="wrapper">
         <Statement>
-          <Tag>our community</Tag>
+          <Tag slot="tag" as="h2">
+            our community
+          </Tag>
           <span class="font-accent text-brand">Church is better together.</span>{" "}
           Find your people in a ministry built for every age, every gift and
           every corner of the world.
@@ -120,7 +135,10 @@ const ministries: Item[] = [
       <div class="wrapper equal-columns" data-align="start">
         <div class="flow" data-sticky>
           <Statement>
-            <Tag>our values</Tag> Our core values are who we are.
+            <Tag slot="tag" as="h2">
+              our values
+            </Tag>{" "}
+            Our core values are who we are.
             <span class="font-accent text-brand">
               They are not just what we do,
             </span>{" "}
@@ -161,7 +179,8 @@ const ministries: Item[] = [
           </ListBItem>
           <ListBItem>
             <Fragment slot="title">
-              We believe in the <span class="font-accent">great</span> commission
+              We believe in the <span class="font-accent">great</span>{" "}
+              commission
             </Fragment>
             So we don't limit how God can use us, where God can send us or who
             God can reach through us.
@@ -207,14 +226,17 @@ const ministries: Item[] = [
       <div class="wrapper equal-columns">
         <article class="flow">
           <Media
-            src={leaderImage}
+            src={bryanandRashida}
             alt="Pastors Bryan and Rashida Powe"
             shape="rounded"
             style="--media-ratio: 2 / 1;"
             sizes="(width > 720px) 50vw, 100vw"
           />
           <Statement>
-            <Tag>senior pastors</Tag> Bryan &amp; Rashida
+            <Tag slot="tag" as="h2">
+              senior pastors
+            </Tag>{" "}
+            Bryan &amp; Rashida
             <span class="font-accent">Powe</span>
           </Statement>
           <p>
@@ -225,14 +247,17 @@ const ministries: Item[] = [
         </article>
         <article class="flow">
           <Media
-            src={leaderImage}
+            src={pastordeborahPowe}
             alt="Pastor Deborah Powe"
             shape="rounded"
             style="--media-ratio: 2 / 1;"
             sizes="(width > 720px) 50vw, 100vw"
           />
           <Statement>
-            <Tag>overseeing pastor</Tag> Pastor
+            <Tag slot="tag" as="h2">
+              overseeing pastor
+            </Tag>{" "}
+            Pastor
             <span class="font-accent">Deborah</span> Powe
           </Statement>
           <p>
