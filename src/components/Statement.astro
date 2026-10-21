@@ -1,6 +1,9 @@
-<p class="statement">
-  <slot />
-</p>
+<div class="statement">
+  <slot name="tag" />{" "}
+  <p>
+    <slot />
+  </p>
+</div>
 
 <style>
   .statement {
@@ -10,5 +13,16 @@
     line-height: var(--lh-heading);
     letter-spacing: -0.005em;
     color: var(--text-main);
+    max-width: 65ch;
+    text-wrap: balance;
+
+    h2 {
+      transform: translateY(-0.25em);
+    }
+  }
+
+  /* Inline so the tag (often a heading) sits at the start of the sentence */
+  p {
+    display: inline;
   }
 </style>

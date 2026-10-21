@@ -356,6 +356,45 @@
 }
 
 /* ==========================================================================
+   COMPONENTS — shared CUBE Blocks
+   ========================================================================== */
+@layer components {
+  /* Media overlay — photography or video under a scrim (hero, testimony) */
+  .media-overlay {
+    position: relative;
+    display: grid;
+    isolation: isolate;
+    overflow: clip;
+    color: var(--text-on-media);
+    background-color: var(--background-dark);
+  }
+
+  /* Absolute so the media's intrinsic size never sets the block's height */
+  .media-overlay > .media {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    object-position: var(--media-focus, 50% 50%);
+  }
+
+  .media-overlay::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(
+      to top,
+      rgb(0 0 0 / 0.75),
+      rgb(0 0 0 / 0.2) 50%,
+      rgb(0 0 0 / 0)
+    );
+  }
+}
+
+/* ==========================================================================
    UTILITIES — CUBE Utilities
    ========================================================================== */
 @layer utilities {

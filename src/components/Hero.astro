@@ -1,0 +1,210 @@
+---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+
+interface VideoSource {
+  src: string;
+  type: string;
+  media?: string;
+}
+
+interface Props {
+  image: ImageMetadata;
+  alt: string;
+  video?: VideoSource[];
+}
+
+const { image, alt, video } = Astro.props;
+---
+
+<section class="hero media-overlay" data-theme="dark">
+  {/* The image is the LCP element and the video's poster: priority makes it
+      eager, high fetchpriority and responsive, which a poster attribute is not */}
+  <Image class="media" src={image} alt={alt} layout="full-width" priority />
+  {video?.length ? (
+    <video
+      class="media"
+      data-hero-video
+      muted
+      loop
+      playsinline
+      preload="none"
+      aria-hidden="true"
+      tabindex="-1"
+    >
+      {video.map((source) => (
+        <source data-src={source.src} type={source.type} media={source.media} />
+      ))}
+    </video>
+  ) : null}
+  <div class="hero__content wrapper repel" data-align="end">
+    <h1 class="hero__title font-display">
+      <slot />
+    </h1>
+    <slot name="aside" />
+  </div>
+  {video?.length ? (
+    <button class="toggle" type="button" data-hero-toggle hidden>
+      Pause
+    </button>
+  ) : null}
+</section>
+
+<script>
+  type ConnectionNavigator = Navigator & {
+    connection?: EventTarget & { saveData?: boolean };
+  };
+
+  const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+  const connection = (navigator as ConnectionNavigator).connection;
+
+  for (const hero of document.querySelectorAll(".hero")) {
+    const video = hero.querySelector<HTMLVideoElement>("[data-hero-video]");
+    const toggle = hero.querySelector<HTMLButtonElement>("[data-hero-toggle]");
+    if (!video || !toggle) continue;
+
+    let pageReady = document.readyState === "complete";
+    let inView = false;
+    let sourceAttached = false;
+    let pausedByUser = false;
+    let autoplayBlocked = false;
+    let failed = false;
+    video.muted = true;
+
+    function syncPlayback() {
+      if (!video || !toggle) return;
+      const disabled = reducedMotion.matches || connection?.saveData;
+      toggle.hidden = !sourceAttached || !!disabled || failed;
+
+      if (disabled || failed) delete video.dataset.playing;
+      if (
+        !pageReady ||
+        !inView ||
+        document.hidden ||
+        disabled ||
+        pausedByUser ||
+        autoplayBlocked ||
+        failed
+      ) {
+        video.pause();
+        return;
+      }
+
+      if (!sourceAttached) {
+        // Choose once before fetching: resizing must not restart the loop
+        // or download a second rendition. No src means no speculative fetch.
+        const source = Array.from(video.querySelectorAll("source")).find(
+          (source) =>
+            (!source.media || matchMedia(source.media).matches) &&
+            video.canPlayType(source.type),
+        );
+        if (!source?.dataset.src) {
+          failed = true;
+          return;
+        }
+        sourceAttached = true;
+        video.src = source.dataset.src;
+        toggle.hidden = false;
+      }
+
+      if (video.paused) {
+        void video.play().catch((error: DOMException) => {
+          // Scrolling away while play() is pending legitimately aborts it.
+          if (error.name === "AbortError") return;
+          autoplayBlocked = true;
+          toggle.textContent = "Play";
+          toggle.setAttribute("aria-label", "Play background video");
+        });
+      }
+    }
+
+    video.addEventListener("playing", () => {
+      video.dataset.playing = "";
+      autoplayBlocked = false;
+      toggle.textContent = "Pause";
+      toggle.setAttribute("aria-label", "Pause background video");
+      syncPlayback();
+    });
+    video.addEventListener("pause", () => {
+      toggle.textContent = "Play";
+      toggle.setAttribute("aria-label", "Play background video");
+    });
+    video.addEventListener("error", () => {
+      failed = true;
+      syncPlayback();
+    });
+    toggle.addEventListener("click", () => {
+      pausedByUser = !video.paused;
+      autoplayBlocked = false;
+      syncPlayback();
+    });
+
+    const observer = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      syncPlayback();
+    });
+    observer.observe(hero);
+    document.addEventListener("visibilitychange", syncPlayback);
+    reducedMotion.addEventListener("change", syncPlayback);
+    connection?.addEventListener("change", syncPlayback);
+
+    // Let the initial page and priority image finish before video competes
+    // for bandwidth. Native loop reuses buffered frames without reloading.
+    if (!pageReady) {
+      window.addEventListener(
+        "load",
+        () => {
+          pageReady = true;
+          syncPlayback();
+        },
+        { once: true },
+      );
+    }
+  }
+</script>
+
+<style>
+  /* Video sits over the image and fades in once frames are playing */
+  video.media {
+    opacity: 0;
+    transition: opacity var(--duration-base) var(--ease-out);
+  }
+
+  video.media[data-playing] {
+    opacity: 1;
+  }
+
+  .hero {
+    --media-focus: 50% 30%;
+    align-items: end;
+    min-block-size: clamp(35rem, 56vw, 100svh);
+  }
+
+  .hero__content {
+    --repel-gap: var(--size-500) var(--size-700);
+    padding-block: var(--size-1000) clamp(2.5rem, 1.5rem + 2.5vw, 4rem);
+  }
+
+  .hero__title {
+    font-size: var(--font-size-heading-lg);
+    color: inherit;
+  }
+
+  .toggle {
+    position: absolute;
+    inset-block-start: var(--size-500);
+    inset-inline-end: var(--size-500);
+    padding: 0.4em 1em;
+    font-family: var(--ff-ui);
+    font-size: var(--font-size-xs);
+    color: inherit;
+    background-color: rgb(0 0 0 / 0.4);
+    border: var(--border-width-hairline) solid currentColor;
+    border-radius: var(--border-radius-pill);
+  }
+
+  .toggle:focus-visible {
+    outline: var(--border-width-2) solid var(--focus-ring);
+    outline-offset: 3px;
+  }
+</style>

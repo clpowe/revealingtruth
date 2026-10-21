@@ -10,9 +10,14 @@ import ListB from "../components/ListB/ListB.astro";
 import ListBItem from "../components/ListB/ListBItem.astro";
 import Media from "../components/Media.astro";
 import MediaStrip from "../components/MediaStrip.astro";
+import Hero from "../components/Hero.astro";
+import SocialFollow from "../components/SocialFollow.astro";
+import Testimony from "../components/Testimony.astro";
+import SiteFooter from "../components/SiteFooter.astro";
 
 import pastorBryanImage from "../assets/images/PastorBryan.jpg";
 import mediaimage from "../assets/images/media-strip.png";
+import testimonialImage from "../assets/images/testimonial.png";
 
 import BaseLayout from "../layouts/BaseLayout.astro";
 
@@ -345,6 +350,73 @@ const listAData: Item[] = [
           src={mediaimage}
           alt="Pastor Bryan speaking on stage under spotlights"
         />
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Hero</h3>
+        <code>.media-overlay + .hero</code>
+        <p style="max-inline-size: 34em;">
+          Image or video under a gradient scrim, with a display title and the
+          follow row. The image always loads first as the LCP element; a video,
+          when given, fades in over it unless reduced motion or Save-Data is on.
+        </p>
+      </header>
+      <div class="fig-content-b">
+        <Hero image={pastorBryanImage} alt="">
+          Experience <br />
+          <span class="font-accent text-brand">new</span> life!
+          <SocialFollow
+            slot="aside"
+            links={[
+              { name: "youtube", label: "YouTube", href: "#" },
+              { name: "instagram", label: "Instagram", href: "#" },
+              { name: "facebook", label: "Facebook", href: "#" },
+            ]}
+          />
+        </Hero>
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Testimony</h3>
+        <code>.media-overlay + .testimony</code>
+        <p style="max-inline-size: 34em;">
+          Centred serif quote and logo over photography, using the default
+          scrim.
+        </p>
+      </header>
+      <div class="fig-content-b">
+        <Testimony
+          image={testimonialImage}
+          alt="A boy celebrating as he is baptised in a pool"
+        >
+          “We are Revealing Truth Church—where lives are changed, communities
+          are impacted, and Christ is put on display through the Simple Truth of
+          God’s Word.”
+        </Testimony>
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Site footer</h3>
+        <code>.site-footer</code>
+        <p style="max-inline-size: 34em;">
+          Logo, address and copyright in DM Sans. Stacked on mobile, logo left
+          of two lines on tablet, three columns on desktop.
+        </p>
+      </header>
+      <div class="fig-content-b">
+        <SiteFooter />
       </div>
     </article>
   </section>
