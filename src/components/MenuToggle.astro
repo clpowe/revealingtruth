@@ -1,0 +1,146 @@
+---
+interface Props {
+  /** Static state for demos; ignored when the toggle controls a popover */
+  expanded?: boolean;
+  /** id of the popover this button opens and closes */
+  target?: string;
+  action?: "toggle" | "show" | "hide";
+  label?: string;
+  autofocus?: boolean;
+}
+
+const {
+  expanded = false,
+  target,
+  action = "toggle",
+  label = "Menu",
+  autofocus = false,
+} = Astro.props;
+---
+
+{/* A popover invoker gets its expanded state from the browser; an explicit
+    aria-expanded would override it, so it is only set without a target */}
+<button
+  class="menu-toggle"
+  type="button"
+  popovertarget={target}
+  popovertargetaction={target && action !== "toggle" ? action : undefined}
+  aria-expanded={target ? undefined : expanded ? "true" : "false"}
+  autofocus={autofocus}
+>
+  <span class="visually-hidden">{label}</span>
+  <span class="menu-toggle__bars" aria-hidden="true"></span>
+</button>
+
+<style>
+  /* Menu toggle — three stepped bars that cross into an X when expanded */
+  .menu-toggle {
+    --bars-size: 1.25rem;
+    --bar-gap: 0.375rem;
+
+    position: relative;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    /* Optical alignment: the bars, not the hit area, meet the wrapper edge */
+    margin-inline-end: calc((var(--bars-size) - 2.75rem) / 2);
+    padding: 0;
+    color: inherit;
+    background: none;
+    border: 0;
+    cursor: pointer;
+  }
+
+  .menu-toggle:focus-visible {
+    outline: var(--border-width-2) solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--border-radius-1);
+  }
+
+  /* The span is the middle bar; its pseudo-elements are the top and bottom */
+  .menu-toggle__bars {
+    position: relative;
+    display: block;
+    inline-size: var(--bars-size);
+    block-size: 2px;
+    background: linear-gradient(currentColor 0 0) right / 70% 100% no-repeat;
+    transition: background-size var(--duration-fast) var(--ease-out);
+  }
+
+  .menu-toggle__bars::before,
+  .menu-toggle__bars::after {
+    content: "";
+    position: absolute;
+    inset-inline-end: 0;
+    block-size: 100%;
+    background-color: currentColor;
+    transition:
+      inline-size var(--duration-base) var(--ease-out),
+      translate var(--duration-base) var(--ease-out),
+      rotate var(--duration-base) var(--ease-out);
+  }
+
+  .menu-toggle__bars::before {
+    inline-size: 100%;
+    translate: 0 calc(var(--bar-gap) * -1);
+  }
+
+  .menu-toggle__bars::after {
+    inline-size: 45%;
+    translate: 0 var(--bar-gap);
+  }
+
+  /* A hide toggle only exists inside an open popover, so it is always an X */
+  .menu-toggle:is([aria-expanded="true"], [popovertargetaction="hide"])
+    .menu-toggle__bars {
+    background-size: 0 100%;
+  }
+
+  .menu-toggle:is([aria-expanded="true"], [popovertargetaction="hide"])
+    .menu-toggle__bars::before,
+  .menu-toggle:is([aria-expanded="true"], [popovertargetaction="hide"])
+    .menu-toggle__bars::after {
+    inline-size: 100%;
+    translate: 0 0;
+  }
+
+  .menu-toggle:is([aria-expanded="true"], [popovertargetaction="hide"])
+    .menu-toggle__bars::before {
+    rotate: 45deg;
+  }
+
+  .menu-toggle:is([aria-expanded="true"], [popovertargetaction="hide"])
+    .menu-toggle__bars::after {
+    rotate: -45deg;
+  }
+
+  /* Each time its popover opens, a hide toggle renders first as bars, then
+     transitions into the X while the popover settles */
+  .menu-toggle[popovertargetaction="hide"] .menu-toggle__bars,
+  .menu-toggle[popovertargetaction="hide"] .menu-toggle__bars::before,
+  .menu-toggle[popovertargetaction="hide"] .menu-toggle__bars::after {
+    transition-duration: var(--duration-slow);
+    transition-delay: var(--duration-fast);
+    transition-timing-function: var(--ease-smooth);
+  }
+
+  @starting-style {
+    .menu-toggle[popovertargetaction="hide"] .menu-toggle__bars {
+      background-size: 70% 100%;
+    }
+
+    .menu-toggle[popovertargetaction="hide"] .menu-toggle__bars::before {
+      inline-size: 100%;
+      translate: 0 calc(var(--bar-gap) * -1);
+      rotate: 0deg;
+    }
+
+    .menu-toggle[popovertargetaction="hide"] .menu-toggle__bars::after {
+      inline-size: 45%;
+      translate: 0 var(--bar-gap);
+      rotate: 0deg;
+    }
+  }
+</style>

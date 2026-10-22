@@ -26,9 +26,13 @@ Review compression quality before publishing a different source.
 
 ## Configure playback
 
-Copy `.env.example` to `.env` and set `PUBLIC_HERO_VIDEO_BASE_URL` to the media
-origin. This is a public build-time setting; restart development or rebuild
-after changing it. Without it, the hero renders only its existing image.
+The public preview origin is the default in `src/config/hero-video.ts`, so
+clean staging builds work without the gitignored local `.env` file.
+To override it, copy `.env.example` to `.env` and set
+`PUBLIC_HERO_VIDEO_BASE_URL` to the media origin. On Cloudflare Builds, set
+this in the build environment variables, not just Worker runtime variables.
+This is a public build-time setting; restart development or rebuild after
+changing it. An explicitly empty value renders only the existing image.
 
 The bucket must permit public reads for the browser to play these videos.
 For previews, its public `r2.dev` URL can be enabled. That endpoint is rate

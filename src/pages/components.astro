@@ -14,6 +14,8 @@ import Hero from "../components/Hero.astro";
 import SocialFollow from "../components/SocialFollow.astro";
 import Testimony from "../components/Testimony.astro";
 import SiteFooter from "../components/SiteFooter.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import MenuToggle from "../components/MenuToggle.astro";
 
 import pastorBryanImage from "../assets/images/PastorBryan.jpg";
 import mediaimage from "../assets/images/media-strip.png";
@@ -402,6 +404,44 @@ const listAData: Item[] = [
           God’s Word.”
         </Testimony>
       </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Site header</h3>
+        <code>.site-header · .site-menu · .menu-toggle</code>
+        <p style="max-inline-size: 34em;">
+          Logo and menu toggle, absolutely positioned over the hero. The toggle
+          opens a frosted popover card that drops in from the top of the
+          viewport, with grouped link columns over the call-to-action buttons
+          and partner logos; its close toggle crosses from bars into an X.
+        </p>
+      </header>
+      <figure class="flow">
+        <figcaption>Over the hero</figcaption>
+        <div class="fig-content-b" style="position: relative;">
+          <SiteHeader />
+          <Hero image={pastorBryanImage} alt="">
+            Experience <br />
+            <span class="font-accent text-brand">new</span> life!
+          </Hero>
+        </div>
+      </figure>
+      <figure class="flow">
+        <figcaption>Menu toggle states</figcaption>
+        <div class="fig-content cluster" data-theme="dark">
+          <div class="flow">
+            <MenuToggle />
+            <code>aria-expanded="false"</code>
+          </div>
+          <div class="flow">
+            <MenuToggle expanded />
+            <code>aria-expanded="true"</code>
+          </div>
+        </div>
+      </figure>
     </article>
   </section>
 

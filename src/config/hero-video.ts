@@ -1,9 +1,10 @@
-// Build-time URL: use the R2 development URL for previews, then a cached
-// custom domain for production. An unset URL keeps the image fallback.
-const baseUrl = import.meta.env.PUBLIC_HERO_VIDEO_BASE_URL?.trim().replace(
-  /\/+$/,
-  "",
-);
+// This public origin must also be available to clean CI builds, which do not
+// receive the gitignored local .env. Override it with a cached custom domain
+// before launch. An explicitly empty override keeps the image-only option.
+const previewOrigin = "https://pub-67c32fbe2c6e4b858c94913f928e6e5f.r2.dev";
+const baseUrl = (import.meta.env.PUBLIC_HERO_VIDEO_BASE_URL ?? previewOrigin)
+  .trim()
+  .replace(/\/+$/, "");
 
 export const heroVideo = baseUrl
   ? [

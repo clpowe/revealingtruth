@@ -1,14 +1,17 @@
 ---
 interface Props {
   type?: "outline" | "accent";
+  /** Renders a link instead of a button */
+  href?: string;
 }
 
-const { type } = Astro.props;
+const { type, href } = Astro.props;
+const Element = href ? "a" : "button";
 ---
 
-<button class="button" data-type={type}>
+<Element class="button" data-type={type} href={href}>
   <slot />
-</button>
+</Element>
 
 <style>
   .button {
