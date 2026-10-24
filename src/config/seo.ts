@@ -21,4 +21,11 @@ export const seo = {
     ico: "/favicon.ico",
     appleTouch: "/apple-touch-icon.png",
   },
+  logo: "/revealing-truth-logo.svg",
+  telephone: "+1-813-354-1135",
+  social: {
+    facebook: "https://www.facebook.com/revealingtruth",
+    instagram: "https://www.instagram.com/revealingtruth",
+    youtube: "https://www.youtube.com/revealingtruthonline",
+  },
 };
