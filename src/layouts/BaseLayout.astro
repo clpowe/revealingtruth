@@ -16,8 +16,11 @@ type Props = ComponentProps<typeof SEO>;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <SEO {...Astro.props} />
     <Font cssVariable="--font-archivo" preload />
-    <Font cssVariable="--font-instrument-serif" />
-    <Font cssVariable="--font-dm-sans" />
+    <Font
+      cssVariable="--font-instrument-serif"
+      preload={[{ style: "italic", subset: "latin" }]}
+    />
+    <Font cssVariable="--font-dm-sans" preload={[{ subset: "latin" }]} />
     <slot name="head" />
   </head>
 
