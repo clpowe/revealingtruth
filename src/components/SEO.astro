@@ -1,0 +1,77 @@
+---
+import type { ImageMetadata } from "astro";
+import { seo } from "../config/seo";
+
+interface Props {
+  // Omit on the home page to render the site name alone
+  title?: string;
+  description?: string;
+  image?: ImageMetadata | string;
+  imageAlt?: string;
+  noindex?: boolean;
+  type?: "website" | "article";
+}
+
+const {
+  title,
+  description = seo.defaultDescription,
+  image = seo.defaultImage,
+  imageAlt = seo.defaultImageAlt,
+  noindex = false,
+  type = "website",
+} = Astro.props;
+
+const fullTitle =
+  title && title !== seo.siteName
+    ? `${title}${seo.titleSeparator}${seo.siteName}`
+    : seo.siteName;
+
+// Falls back to the request origin when `site` is unset in astro.config
+const origin = Astro.site ?? Astro.url;
+const canonicalURL = new URL(Astro.url.pathname, origin);
+
+const imageSrc = typeof image === "string" ? image : image.src;
+const imageURL = new URL(imageSrc, origin);
+---
+
+<title>{fullTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonicalURL} />
+{noindex && <meta name="robots" content="noindex, nofollow" />}
+
+<meta property="og:title" content={fullTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonicalURL} />
+<meta property="og:image" content={imageURL} />
+<meta property="og:image:alt" content={imageAlt} />
+{typeof image !== "string" && (
+  <>
+    <meta property="og:image:width" content={String(image.width)} />
+    <meta property="og:image:height" content={String(image.height)} />
+  </>
+)}
+<meta property="og:type" content={type} />
+<meta property="og:site_name" content={seo.siteName} />
+<meta property="og:locale" content={seo.locale} />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={fullTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={imageURL} />
+<meta name="twitter:image:alt" content={imageAlt} />
+
+<link rel="icon" href={seo.favicons.ico} sizes="32x32" />
+<link
+  rel="icon"
+  href={seo.favicons.svgLight}
+  type="image/svg+xml"
+  media="(prefers-color-scheme: light)"
+/>
+<link
+  rel="icon"
+  href={seo.favicons.svgDark}
+  type="image/svg+xml"
+  media="(prefers-color-scheme: dark)"
+/>
+<link rel="apple-touch-icon" href={seo.favicons.appleTouch} />
+<meta name="theme-color" content={seo.themeColor} />
