@@ -2,6 +2,7 @@
 export type MetaData = {
   time: string;
   location: string;
+  phone: string;
 };
 
 export type Item = {
@@ -26,6 +27,7 @@ const { index, title, href, metadata } = Astro.props;
     <div class="meta">
       <p>{metadata?.time}</p>
       <p>{metadata?.location}</p>
+      <p>{metadata?.phone}</p>
     </div>
   </a>
 </li>
@@ -72,5 +74,6 @@ const { index, title, href, metadata } = Astro.props;
     font-size: var(--font-size-sm);
     line-height: 1.8;
     color: var(--text-main);
+    text-align: end;
   }
 </style>

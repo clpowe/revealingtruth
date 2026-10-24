@@ -203,6 +203,13 @@ const { image, alt, video } = Astro.props;
     border-radius: var(--border-radius-pill);
   }
 
+  /* Out of sight for pointer users; keyboard users still get it on focus,
+     so the looping video can always be paused (WCAG 2.2.2) */
+  .toggle:not(:focus-visible) {
+    opacity: 0;
+    pointer-events: none;
+  }
+
   .toggle:focus-visible {
     outline: var(--border-width-2) solid var(--focus-ring);
     outline-offset: 3px;

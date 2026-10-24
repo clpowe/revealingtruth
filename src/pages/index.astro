@@ -13,6 +13,8 @@ import ListBItem from "../components/ListB/ListBItem.astro";
 import Button from "../components/Button.astro";
 import Testimony from "../components/Testimony.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { homeStructuredData } from "../config/structured-data";
+import { seo } from "../config/seo";
 
 import pastorBryanImage from "../assets/images/PastorBryan.jpg";
 import mediaStripImage from "../assets/images/media-strip.png";
@@ -28,6 +30,7 @@ const locations: Item[] = [
     metadata: {
       time: "Sun 9:00 & 11:00AM",
       location: "5201 N. Armenia Ave. Tampa, FL 33603",
+      phone: "(813) 354-1135",
     },
   },
   {
@@ -35,8 +38,9 @@ const locations: Item[] = [
     title: "Wesley Chapel",
     href: "#",
     metadata: {
-      time: "Sun 9:00 & 11:00AM",
-      location: "5201 N. Armenia Ave. Tampa, FL 33603",
+      time: "Sun 9:00AM",
+      location: "2644 Cypress Ridge Blvd, Wesley Chapel, FL 33544",
+      phone: "(813) 354-1135",
     },
   },
   {
@@ -44,8 +48,9 @@ const locations: Item[] = [
     title: "St. Petersburg",
     href: "#",
     metadata: {
-      time: "Sun 9:00 & 11:00AM",
-      location: "5201 N. Armenia Ave. Tampa, FL 33603",
+      time: "Sun 11:00AM",
+      location: "Contact Us For Park Locations",
+      phone: "(813) 354-1135",
     },
   },
 ];
@@ -58,7 +63,13 @@ const ministries: Item[] = [
 ];
 ---
 
-<BaseLayout title="Revealing Truth Ministries">
+<BaseLayout>
+  <script
+    slot="head"
+    type="application/ld+json"
+    is:inline
+    set:html={JSON.stringify(homeStructuredData).replace(/</g, "\\u003c")}
+  />
   <main>
     <Hero image={pastorBryanImage} alt="" video={heroVideo}>
       Experience <br />
@@ -66,9 +77,9 @@ const ministries: Item[] = [
       <SocialFollow
         slot="aside"
         links={[
-          { name: "youtube", label: "YouTube", href: "#" },
-          { name: "instagram", label: "Instagram", href: "#" },
-          { name: "facebook", label: "Facebook", href: "#" },
+          { name: "youtube", label: "YouTube", href: seo.social.youtube },
+          { name: "instagram", label: "Instagram", href: seo.social.instagram },
+          { name: "facebook", label: "Facebook", href: seo.social.facebook },
         ]}
       />
     </Hero>

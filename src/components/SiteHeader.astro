@@ -1,0 +1,364 @@
+---
+import { Image } from "astro:assets";
+
+import Button from "./Button.astro";
+import MenuToggle from "./MenuToggle.astro";
+import logo from "../assets/logo/revealing-truth-logo.svg";
+import separationSeasonLogo from "../assets/logo/separation-season-logo-black.svg";
+import embracingLegacyLogo from "../assets/logo/embracing-legacy-logo-black.svg";
+
+const navigation = [
+  {
+    heading: "New Here",
+    links: [
+      { label: "Plan a Visit", href: "#" },
+      { label: "About Us", href: "#" },
+      { label: "Our Values", href: "#" },
+      { label: "Our Pastors", href: "#" },
+    ],
+  },
+  {
+    heading: "Locations",
+    links: [
+      { label: "Tampa", href: "#" },
+      { label: "Wesley Chapel", href: "#" },
+      { label: "St. Petersburg", href: "#" },
+    ],
+  },
+  {
+    heading: "Ministries",
+    links: [
+      { label: "Creative Kids", href: "#" },
+      { label: "UR Student Ministries", href: "#" },
+      { label: "Creative Collective", href: "#" },
+      { label: "Outreach & Global Missions", href: "#" },
+    ],
+  },
+  {
+    heading: "Watch",
+    links: [
+      { label: "Watch Live", href: "#" },
+      { label: "Sermons", href: "#" },
+    ],
+  },
+];
+
+// Heights balance the marks optically: the wide script needs less height
+// than the stacked emblem to carry the same weight
+const externalSites = [
+  {
+    name: "Separation Season",
+    logo: separationSeasonLogo,
+    href: "#",
+    height: "2.25rem",
+  },
+  {
+    name: "Embracing Legacy",
+    logo: embracingLegacyLogo,
+    href: "#",
+    height: "3rem",
+  },
+];
+
+// Unique per render: the components page shows a second header
+const menuId = `site-menu-${crypto.randomUUID().slice(0, 8)}`;
+---
+
+<header class="site-header">
+  <div class="site-header__inner wrapper repel">
+    <a class="site-header__logo" href="/">
+      <Image src={logo} alt="Revealing Truth Church home" />
+    </a>
+    <MenuToggle target={menuId} />
+  </div>
+
+  {/* Native popover: top layer, light dismiss, Esc and focus return all come
+      from the browser. The panel floats over the header, so it carries its
+      own close toggle. */}
+  <div
+    id={menuId}
+    class="site-menu wrapper"
+    data-width="narrow"
+    popover
+    data-theme="light"
+  >
+    <div class="site-menu__bar">
+      <MenuToggle target={menuId} action="hide" label="Close menu" autofocus />
+    </div>
+
+    <nav class="site-menu__body wrapper" data-width="narrow" aria-label="Main">
+      <div class="site-menu__groups">
+        {navigation.map(({ heading, links }, index) => (
+          <div class="site-menu__item" style={`--index: ${index}`}>
+            <h2 class="site-menu__heading" id={`${menuId}-${index}`}>
+              {heading}
+            </h2>
+            <ul
+              role="list"
+              class="site-menu__list"
+              aria-labelledby={`${menuId}-${index}`}
+            >
+              {links.map(({ label, href }) => (
+                <li>
+                  <a
+                    class="site-menu__link"
+                    href={href}
+                    aria-current={
+                      Astro.url.pathname === href ? "page" : undefined
+                    }
+                  >
+                    {label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      <div
+        class="site-menu__footer site-menu__item"
+        style={`--index: ${navigation.length}`}
+      >
+        <div class="site-menu__actions cluster">
+          <Button type="accent" href="#">
+            Connect with us
+          </Button>
+          <Button type="outline" href="#">
+            Give
+          </Button>
+        </div>
+
+        <ul role="list" class="site-menu__sites cluster">
+          {externalSites.map(({ name, logo, href, height }) => (
+            <li>
+              <a
+                class="site-menu__site"
+                href={href}
+                target="_blank"
+                rel="noopener"
+                style={`--logo-height: ${height}`}
+              >
+                <Image src={logo} alt={name} />
+                <span class="visually-hidden">(opens in a new tab)</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<style>
+  /* Site header ---------------------------------------------------------- */
+  .site-header {
+    --site-header-padding: clamp(1.5rem, 1.3rem + 0.5vw, 1.875rem);
+
+    position: absolute;
+    z-index: 10000;
+    inset-inline: 0;
+    inset-block-start: 0;
+    padding-block: var(--site-header-padding);
+    color: var(--text-on-media);
+  }
+
+  .site-header__logo {
+    position: relative;
+    z-index: 2;
+    display: block;
+  }
+
+  .site-header__logo img {
+    inline-size: 6.25rem;
+    block-size: auto;
+  }
+
+  /* Site menu — a frosted card that drops in from the top of the screen ---
+     Closed: the UA popover rule sets display: none. allow-discrete holds
+     display (and overlay, which keeps it in the top layer) until the exit
+     transition ends; @starting-style gives the entry transition its start. */
+  .site-menu {
+    --site-menu-inset: var(--size-200);
+    --site-menu-radius: var(--border-radius-3);
+    /* The brand ring disappears on white */
+    --focus-ring: var(--text-high-contrast);
+
+    position: fixed;
+    inset: var(--site-menu-inset) var(--site-menu-inset) auto;
+    /* Stays above the header where a browser lacks overlay and drops the
+       panel from the top layer before its exit transition ends */
+    z-index: 3;
+    inline-size: auto;
+    max-block-size: calc(100dvh - var(--site-menu-inset) * 2);
+    margin: 0;
+    padding: var(--size-300) var(--size-600) var(--size-700);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    /* The page shows through, softened */
+    background-color: color-mix(
+      in srgb,
+      var(--background-main) 92%,
+      transparent
+    );
+    backdrop-filter: blur(1.5rem);
+    border: 0;
+    border-radius: var(--site-menu-radius);
+    box-shadow:
+      0 0.25rem 0.75rem rgb(0 0 0 / 0.06),
+      0 2rem 4rem -1.5rem rgb(0 0 0 / 0.35);
+    /* Starts with its bottom edge at the top of the screen */
+    translate: 0 calc(-100% - var(--site-menu-inset));
+    transition:
+      translate var(--duration-slow) var(--ease-in),
+      display var(--duration-slow) allow-discrete,
+      overlay var(--duration-slow) allow-discrete;
+    max-width: 60rem;
+    margin-inline: auto;
+  }
+
+  /* The card supplies the gutter, so the wrapped content sits flush inside it */
+  .site-menu .wrapper {
+    --wrapper-padding: 0rem;
+  }
+
+  /* Slow in with a long, soft settle; quicker and gentler out */
+  .site-menu:popover-open {
+    translate: 0 0;
+    transition-duration: var(--duration-slower);
+    transition-timing-function: var(--ease-smooth);
+  }
+
+  @starting-style {
+    .site-menu:popover-open {
+      translate: 0 calc(-100% - var(--site-menu-inset));
+    }
+  }
+
+  .site-menu::backdrop {
+    background-color: rgb(0 0 0 / 0);
+    transition:
+      background-color var(--duration-slow) var(--ease-in),
+      display var(--duration-slow) allow-discrete,
+      overlay var(--duration-slow) allow-discrete;
+  }
+
+  .site-menu:popover-open::backdrop {
+    background-color: var(--clr-overlay, rgb(0 0 0 / 0.4));
+    transition-duration: var(--duration-slower);
+    transition-timing-function: var(--ease-smooth);
+  }
+
+  @starting-style {
+    .site-menu:popover-open::backdrop {
+      background-color: rgb(0 0 0 / 0);
+    }
+  }
+
+  /* Items follow the panel down, one after another. The transition lives
+     only on the open state, so on close they leave with the panel. */
+  .site-menu:popover-open .site-menu__item {
+    transition:
+      opacity var(--duration-slower) var(--ease-smooth),
+      translate var(--duration-slower) var(--ease-smooth);
+    transition-delay: calc(var(--duration-fast) + var(--index) * 60ms);
+  }
+
+  @starting-style {
+    .site-menu:popover-open .site-menu__item {
+      opacity: 0;
+      translate: 0 calc(var(--size-400) * -1);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-menu:popover-open .site-menu__item {
+      transition-delay: 0s;
+    }
+  }
+
+  .site-menu__bar {
+    display: flex;
+    justify-content: flex-end;
+    color: var(--text-high-contrast);
+  }
+
+  /* As many centred columns as fit, so phones get two and desktop one per
+     group */
+  .site-menu__groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(8rem, 100%), 1fr));
+    gap: var(--size-700) var(--size-500);
+    text-align: center;
+  }
+
+  .site-menu__heading {
+    margin-block-end: var(--size-400);
+    font-size: var(--font-size-md);
+    font-weight: var(--fw-semi-bold);
+    line-height: var(--lh-heading);
+    color: var(--text-high-contrast);
+  }
+
+  /* Tight leading so a wrapped link reads as one item; the gap spaces them */
+  .site-menu__list {
+    display: grid;
+    gap: var(--size-400);
+    line-height: var(--lh-heading);
+  }
+
+  /* Brand green is too light for text on white, so it marks links as an
+     underline instead */
+  .site-menu__link {
+    color: var(--text-main);
+    text-decoration: underline 0.12em transparent;
+    text-underline-offset: 0.3em;
+    transition:
+      color var(--duration-base) var(--ease-out),
+      text-decoration-color var(--duration-base) var(--ease-out);
+  }
+
+  .site-menu__link:hover,
+  .site-menu__link[aria-current="page"] {
+    color: var(--text-high-contrast);
+    text-decoration-color: var(--background-accent);
+  }
+
+  .site-menu__footer {
+    display: grid;
+    gap: var(--size-600);
+    margin-block-start: var(--size-500);
+    padding-block-start: var(--size-700);
+    border-block-start: var(--border-width-hairline) solid var(--border-subtle);
+  }
+
+  .site-menu__actions,
+  .site-menu__sites {
+    --cluster-justify: center;
+  }
+
+  .site-menu__sites {
+    --cluster-gap: var(--size-600);
+  }
+
+  .site-menu__site {
+    display: block;
+    transition: opacity var(--duration-base) var(--ease-out);
+  }
+
+  .site-menu__site img {
+    inline-size: auto;
+    block-size: var(--logo-height);
+  }
+
+  .site-menu__site:hover {
+    opacity: 0.6;
+  }
+
+  .site-menu__link:focus-visible,
+  .site-menu__site:focus-visible {
+    outline: var(--border-width-2) solid var(--focus-ring);
+    outline-offset: 4px;
+    border-radius: var(--border-radius-1);
+  }
+</style>

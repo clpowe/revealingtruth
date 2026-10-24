@@ -139,13 +139,18 @@
 
     --border-radius-1: 0.25rem;
     --border-radius-2: 0.75rem;
+    --border-radius-3: 1.5rem;
     --border-radius-pill: 100vmax;
     --border-width-hairline: 1px;
     --border-width-2: 2px;
 
     --duration-fast: 150ms;
     --duration-base: 250ms;
+    --duration-slow: 500ms;
+    --duration-slower: 800ms;
     --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+    --ease-smooth: cubic-bezier(0.2, 0, 0, 1); /* gentle start, long soft settle */
+    --ease-in: cubic-bezier(0.32, 0, 0.67, 0);
 
     /* ---------------------------------------------------------------
        Layout tokens
