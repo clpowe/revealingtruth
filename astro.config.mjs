@@ -2,12 +2,14 @@
 import { defineConfig, fontProviders } from "astro/config";
 import cloudflare from "@astrojs/cloudflare";
 
+import sitemap from "@astrojs/sitemap";
+
 // https://astro.build/config
 export default defineConfig({
   adapter: cloudflare(),
-  site: "https://<domain>",
-
+  site: "https://www.revealingtruth.org/",
   session: false,
+
   fonts: [
     {
       provider: fontProviders.google(),
@@ -39,5 +41,11 @@ export default defineConfig({
       styles: ["normal"],
       fallbacks: ["system-ui", "sans-serif"],
     },
+  ],
+
+  integrations: [
+    sitemap({
+      filter: (page) => !page.includes("/components"),
+    }),
   ],
 });
