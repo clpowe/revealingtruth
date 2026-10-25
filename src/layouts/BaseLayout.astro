@@ -5,6 +5,7 @@ import "../styles/global.css";
 import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import SEO from "../components/SEO.astro";
+import ConnectWidget from "../components/ConnectWidget.astro";
 
 type Props = ComponentProps<typeof SEO>;
 ---
@@ -28,5 +29,6 @@ type Props = ComponentProps<typeof SEO>;
     <SiteHeader />
     <slot />
     <SiteFooter />
+    <ConnectWidget />
   </body>
 </html>

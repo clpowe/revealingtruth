@@ -16,6 +16,9 @@ import Testimony from "../components/Testimony.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import MenuToggle from "../components/MenuToggle.astro";
+import Field from "../components/Field.astro";
+import Checkbox from "../components/Checkbox.astro";
+import ConnectWidget from "../components/ConnectWidget.astro";
 
 import pastorBryanImage from "../assets/images/PastorBryan.jpg";
 import mediaimage from "../assets/images/media-strip.png";
@@ -110,6 +113,86 @@ const listAData: Item[] = [
           </div>
         </figure>
       </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Field</h3>
+        <code>.field</code>
+        <p style="max-inline-size: 34em;">
+          Pill text input in DM Sans; multiline renders a rounded textarea. The
+          label is visually hidden and repeated as the placeholder. Focus
+          darkens the edge and adds the focus ring.
+        </p>
+      </header>
+      <div class="equal-columns">
+        <figure class="flow">
+          <figcaption>Light</figcaption>
+          <div class="fig-content flow" data-theme="light">
+            <Field label="Name" name="demo-name" />
+            <Field label="How can we help? (optional)" name="demo-message" multiline />
+          </div>
+        </figure>
+        <figure class="flow">
+          <figcaption>Dark</figcaption>
+          <div class="fig-content flow" data-theme="dark">
+            <Field label="Name" name="demo-name" />
+            <Field label="How can we help? (optional)" name="demo-message" multiline />
+          </div>
+        </figure>
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Checkbox</h3>
+        <code>.checkbox</code>
+        <p style="max-inline-size: 34em;">
+          A native checkbox restyled as a square box; the tick is drawn with
+          clip-path in the theme's background colour.
+        </p>
+      </header>
+      <div class="equal-columns">
+        <figure class="flow">
+          <figcaption>Light · unchecked and checked</figcaption>
+          <div class="fig-content cluster" data-theme="light">
+            <Checkbox name="demo-sms">Text me updates</Checkbox>
+            <Checkbox name="demo-sms" checked>Text me updates</Checkbox>
+          </div>
+        </figure>
+        <figure class="flow">
+          <figcaption>Dark · unchecked and checked</figcaption>
+          <div class="fig-content cluster" data-theme="dark">
+            <Checkbox name="demo-sms">Text me updates</Checkbox>
+            <Checkbox name="demo-sms" checked>Text me updates</Checkbox>
+          </div>
+        </figure>
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Connect widget</h3>
+        <code>.connect</code>
+        <p style="max-inline-size: 34em;">
+          Pill fixed to the bottom corner of every page. It opens a contact card
+          as a native popover over a dimmed page; the pill's X hides it for the
+          rest of the session. The form logs its data to the console for now.
+          The live widget is in the corner; below, both parts in place.
+        </p>
+      </header>
+      <figure class="flow">
+        <figcaption>Pill and card</figcaption>
+        <div class="fig-content" style="background-color: var(--clr-neutral-200);">
+          <ConnectWidget inline />
+        </div>
+      </figure>
     </article>
   </section>
 

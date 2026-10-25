@@ -1,0 +1,75 @@
+---
+import type { HTMLAttributes } from "astro/types";
+
+type Props = (HTMLAttributes<"input"> | HTMLAttributes<"textarea">) & {
+  /** Read by screen readers and shown as the placeholder */
+  label: string;
+  /** Renders a textarea instead of an input */
+  multiline?: boolean;
+};
+
+const { label, multiline = false, ...rest } = Astro.props;
+const Control = multiline ? "textarea" : "input";
+---
+
+{/* The label stays in the accessibility tree, so the placeholder is never
+    the only name the control has */}
+<label class="field">
+  <span class="visually-hidden">{label}</span>
+  <Control
+    class="field__control"
+    placeholder={label}
+    rows={multiline ? 4 : undefined}
+    {...rest}
+  />
+</label>
+
+<style>
+  /* Field — pill input, or a rounded box when it holds multiple lines */
+  .field {
+    display: block;
+  }
+
+  .field__control {
+    display: block;
+    inline-size: 100%;
+    padding: 0.85em 1.5em;
+    font-family: var(--ff-ui);
+    font-size: var(--font-size-sm);
+    line-height: var(--lh-heading);
+    color: var(--text-high-contrast);
+    background-color: var(--background-main);
+    border: var(--border-width-hairline) solid var(--border-subtle);
+    border-radius: var(--border-radius-pill);
+    /* Transparent at rest, so focus fades the ring in rather than from
+       currentColor */
+    outline: var(--border-width-2) solid transparent;
+    outline-offset: 3px;
+    transition:
+      border-color var(--duration-fast) var(--ease-out),
+      outline-color var(--duration-fast) var(--ease-out);
+  }
+
+  /* A pill radius on a tall box would round it into a lozenge */
+  textarea.field__control {
+    min-block-size: 7rem;
+    padding-block: 1.1em;
+    border-radius: var(--border-radius-3);
+    resize: vertical;
+  }
+
+  .field__control::placeholder {
+    color: var(--text-main);
+    opacity: 1;
+  }
+
+  .field__control:hover {
+    border-color: var(--text-main);
+  }
+
+  /* Dark edge with the brand ring held off it, so the ring reads on white */
+  .field__control:focus-visible {
+    border-color: var(--text-high-contrast);
+    outline-color: var(--focus-ring);
+  }
+</style>
