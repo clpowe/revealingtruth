@@ -23,6 +23,7 @@ export const seo = {
   },
   logo: "/revealing-truth-logo.svg",
   telephone: "+1-813-354-1135",
+  givingURL: "https://pushpay.com/g/revealingtruth",
   social: {
     facebook: "https://www.facebook.com/revealingtruth",
     instagram: "https://www.instagram.com/revealingtruth",

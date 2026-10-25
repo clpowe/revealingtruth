@@ -5,8 +5,11 @@ import "../styles/global.css";
 import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import SEO from "../components/SEO.astro";
+import ConnectWidget from "../components/ConnectWidget.astro";
 
-type Props = ComponentProps<typeof SEO>;
+type Props = ComponentProps<typeof SEO> & ComponentProps<typeof SiteHeader>;
+
+const { position, ...seoProps } = Astro.props;
 ---
 
 <!doctype html>
@@ -14,7 +17,7 @@ type Props = ComponentProps<typeof SEO>;
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <SEO {...Astro.props} />
+    <SEO {...seoProps} />
     <Font cssVariable="--font-archivo" preload />
     <Font
       cssVariable="--font-instrument-serif"
@@ -25,8 +28,9 @@ type Props = ComponentProps<typeof SEO>;
   </head>
 
   <body data-theme="light">
-    <SiteHeader />
+    <SiteHeader position={position} />
     <slot />
     <SiteFooter />
+    <ConnectWidget />
   </body>
 </html>

@@ -15,45 +15,13 @@ import Testimony from "../components/Testimony.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { homeStructuredData } from "../config/structured-data";
 import { seo } from "../config/seo";
+import { locations } from "../config/locations";
 
 import pastorBryanImage from "../assets/images/PastorBryan.jpg";
 import mediaStripImage from "../assets/images/media-strip.png";
 import bryanandRashida from "../assets/images/bryan-rashida-powe.png";
 import pastordeborahPowe from "../assets/images/pastordeborahpowe.png";
 import testimonialImage from "../assets/images/testimonial.png";
-
-const locations: Item[] = [
-  {
-    index: "tp",
-    title: "Tampa",
-    href: "#",
-    metadata: {
-      time: "Sun 9:00 & 11:00AM",
-      location: "5201 N. Armenia Ave. Tampa, FL 33603",
-      phone: "(813) 354-1135",
-    },
-  },
-  {
-    index: "wc",
-    title: "Wesley Chapel",
-    href: "#",
-    metadata: {
-      time: "Sun 9:00AM",
-      location: "2644 Cypress Ridge Blvd, Wesley Chapel, FL 33544",
-      phone: "(813) 354-1135",
-    },
-  },
-  {
-    index: "sp",
-    title: "St. Petersburg",
-    href: "#",
-    metadata: {
-      time: "Sun 11:00AM",
-      location: "Contact Us For Park Locations",
-      phone: "(813) 354-1135",
-    },
-  },
-];
 
 const ministries: Item[] = [
   { index: "ck", title: "Creative Kids", href: "#" },
@@ -288,7 +256,9 @@ const ministries: Item[] = [
         </h2>
         <div class="cluster">
           <Button type="accent">Connect with us</Button>
-          <Button type="outline">Give</Button>
+          <Button type="outline" href={seo.givingURL}>
+            Give
+          </Button>
         </div>
       </div>
     </section>

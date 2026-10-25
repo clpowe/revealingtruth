@@ -1,0 +1,387 @@
+---
+import Tag from "./Tag.astro";
+import Button from "./Button.astro";
+import Field from "./Field.astro";
+import Checkbox from "./Checkbox.astro";
+import MenuToggle from "./MenuToggle.astro";
+
+interface Props {
+  /** Renders the pill and card in place, not as popovers: for the
+      components page, where the live widget is already on screen */
+  inline?: boolean;
+}
+
+const { inline = false } = Astro.props;
+
+const launcherId = "connect-launcher";
+const panelId = "connect-panel";
+const titleId = inline ? "connect-title-demo" : "connect-title";
+---
+
+<aside class="connect" aria-label="Connect with us" data-inline={inline || undefined}>
+  {/* A manual popover: no light dismiss, and the close toggle can hide it
+      (and draw its X) the same way it does the site menu */}
+  <div
+    id={inline ? undefined : launcherId}
+    class="connect__launcher"
+    popover={inline ? undefined : "manual"}
+    data-theme="dark"
+  >
+    <button
+      class="connect__open"
+      type="button"
+      popovertarget={inline ? undefined : panelId}
+    >
+      <span class="connect__dot" aria-hidden="true"></span>
+      Connect with us
+    </button>
+    {inline ? (
+      <MenuToggle expanded label="Dismiss" />
+    ) : (
+      <MenuToggle target={launcherId} action="hide" label="Dismiss" />
+    )}
+  </div>
+
+  {/* Native popover, like the site menu: top layer, light dismiss, Esc and
+      focus return all come from the browser */}
+  <div
+    id={inline ? undefined : panelId}
+    class="connect__panel"
+    popover={inline ? undefined : "auto"}
+    data-theme="light"
+  >
+    <div class="connect__close">
+      {inline ? (
+        <MenuToggle expanded label="Close" />
+      ) : (
+        <MenuToggle target={panelId} action="hide" label="Close" autofocus />
+      )}
+    </div>
+
+    <form class="connect__form" aria-labelledby={titleId}>
+      <header class="connect__header flow">
+        <Tag>connect</Tag>
+        <h2 class="connect__title" id={titleId}>
+          We'd love to <span class="font-accent">meet you</span>.
+        </h2>
+      </header>
+      <Field label="Name" name="name" autocomplete="name" required />
+      <Field
+        label="Email"
+        name="email"
+        type="email"
+        autocomplete="email"
+        required
+      />
+      <Field label="Phone" name="phone" type="tel" autocomplete="tel" />
+      <Field label="How can we help? (optional)" name="message" multiline />
+      <Checkbox name="sms">Text me updates</Checkbox>
+      <Button type="accent">Send</Button>
+      <p class="connect__note">
+        Message and data rates may apply. Reply STOP to opt out.
+      </p>
+    </form>
+  </div>
+</aside>
+
+<style>
+  /* Connect — a pill in the corner that opens a contact card --------------
+     Closed: the UA popover rule sets display: none, so display is only set
+     on the open state (an author rule would beat the UA's). allow-discrete
+     holds display and overlay until the exit transition ends. */
+  .connect__launcher,
+  .connect__panel {
+    margin: 0;
+    border: 0;
+    box-shadow:
+      0 0.25rem 0.75rem rgb(0 0 0 / 0.06),
+      0 2rem 4rem -1.5rem rgb(0 0 0 / 0.35);
+  }
+
+  /* Motion mirrors the site menu, flipped to the bottom edge: each part
+     starts with its top edge at the bottom of the screen */
+  .connect__launcher[popover],
+  .connect__panel[popover] {
+    position: fixed;
+    inset: auto var(--size-500) var(--size-500) auto;
+    translate: 0 calc(100% + var(--size-500));
+    transition:
+      translate var(--duration-slow) var(--ease-in),
+      display var(--duration-slow) allow-discrete,
+      overlay var(--duration-slow) allow-discrete;
+  }
+
+  /* Slow in with a long, soft settle; quicker and gentler out */
+  .connect__launcher:popover-open,
+  .connect__panel:popover-open {
+    translate: 0 0;
+    transition-duration: var(--duration-slower);
+    transition-timing-function: var(--ease-smooth);
+  }
+
+  @starting-style {
+    .connect__launcher:popover-open,
+    .connect__panel:popover-open {
+      translate: 0 calc(100% + var(--size-500));
+    }
+  }
+
+  /* Launcher pill ------------------------------------------------------- */
+  .connect__launcher:is(:popover-open, :not([popover])) {
+    display: flex;
+    align-items: center;
+    gap: var(--size-400);
+  }
+
+  .connect__launcher {
+    padding: var(--size-100) var(--size-500);
+    color: var(--text-high-contrast);
+    background-color: var(--background-main);
+    border: var(--border-width-hairline) solid var(--border-subtle);
+    border-radius: var(--border-radius-pill);
+  }
+
+  .connect__launcher :global(.menu-toggle) {
+    --bars-size: 0.75rem;
+    --bar-gap: 0.25rem;
+  }
+
+  .connect__open {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--size-300);
+    padding-block: var(--size-200);
+    font-family: var(--ff-ui);
+    font-size: var(--font-size-sm);
+    line-height: var(--lh-heading);
+    color: inherit;
+  }
+
+  .connect__open:focus-visible {
+    outline: var(--border-width-2) solid var(--focus-ring);
+    outline-offset: 4px;
+    border-radius: var(--border-radius-1);
+  }
+
+  /* Brand dot inside a soft halo, which swells on hover */
+  .connect__dot {
+    inline-size: 0.625rem;
+    block-size: 0.625rem;
+    background-color: var(--background-accent);
+    border-radius: var(--border-radius-pill);
+    box-shadow: 0 0 0 0.2rem
+      color-mix(in srgb, var(--background-accent) 35%, transparent);
+    transition: box-shadow var(--duration-base) var(--ease-out);
+  }
+
+  .connect__open:hover .connect__dot {
+    box-shadow: 0 0 0 0.3rem
+      color-mix(in srgb, var(--background-accent) 35%, transparent);
+  }
+
+  /* Card ---------------------------------------------------------------- */
+  .connect__panel:is(:popover-open, :not([popover])) {
+    display: block;
+  }
+
+  .connect__panel {
+    inline-size: min(26rem, 100% - var(--size-500) * 2);
+    max-block-size: calc(100dvh - var(--size-500) * 2);
+    padding: var(--size-600);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background-color: var(--background-main);
+    border-radius: var(--border-radius-2);
+  }
+
+  .connect__panel:not([popover]) {
+    position: relative;
+  }
+
+  .connect__panel::backdrop {
+    background-color: rgb(0 0 0 / 0);
+    transition:
+      background-color var(--duration-slow) var(--ease-in),
+      display var(--duration-slow) allow-discrete,
+      overlay var(--duration-slow) allow-discrete;
+  }
+
+  .connect__panel:popover-open::backdrop {
+    background-color: var(--clr-overlay);
+    transition-duration: var(--duration-slower);
+    transition-timing-function: var(--ease-smooth);
+  }
+
+  @starting-style {
+    .connect__panel:popover-open::backdrop {
+      background-color: rgb(0 0 0 / 0);
+    }
+  }
+
+  /* Form rows follow the card up, one after another, with the site menu's
+     timing. A keyframe rather than a transition: the rows are other
+     components (Button keeps its own transitions), and the animation lives
+     only on the open state, so on close they leave with the card. */
+  .connect__form > :global(:nth-child(2)) {
+    --index: 1;
+  }
+
+  .connect__form > :global(:nth-child(3)) {
+    --index: 2;
+  }
+
+  .connect__form > :global(:nth-child(4)) {
+    --index: 3;
+  }
+
+  .connect__form > :global(:nth-child(5)) {
+    --index: 4;
+  }
+
+  .connect__form > :global(:nth-child(6)) {
+    --index: 5;
+  }
+
+  .connect__form > :global(:nth-child(7)) {
+    --index: 6;
+  }
+
+  .connect__form > :global(:nth-child(8)) {
+    --index: 7;
+  }
+
+  .connect__panel:popover-open .connect__form > :global(*) {
+    animation: connect-row-in var(--duration-slower) var(--ease-smooth)
+      backwards;
+    animation-delay: calc(var(--duration-fast) + var(--index, 0) * 60ms);
+  }
+
+  @keyframes connect-row-in {
+    from {
+      opacity: 0;
+      translate: 0 var(--size-400);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .connect__panel:popover-open .connect__form > :global(*) {
+      animation-delay: 0s;
+    }
+  }
+
+  /* Sits in the corner beside the tag rather than on a row of its own */
+  .connect__close {
+    position: absolute;
+    inset-block-start: var(--size-400);
+    inset-inline-end: var(--size-500);
+    color: var(--text-high-contrast);
+    /* The brand ring disappears on white */
+    --focus-ring: var(--text-high-contrast);
+  }
+
+  .connect__close :global(.menu-toggle) {
+    --bars-size: 0.875rem;
+    --bar-gap: 0.25rem;
+  }
+
+  .connect__form {
+    display: grid;
+    gap: var(--size-300);
+  }
+
+  .connect__header {
+    --flow-space: var(--size-300);
+
+    margin-block-end: var(--size-100);
+  }
+
+  .connect__title {
+    font-family: var(--ff-heading);
+    font-size: var(--font-size-heading-sm);
+    font-weight: var(--fw-semi-bold);
+    line-height: var(--lh-heading);
+    color: var(--text-high-contrast);
+  }
+
+  .connect__form > :global(.checkbox) {
+    justify-self: start;
+    margin-block: var(--size-300);
+  }
+
+  .connect__note {
+    font-family: var(--ff-ui);
+    font-size: var(--font-size-xs);
+    line-height: var(--lh-heading);
+    color: var(--text-main);
+  }
+
+  /* Components page: both parts side by side, in the flow */
+  .connect[data-inline] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--size-600);
+  }
+</style>
+
+<script>
+  const dismissedKey = "connect-dismissed";
+
+  // Storage can throw (private windows, blocked site data): the pill then
+  // simply comes back on each page
+  function isDismissed() {
+    try {
+      return sessionStorage.getItem(dismissedKey) === "true";
+    } catch {
+      return false;
+    }
+  }
+
+  for (const connect of document.querySelectorAll(
+    ".connect:not([data-inline])",
+  )) {
+    const launcher = connect.querySelector<HTMLElement>(".connect__launcher");
+    const panel = connect.querySelector<HTMLElement>(".connect__panel");
+    const open = connect.querySelector<HTMLButtonElement>(".connect__open");
+    const form = connect.querySelector<HTMLFormElement>(".connect__form");
+    if (!launcher || !panel || !open || !form) continue;
+
+    if (!isDismissed()) launcher.showPopover();
+
+    // The card takes the pill's place while it is open
+    panel.addEventListener("toggle", (event) => {
+      if ((event as ToggleEvent).newState === "open") {
+        launcher.hidePopover();
+        return;
+      }
+      if (isDismissed()) return;
+      launcher.showPopover();
+      // Focus return fails while the pill is hidden, leaving focus in the
+      // card through its exit transition; hand it to the pill instead
+      const focused = document.activeElement;
+      if (!focused || focused === document.body || panel.contains(focused)) {
+        open.focus();
+      }
+    });
+
+    // Closed by its own X, not by the card replacing it
+    launcher.addEventListener("toggle", (event) => {
+      if ((event as ToggleEvent).newState !== "closed") return;
+      if (panel.matches(":popover-open")) return;
+      try {
+        sessionStorage.setItem(dismissedKey, "true");
+      } catch {}
+    });
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const data = new FormData(form);
+      console.log("Connect form submitted", {
+        ...Object.fromEntries(data),
+        sms: data.has("sms"),
+      });
+      form.reset();
+      panel.hidePopover();
+    });
+  }
+</script>
