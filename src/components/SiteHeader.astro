@@ -2,6 +2,7 @@
 import { Image } from "astro:assets";
 
 import Button from "./Button.astro";
+import { seo } from "../config/seo";
 import MenuToggle from "./MenuToggle.astro";
 import logo from "../assets/logo/revealing-truth-logo.svg";
 import separationSeasonLogo from "../assets/logo/separation-season-logo-black.svg";
@@ -11,7 +12,6 @@ const navigation = [
   {
     heading: "New Here",
     links: [
-      { label: "Plan a Visit", href: "#" },
       { label: "About Us", href: "#" },
       { label: "Our Values", href: "#" },
       { label: "Our Pastors", href: "#" },
@@ -37,7 +37,7 @@ const navigation = [
   {
     heading: "Watch",
     links: [
-      { label: "Watch Live", href: "#" },
+      { label: "Watch Live", href: "/live" },
       { label: "Sermons", href: "#" },
     ],
   },
@@ -47,21 +47,21 @@ const navigation = [
 // than the stacked emblem to carry the same weight
 const externalSites = [
   {
-    name: "Separation Season",
-    logo: separationSeasonLogo,
-    href: "#",
-    height: "2.25rem",
-  },
-  {
     name: "Embracing Legacy",
     logo: embracingLegacyLogo,
-    href: "#",
+    href: "https://embracinglegacy.org/",
     height: "3rem",
+  },
+  {
+    name: "Separation Season",
+    logo: separationSeasonLogo,
+    href: "https://www.separation-season.com/",
+    height: "2.25rem",
   },
 ];
 
 // Unique per render: the components page shows a second header
-const menuId = `site-menu-${crypto.randomUUID().slice(0, 8)}`;
+const menuId = `site-menu`;
 ---
 
 <header class="site-header">
@@ -121,30 +121,29 @@ const menuId = `site-menu-${crypto.randomUUID().slice(0, 8)}`;
         style={`--index: ${navigation.length}`}
       >
         <div class="site-menu__actions cluster">
-          <Button type="accent" href="#">
+          <ul role="list" class="site-menu__sites cluster">
+            {externalSites.map(({ name, logo, href, height }) => (
+              <li>
+                <a
+                  class="site-menu__site"
+                  href={href}
+                  target="_blank"
+                  rel="noopener"
+                  style={`--logo-height: ${height}`}
+                >
+                  <Image src={logo} alt={name} />
+                  <span class="visually-hidden">(opens in a new tab)</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+          {/*<Button type="accent" href="#">
             Connect with us
-          </Button>
-          <Button type="outline" href="#">
+          </Button>*/}
+          <Button type="accent" href={seo.givingURL}>
             Give
           </Button>
         </div>
-
-        <ul role="list" class="site-menu__sites cluster">
-          {externalSites.map(({ name, logo, href, height }) => (
-            <li>
-              <a
-                class="site-menu__site"
-                href={href}
-                target="_blank"
-                rel="noopener"
-                style={`--logo-height: ${height}`}
-              >
-                <Image src={logo} alt={name} />
-                <span class="visually-hidden">(opens in a new tab)</span>
-              </a>
-            </li>
-          ))}
-        </ul>
       </div>
     </nav>
   </div>
@@ -161,6 +160,14 @@ const menuId = `site-menu-${crypto.randomUUID().slice(0, 8)}`;
     inset-block-start: 0;
     padding-block: var(--site-header-padding);
     color: var(--text-on-media);
+    /* The bar floats over media, including embedded players: only its
+       controls take clicks, so the strip between them falls through */
+    pointer-events: none;
+  }
+
+  .site-header__inner > :global(*),
+  .site-menu {
+    pointer-events: auto;
   }
 
   .site-header__logo {
