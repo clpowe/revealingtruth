@@ -29,10 +29,10 @@ const youtubeHref = videoId
 <BaseLayout
   title="Watch Live"
   description="Worship with Revealing Truth Church online. Watch our Sunday services live at 9:00 and 11:00AM, wherever you are."
+  position="static"
 >
   <main>
-    {/* Dark band: the site header floats over the player and its logo and
-        menu toggle are drawn for a dark backdrop */}
+    {/* Dark band continuing the static header's, so the two read as one */}
     <section class="live-player" data-theme="dark">
       <h1 class="visually-hidden">Watch Revealing Truth Church live</h1>
       {/* YouTube refuses to play (error 153) when the embed sends no
@@ -137,8 +137,9 @@ const youtubeHref = videoId
 
 <style>
   /* Player band ---------------------------------------------------------
-     Runs under the floating site header, as the home hero does, and stays
-     within one screen so the controls are never cut off */
+     Sits below the static site header, which would otherwise cover the
+     player's title bar and take its clicks. Capped at one screen so the
+     controls are never far below the fold */
   .live-player iframe {
     display: block;
     inline-size: 100%;

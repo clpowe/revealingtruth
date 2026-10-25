@@ -8,6 +8,14 @@ import logo from "../assets/logo/revealing-truth-logo.svg";
 import separationSeasonLogo from "../assets/logo/separation-season-logo-black.svg";
 import embracingLegacyLogo from "../assets/logo/embracing-legacy-logo-black.svg";
 
+interface Props {
+  /** "overlay" floats over the page's opening media; "static" sits in the
+      flow as a dark band, for pages whose media must not be covered */
+  position?: "overlay" | "static";
+}
+
+const { position = "overlay" } = Astro.props;
+
 const navigation = [
   {
     heading: "New Here",
@@ -39,7 +47,7 @@ const navigation = [
     heading: "Watch",
     links: [
       { label: "Watch Live", href: "/live" },
-      { label: "Sermons", href: "#" },
+      { label: "Sermons", href: seo.social.youtube, external: true },
     ],
   },
 ];
@@ -65,7 +73,10 @@ const externalSites = [
 const menuId = `site-menu`;
 ---
 
-<header class="site-header">
+<header
+  class="site-header"
+  data-position={position === "static" ? "static" : undefined}
+>
   <div class="site-header__inner wrapper repel">
     <a class="site-header__logo" href="/">
       <Image src={logo} alt="Revealing Truth Church home" />
@@ -99,16 +110,21 @@ const menuId = `site-menu`;
               class="site-menu__list"
               aria-labelledby={`${menuId}-${index}`}
             >
-              {links.map(({ label, href }) => (
+              {links.map(({ label, href, external }) => (
                 <li>
                   <a
                     class="site-menu__link"
                     href={href}
+                    target={external ? "_blank" : undefined}
+                    rel={external ? "noopener" : undefined}
                     aria-current={
                       Astro.url.pathname === href ? "page" : undefined
                     }
                   >
                     {label}
+                    {external && (
+                      <span class="visually-hidden"> (opens in a new tab)</span>
+                    )}
                   </a>
                 </li>
               ))}
@@ -164,6 +180,13 @@ const menuId = `site-menu`;
     /* The bar floats over media, including embedded players: only its
        controls take clicks, so the strip between them falls through */
     pointer-events: none;
+  }
+
+  /* Exception: in the flow, over its own dark band, so an embedded player
+     below it keeps its title bar and controls clear */
+  .site-header[data-position="static"] {
+    position: relative;
+    background-color: var(--background-dark);
   }
 
   .site-header__inner > :global(*),
