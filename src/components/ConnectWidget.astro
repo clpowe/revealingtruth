@@ -1,4 +1,7 @@
 ---
+import { actions } from "astro:actions";
+import { LIMITS } from "../config/prayers.ts";
+
 import Tag from "./Tag.astro";
 import Button from "./Button.astro";
 import Field from "./Field.astro";
@@ -16,9 +19,17 @@ const { inline = false } = Astro.props;
 const launcherId = "connect-launcher";
 const panelId = "connect-panel";
 const titleId = inline ? "connect-title-demo" : "connect-title";
+/* Pages with the ClientRouter keep the live widget, its listeners and
+   whether it's open across navigations instead of swapping it out */
+const persist = inline ? undefined : "connect-widget";
 ---
 
-<aside class="connect" aria-label="Connect with us" data-inline={inline || undefined}>
+<aside
+  class="connect"
+  aria-label="Connect with us"
+  data-inline={inline || undefined}
+  data-astro-transition-persist={persist}
+>
   {/* A manual popover: no light dismiss, and the close toggle can hide it
       (and draw its X) the same way it does the site menu */}
   <div
@@ -58,29 +69,63 @@ const titleId = inline ? "connect-title-demo" : "connect-title";
       )}
     </div>
 
-    <form class="connect__form" aria-labelledby={titleId}>
+    <form
+      class="connect__form"
+      aria-labelledby={titleId}
+      method="POST"
+      action={`/connect${actions.submitPrayerRequest}`}
+    >
       <header class="connect__header flow">
         <Tag>connect</Tag>
         <h2 class="connect__title" id={titleId}>
           We'd love to <span class="font-accent">meet you</span>.
         </h2>
       </header>
-      <Field label="Name" name="name" autocomplete="name" required />
+      <Field
+        label="Name"
+        name="name"
+        autocomplete="name"
+        aria-required
+        required
+        maxlength={LIMITS.name}
+      />
       <Field
         label="Email"
         name="email"
         type="email"
         autocomplete="email"
+        maxlength={LIMITS.email}
         required
       />
-      <Field label="Phone" name="phone" type="tel" autocomplete="tel" />
-      <Field label="How can we help? (optional)" name="message" multiline />
-      <Checkbox name="sms">Text me updates</Checkbox>
+      <Field
+        label="Phone"
+        name="phone"
+        type="tel"
+        autocomplete="tel"
+        maxlength={LIMITS.phone}
+      />
+      <Field
+        label="How can we help? (optional)"
+        name="message"
+        multiline
+        maxlength={LIMITS.message}
+      />
+      <Checkbox name="sms" value="false">
+        Text me updates
+      </Checkbox>
       <Button type="accent">Send</Button>
       <p class="connect__note">
         Message and data rates may apply. Reply STOP to opt out.
       </p>
+      <p class="connect__status" role="alert"></p>
     </form>
+    <div class="connect__thanks flow" hidden>
+      <Tag>connect</Tag>
+      <h2 class="connect__title" tabindex="-1">
+        Thank you. <span class="font-accent">We'll be in touch.</span>
+      </h2>
+      <p class="connect__note">Your message reached our team.</p>
+    </div>
   </div>
 </aside>
 
@@ -322,13 +367,36 @@ const titleId = inline ? "connect-title-demo" : "connect-title";
     align-items: flex-start;
     gap: var(--size-600);
   }
+
+  /* The grid display above would otherwise beat the hidden attribute */
+  .connect__form[hidden] {
+    display: none;
+  }
+
+  .connect__status {
+    font-family: var(--ff-ui);
+    font-size: var(--font-size-sm);
+    font-weight: var(--fw-bold);
+    color: var(--text-high-contrast);
+  }
+
+  /* No empty row in the grid until there's something to say */
+  .connect__status:empty {
+    display: none;
+  }
+
+  /* Focus moves here only so screen readers hear the thank-you */
+  .connect__thanks .connect__title:focus {
+    outline: none;
+  }
 </style>
 
 <script>
-  const dismissedKey = "connect-dismissed";
+  import { actions, isInputError } from "astro:actions";
 
-  // Storage can throw (private windows, blocked site data): the pill then
-  // simply comes back on each page
+  const dismissedKey = "connect-dismissed";
+  const sendFailed = "We couldn't send your message. Please try again.";
+
   function isDismissed() {
     try {
       return sessionStorage.getItem(dismissedKey) === "true";
@@ -344,7 +412,12 @@ const titleId = inline ? "connect-title-demo" : "connect-title";
     const panel = connect.querySelector<HTMLElement>(".connect__panel");
     const open = connect.querySelector<HTMLButtonElement>(".connect__open");
     const form = connect.querySelector<HTMLFormElement>(".connect__form");
-    if (!launcher || !panel || !open || !form) continue;
+    const status = connect.querySelector<HTMLElement>(".connect__status");
+    const thanks = connect.querySelector<HTMLElement>(".connect__thanks");
+    const send = form?.querySelector<HTMLButtonElement>("button");
+    if (!launcher || !panel || !open || !form || !status || !thanks || !send) {
+      continue;
+    }
 
     if (!isDismissed()) launcher.showPopover();
 
@@ -352,6 +425,10 @@ const titleId = inline ? "connect-title-demo" : "connect-title";
     panel.addEventListener("toggle", (event) => {
       if ((event as ToggleEvent).newState === "open") {
         launcher.hidePopover();
+        // Each opening starts on a fresh form, not the last thank-you
+        form.hidden = false;
+        thanks.hidden = true;
+        status.textContent = "";
         return;
       }
       if (isDismissed()) return;
@@ -373,15 +450,33 @@ const titleId = inline ? "connect-title-demo" : "connect-title";
       } catch {}
     });
 
-    form.addEventListener("submit", (event) => {
+    // Sends in place and swaps the card to a thank-you. Without JS the form
+    // still posts to /connect
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
-      const data = new FormData(form);
-      console.log("Connect form submitted", {
-        ...Object.fromEntries(data),
-        sms: data.has("sms"),
-      });
-      form.reset();
-      panel.hidePopover();
+      // Disabled while sending, so a double click can't save it twice
+      send.disabled = true;
+      status.textContent = "";
+
+      try {
+        const { error } = await actions.submitPrayerRequest(new FormData(form));
+        if (error) {
+          // textContent, never innerHTML: messages always show as plain text
+          status.textContent = isInputError(error)
+            ? (Object.values(error.fields).flat()[0] ?? sendFailed)
+            : sendFailed;
+          return;
+        }
+        form.reset();
+        form.hidden = true;
+        thanks.hidden = false;
+        thanks.querySelector<HTMLElement>(".connect__title")?.focus();
+      } catch {
+        // Network failure: the request never reached the server
+        status.textContent = sendFailed;
+      } finally {
+        send.disabled = false;
+      }
     });
   }
 </script>

@@ -1,13 +1,7 @@
-// YouTube channel behind seo.social.youtube. The /live page embeds by video
-// ID when one is found, because live chat can only be embedded per video.
 export const youtubeChannelId = "UCLQfHqzkzdBwitvJcFqGYAA";
 
 const liveURL = `https://www.youtube.com/channel/${youtubeChannelId}/live`;
 
-// The channel's /live URL resolves to the current or next scheduled stream,
-// and its canonical link names that video. Anything else (no stream
-// scheduled, consent wall, timeout) returns undefined so the page falls back
-// to the channel-level player.
 export async function getLiveVideoId(): Promise<string | undefined> {
   try {
     const response = await fetch(liveURL, {
@@ -24,5 +18,52 @@ export async function getLiveVideoId(): Promise<string | undefined> {
     )?.[1];
   } catch {
     return undefined;
+  }
+}
+
+export type LiveState =
+  | { status: "live"; videoId: string }
+  | { status: "upcoming"; videoId: string; startsAt: string }
+  | { status: "none" };
+
+const startGrace = 2 * 60 * 60 * 1000;
+
+interface VideosResponse {
+  items?: {
+    snippet: { liveBroadcastContent: "live" | "upcoming" | "none" };
+    liveStreamingDetails?: { scheduledStartTime?: string };
+  }[];
+}
+
+export async function fetchLiveState(apiKey: string): Promise<LiveState> {
+  const videoId = await getLiveVideoId();
+  if (!videoId) return { status: "none" };
+
+  const response = await fetch(
+    `https://www.googleapis.com/youtube/v3/videos?${new URLSearchParams({
+      part: "snippet,liveStreamingDetails",
+      id: videoId,
+      key: apiKey,
+    })}`,
+    { signal: AbortSignal.timeout(5000) },
+  );
+  if (!response.ok) throw new Error(`YouTube videos responded ${response.status}`);
+
+  const video = ((await response.json()) as VideosResponse).items?.[0];
+  if (!video) return { status: "none" };
+
+  switch (video.snippet.liveBroadcastContent) {
+    case "live":
+      return { status: "live", videoId };
+    case "upcoming": {
+      const startsAt = video.liveStreamingDetails?.scheduledStartTime;
+      if (!startsAt) return { status: "none" };
+      // A broadcast that never went live stays "upcoming" indefinitely
+      if (Date.now() - Date.parse(startsAt) > startGrace) return { status: "none" };
+      return { status: "upcoming", videoId, startsAt };
+    }
+    // Ended streams still resolve at /live for a while
+    default:
+      return { status: "none" };
   }
 }

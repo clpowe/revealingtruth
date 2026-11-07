@@ -1,15 +1,29 @@
 ---
 interface Props {
   type?: "outline" | "accent";
+  /** "circle" fits a single icon or glyph; give it a label */
+  shape?: "circle";
+  /** Accessible name, for buttons whose content doesn't say what they do */
+  label?: string;
   /** Renders a link instead of a button */
   href?: string;
+  /** The selected one of a set of links, like the year shown: tells screen
+      readers what the filled style shows */
+  current?: boolean;
 }
 
-const { type, href } = Astro.props;
+const { type, shape, label, href, current } = Astro.props;
 const Element = href ? "a" : "button";
 ---
 
-<Element class="button" data-type={type} href={href}>
+<Element
+  class="button"
+  data-type={type}
+  data-shape={shape}
+  aria-label={label}
+  aria-current={current ? "page" : undefined}
+  href={href}
+>
   <slot />
 </Element>
 
@@ -45,6 +59,19 @@ const Element = href ? "a" : "button";
     --button-color: var(--text-high-contrast);
     --button-background: transparent;
     --button-border: currentColor;
+  }
+
+  .button[data-shape="circle"] {
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    padding: 0;
+    border-width: var(--border-width-hairline);
+    font-size: var(--font-size-regular);
+  }
+
+  /* Icon buttons sit in quieter company: a hairline in the border colour */
+  .button[data-shape="circle"][data-type="outline"] {
+    --button-border: var(--border-subtle);
   }
 
   /* Hover: blend 20% of the text colour into the variant's own background

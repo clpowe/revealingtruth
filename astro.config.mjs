@@ -45,7 +45,13 @@ export default defineConfig({
 
   integrations: [
     sitemap({
-      filter: (page) => !page.includes("/components"),
+      filter: (page) => !page.includes("/components") && !page.includes("/prayer/thank-you"),
     }),
   ],
+
+  security: {
+    checkOrigin: true,
+    actionBodySizeLimit: 16 * 1024,
+  },
 });
+
