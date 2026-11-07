@@ -181,17 +181,17 @@ const youtubeHref = videoId
     tick();
     setInterval(tick, 1000);
 
-    // Reload to pick up the live state once the cron has had a chance to
-    // flip it. Before the start, wake at most daily: setTimeout overflows
-    // past ~24.8 days and would fire at once. After it, keep checking
-    // every minute in case the stream is late.
-    const untilStart = start - Date.now();
-    if (untilStart > 0) {
-      const day = 24 * 60 * 60 * 1000;
-      setTimeout(() => location.reload(), Math.min(untilStart + 2 * 60 * 1000, day));
-    } else {
-      setInterval(() => location.reload(), 60 * 1000);
-    }
+    // Reload once the cron can have flipped the live state. It runs on each
+    // 5-minute mark; 70s later it has finished and any copy of this page the
+    // edge cached (60s) is gone. So: the first such moment after the start,
+    // then each one after while the stream is late. Waits are capped at a
+    // day: setTimeout overflows past ~24.8 days and would fire at once
+    const step = 5 * 60 * 1000;
+    const settle = 70 * 1000;
+    const nextCheck = (after: number) => Math.floor((after - settle) / step) * step + step + settle;
+    const day = 24 * 60 * 60 * 1000;
+    const wait = nextCheck(Math.max(start, Date.now())) - Date.now();
+    setTimeout(() => location.reload(), Math.min(wait, day));
   }
 </script>
 

@@ -1,0 +1,23 @@
+---
+import ListCItem, { type Item } from "./ListCItem.astro";
+
+export type { Item } from "./ListCItem.astro";
+
+interface Props {
+  items: Item[];
+}
+
+const { items } = Astro.props;
+---
+
+<ul role="list" class="list-C">
+  {items.map((item) => (
+    <ListCItem {...item} />
+  ))}
+</ul>
+
+<style>
+  .list-C {
+    border-block-end: var(--border-width-hairline) solid var(--border-subtle);
+  }
+</style>

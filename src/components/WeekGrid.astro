@@ -1,0 +1,239 @@
+---
+export type WeekGridState = "empty" | "uploaded" | "playing" | "special";
+
+export type WeekGridCell = {
+  state: WeekGridState;
+  /** Where the cell goes; empty cells stay plain */
+  href?: string;
+  /** Accessible name: "Week of Aug 30: Content in All Things" */
+  label?: string;
+};
+
+export type WeekGridWeek = {
+  /** The week's Sunday, "2026-08-30" */
+  start: string;
+  /** The week the panel above is showing */
+  current?: boolean;
+  /** Sunday services and special services */
+  sunday: WeekGridCell;
+  wednesday: WeekGridCell;
+};
+
+interface Props {
+  weeks: WeekGridWeek[];
+  /** Names the grid for screen readers: "Weeks in 2026" */
+  label: string;
+}
+
+const { weeks, label } = Astro.props;
+
+const rows = [
+  { name: "Sun & special", key: "sunday" },
+  { name: "Wednesday", key: "wednesday" },
+] as const;
+
+/** A month's name sits under the week holding its 1st. Once each: the last
+    week of a year often holds next January's 1st */
+const seen = new Set<string>();
+const months = weeks.flatMap((week, column) => {
+  const start = new Date(`${week.start}T00:00Z`);
+  for (let day = 0; day < 7; day++) {
+    const date = new Date(start);
+    date.setUTCDate(start.getUTCDate() + day);
+    if (date.getUTCDate() === 1) {
+      const name = date.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" });
+      if (seen.has(name)) return [];
+      seen.add(name);
+      return [{ column, name }];
+    }
+  }
+  return [];
+});
+
+const legend: { state: WeekGridState | "current"; name: string }[] = [
+  { state: "playing", name: "Playing" },
+  { state: "uploaded", name: "Uploaded" },
+  { state: "special", name: "Special service" },
+  { state: "current", name: "Week shown above" },
+];
+---
+
+<div class="week-grid">
+  <nav class="week-grid__scroller" aria-label={label}>
+    <div class="week-grid__grid" style={`--week-count: ${weeks.length};`}>
+      {rows.map((row, index) => (
+        <>
+          <span class="week-grid__row-name" style={`grid-row: ${index + 1};`}>
+            {row.name}
+          </span>
+          {weeks.map((week, column) => {
+            const cell = week[row.key];
+            const place = `grid-row: ${index + 1}; grid-column: ${column + 2};`;
+            return cell.href ? (
+              <a
+                class="week-grid__cell"
+                href={cell.href}
+                data-state={cell.state}
+                data-current={week.current ? "" : undefined}
+                aria-label={cell.label}
+                aria-current={week.current ? "date" : undefined}
+                style={place}
+              ></a>
+            ) : (
+              <span
+                class="week-grid__cell"
+                data-state={cell.state}
+                data-current={week.current ? "" : undefined}
+                aria-hidden="true"
+                style={place}
+              ></span>
+            );
+          })}
+        </>
+      ))}
+      {months.map((month) => (
+        <span class="week-grid__month" aria-hidden="true" style={`grid-column: ${month.column + 2};`}>
+          {month.name}
+        </span>
+      ))}
+    </div>
+  </nav>
+
+  <ul role="list" class="week-grid__legend cluster">
+    {legend.map((item) => (
+      <li class="cluster" style="--cluster-gap: var(--size-200);">
+        <span
+          class="week-grid__cell"
+          data-state={item.state === "current" ? "empty" : item.state}
+          data-current={item.state === "current" ? "" : undefined}
+          aria-hidden="true"
+        ></span>
+        {item.name}
+      </li>
+    ))}
+  </ul>
+</div>
+
+<script>
+  // A scrolling grid opens on January; bring the week shown above into view
+  function centerCurrentWeek() {
+    for (const scroller of document.querySelectorAll<HTMLElement>(".week-grid__scroller")) {
+      const current = scroller.querySelector<HTMLElement>("[data-current]");
+      if (!current || scroller.scrollWidth <= scroller.clientWidth) continue;
+      scroller.scrollLeft = current.offsetLeft - scroller.clientWidth / 2;
+    }
+  }
+
+  centerCurrentWeek();
+  // Pages with the ClientRouter swap in new grids without rerunning this
+  document.addEventListener("astro:after-swap", centerCurrentWeek);
+</script>
+
+<style>
+  .week-grid {
+    display: grid;
+    gap: var(--size-500);
+    font-family: var(--ff-ui);
+    font-size: var(--font-size-sm);
+  }
+
+  /* 53 columns can't shrink to a phone: the grid scrolls inside itself */
+  .week-grid__scroller {
+    position: relative;
+    overflow-x: auto;
+    /* Room for the current-week ring */
+    padding: 3px;
+  }
+
+  .week-grid__grid {
+    display: grid;
+    grid-template-columns: max-content repeat(var(--week-count), 0.875rem);
+    grid-template-rows: auto auto auto;
+    align-items: center;
+    gap: 0.25rem;
+    inline-size: max-content;
+  }
+
+  /* Wide enough for the year: the weeks share the width */
+  @media (width > 1080px) {
+    .week-grid__grid {
+      grid-template-columns: max-content repeat(var(--week-count), minmax(0, 1fr));
+      inline-size: auto;
+    }
+  }
+
+  /* Names stay put while the weeks scroll under them */
+  .week-grid__row-name {
+    position: sticky;
+    inset-inline-start: 0;
+    z-index: 1;
+    grid-column: 1;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    padding-inline-end: var(--size-400);
+    white-space: nowrap;
+    color: var(--text-high-contrast);
+    background-color: var(--background-main);
+    /* Also covers the scroller's padding, where cells would peek through */
+    box-shadow: -3px 0 0 var(--background-main);
+  }
+
+  .week-grid__cell {
+    display: block;
+    inline-size: 100%;
+    min-inline-size: 0.875rem;
+    aspect-ratio: 1;
+    border-radius: 3px;
+    background-color: color-mix(in srgb, var(--text-high-contrast) 8%, transparent);
+  }
+
+  .week-grid__cell[data-state="uploaded"] {
+    background-color: var(--text-main);
+  }
+
+  .week-grid__cell[data-state="playing"] {
+    background-color: var(--background-accent);
+  }
+
+  /* Special: a solid tile with a punched dot */
+  .week-grid__cell[data-state="special"] {
+    background: radial-gradient(circle, var(--background-main) 22%, var(--text-high-contrast) 25%);
+  }
+
+  .week-grid__cell[data-current] {
+    outline: var(--border-width-2) solid var(--text-high-contrast);
+    outline-offset: 2px;
+  }
+
+  a.week-grid__cell {
+    transition: scale var(--duration-fast) var(--ease-out);
+  }
+
+  a.week-grid__cell:hover {
+    scale: 1.2;
+  }
+
+  a.week-grid__cell:focus-visible {
+    outline: var(--border-width-2) solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .week-grid__month {
+    grid-row: 3;
+    padding-block-start: var(--size-100);
+    font-size: var(--font-size-xs);
+    white-space: nowrap;
+    color: var(--text-main);
+  }
+
+  .week-grid__legend {
+    --cluster-gap: var(--size-300) var(--size-600);
+
+    color: var(--text-main);
+  }
+
+  .week-grid__legend .week-grid__cell {
+    inline-size: 0.875rem;
+  }
+</style>

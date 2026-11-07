@@ -1,0 +1,489 @@
+---
+import Button from "./Button.astro";
+import {
+  fullscreenEnterIcon,
+  fullscreenExitIcon,
+  pauseIcon,
+  playIcon,
+  restartIcon,
+  seekIcon,
+  volumeHighIcon,
+  volumeOffIcon,
+} from "@videojs/html/icons/default";
+
+interface Props {
+  /** YouTube video id */
+  id: string;
+  title: string;
+  /** The sermon after this one, for the next button */
+  next?: { href: string; title: string };
+}
+
+const { id, title, next } = Astro.props;
+const watchURL = `https://www.youtube.com/watch?v=${id}`;
+---
+
+{/* Video.js owns state and controls; the YouTube iframe only plays, with
+    its own chrome hidden. Fullscreen still shows YouTube's chrome: the
+    IFrame API fullscreens the iframe itself */}
+<video-player class="sermon-player">
+  <media-container class="sermon-player__frame">
+    <youtube-video src={id} title={title} playsinline></youtube-video>
+
+    {/* Covers YouTube's own title bar and play button until playback starts */}
+    <media-poster class="sermon-player__poster">
+      <img src={`https://i.ytimg.com/vi/${id}/maxresdefault.jpg`} alt="" />
+    </media-poster>
+
+    <media-controls>
+      <media-controls-content class="sermon-player__controls">
+        <media-time-slider class="sermon-player__timeline">
+          <media-slider-track class="sermon-player__track">
+            <media-slider-buffer class="sermon-player__buffer"></media-slider-buffer>
+            <media-slider-fill class="sermon-player__fill"></media-slider-fill>
+          </media-slider-track>
+          <media-slider-thumb class="sermon-player__thumb"></media-slider-thumb>
+        </media-time-slider>
+
+        <div class="sermon-player__bar">
+          <media-controls-group class="sermon-player__group" aria-label="Playback controls">
+            <media-play-button class="sermon-player__button" data-control="play">
+              <Fragment set:html={playIcon} />
+              <Fragment set:html={pauseIcon} />
+              <Fragment set:html={restartIcon} />
+            </media-play-button>
+            <media-seek-button seconds="-10" class="sermon-player__button" data-control="back">
+              <Fragment set:html={seekIcon} />
+            </media-seek-button>
+            <media-seek-button seconds="10" class="sermon-player__button" data-control="forward">
+              <Fragment set:html={seekIcon} />
+            </media-seek-button>
+            <media-mute-button class="sermon-player__button" data-control="mute">
+              <Fragment set:html={volumeHighIcon} />
+              <Fragment set:html={volumeOffIcon} />
+            </media-mute-button>
+            <media-time-group class="sermon-player__time">
+              <media-time type="current"></media-time>
+              <media-time-separator></media-time-separator>
+              <media-time type="duration"></media-time>
+            </media-time-group>
+          </media-controls-group>
+
+          <media-controls-group class="sermon-player__group" aria-label="More controls">
+            <media-playback-rate-button
+              class="sermon-player__button sermon-player__rate"
+              rates="1 1.25 1.5 2"
+            ></media-playback-rate-button>
+            {next && (
+              <a class="sermon-player__button" href={next.href} aria-label={`Next: ${next.title}`}>
+                {/* Skip-next: Video.js has no icon for it */}
+                <svg viewBox="0 0 18 18" width="18" height="18" fill="currentColor" aria-hidden="true">
+                  <path d="M3 4.04c0-1.13 1.25-1.8 2.2-1.2l7.4 4.96a1.44 1.44 0 0 1 0 2.4l-7.4 4.96c-.95.6-2.2-.07-2.2-1.2zM14 3a1 1 0 0 1 2 0v12a1 1 0 0 1-2 0z" />
+                </svg>
+              </a>
+            )}
+            {/* Widens the player across its [data-expandable] area; hidden
+                until the script finds one */}
+            <button
+              type="button"
+              class="sermon-player__button"
+              data-expand-toggle
+              aria-label="Wide player"
+              aria-pressed="false"
+              hidden
+            >
+              <svg viewBox="0 0 18 18" width="18" height="18" fill="currentColor" aria-hidden="true">
+                <path d="M1.22 8.47 4.47 5.22a.75.75 0 0 1 1.06 1.06L3.81 8h10.38l-1.72-1.72a.75.75 0 1 1 1.06-1.06l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 1 1-1.06-1.06l1.72-1.72H3.81l1.72 1.72a.75.75 0 1 1-1.06 1.06L1.22 9.53a.75.75 0 0 1 0-1.06" />
+              </svg>
+            </button>
+            {/* Darkens the surrounding [data-theater] area; hidden until the
+                script finds one */}
+            <button
+              type="button"
+              class="sermon-player__button"
+              data-theater-toggle
+              aria-label="Theater mode"
+              aria-pressed="false"
+              hidden
+            >
+              <svg viewBox="0 0 18 18" width="18" height="18" fill="currentColor" aria-hidden="true">
+                <path d="M3 4h12a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2m0 1.75a.25.25 0 0 0-.25.25v6c0 .14.11.25.25.25h12a.25.25 0 0 0 .25-.25V6a.25.25 0 0 0-.25-.25z" />
+              </svg>
+            </button>
+            <media-fullscreen-button class="sermon-player__button" data-control="fullscreen">
+              <Fragment set:html={fullscreenEnterIcon} />
+              <Fragment set:html={fullscreenExitIcon} />
+            </media-fullscreen-button>
+          </media-controls-group>
+        </div>
+      </media-controls-content>
+    </media-controls>
+
+    <media-hotkey keys="Space" action="togglePaused"></media-hotkey>
+    <media-hotkey keys="k" action="togglePaused"></media-hotkey>
+    <media-hotkey keys="m" action="toggleMuted"></media-hotkey>
+    <media-hotkey keys="f" action="toggleFullscreen"></media-hotkey>
+    <media-hotkey keys="ArrowLeft" action="seekStep" value="-10"></media-hotkey>
+    <media-hotkey keys="ArrowRight" action="seekStep" value="10"></media-hotkey>
+
+    <media-status-announcer></media-status-announcer>
+
+    {/* Embedding can be switched off per video, and blockers stop the
+        IFrame API: either way, send people to YouTube */}
+    <media-error-dialog>
+      <media-dialog-popup class="sermon-player__error">
+        <p class="sermon-player__error-title">This message can’t play here.</p>
+        <Button type="accent" href={watchURL}>Watch on YouTube</Button>
+      </media-dialog-popup>
+    </media-error-dialog>
+  </media-container>
+</video-player>
+
+<script>
+  import "@videojs/html/video/player";
+  import "@videojs/html/media/youtube-video";
+  import "@videojs/html/ui/container";
+  import "@videojs/html/ui/poster";
+  import "@videojs/html/ui/controls";
+  import "@videojs/html/ui/controls-content";
+  import "@videojs/html/ui/controls-group";
+  import "@videojs/html/ui/play-button";
+  import "@videojs/html/ui/seek-button";
+  import "@videojs/html/ui/mute-button";
+  import "@videojs/html/ui/time-group";
+  import "@videojs/html/ui/time";
+  import "@videojs/html/ui/time-separator";
+  import "@videojs/html/ui/time-slider";
+  import "@videojs/html/ui/slider-track";
+  import "@videojs/html/ui/slider-buffer";
+  import "@videojs/html/ui/slider-fill";
+  import "@videojs/html/ui/slider-thumb";
+  import "@videojs/html/ui/playback-rate-button";
+  import "@videojs/html/ui/fullscreen-button";
+  import "@videojs/html/ui/hotkey";
+  import "@videojs/html/ui/status-announcer";
+  import "@videojs/html/ui/error-dialog";
+  import "@videojs/html/ui/dialog-popup";
+
+  function setUpToggles() {
+    // Wide player: the page's [data-expandable] area gets data-expanded and
+    // lays itself out around it. The page applies a saved choice before paint
+    for (const toggle of document.querySelectorAll<HTMLButtonElement>("[data-expand-toggle]")) {
+      const area = toggle.closest<HTMLElement>("[data-expandable]");
+      if (!area) continue;
+
+      const sync = () => toggle.setAttribute("aria-pressed", String(area.hasAttribute("data-expanded")));
+      sync();
+      toggle.hidden = false;
+
+      toggle.addEventListener("click", () => {
+        const on = area.toggleAttribute("data-expanded");
+        try {
+          localStorage.setItem("player-wide", on ? "on" : "off");
+        } catch {}
+        sync();
+      });
+    }
+
+    // Theater mode: the page's [data-theater] area switches to the dark theme.
+    // The page applies a saved choice before paint; this keeps it in step
+    for (const toggle of document.querySelectorAll<HTMLButtonElement>("[data-theater-toggle]")) {
+      const area = toggle.closest<HTMLElement>("[data-theater]");
+      if (!area) continue;
+
+      const sync = () => toggle.setAttribute("aria-pressed", String(area.dataset.theme === "dark"));
+      sync();
+      toggle.hidden = false;
+
+      toggle.addEventListener("click", () => {
+        const on = area.dataset.theme !== "dark";
+        area.dataset.theme = on ? "dark" : "light";
+        try {
+          localStorage.setItem("theater", on ? "on" : "off");
+        } catch {}
+        sync();
+      });
+    }
+  }
+
+  setUpToggles();
+  // Pages with the ClientRouter swap in a new player without rerunning this
+  document.addEventListener("astro:after-swap", setUpToggles);
+</script>
+
+<style>
+  .sermon-player {
+    display: block;
+    container-type: inline-size;
+    color: var(--text-on-media);
+  }
+
+  /* 16:9 frame; the media fills it and the controls float over its foot */
+  .sermon-player__frame {
+    position: relative;
+    display: block;
+    aspect-ratio: 16 / 9;
+    overflow: clip;
+    background-color: var(--clr-neutral-1000);
+  }
+
+  .sermon-player__frame youtube-video {
+    position: absolute;
+    inset: 0;
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  /* Clicks fall through to the iframe, so the poster still starts playback */
+  .sermon-player__poster {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    /* Covers the iframe while the image is still loading */
+    background-color: var(--clr-neutral-1000);
+    transition: opacity var(--duration-base) var(--ease-out);
+  }
+
+  .sermon-player__poster:not([data-visible]) {
+    opacity: 0;
+  }
+
+  .sermon-player__poster img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  /* Controls ------------------------------------------------------------ */
+  .sermon-player__controls {
+    position: absolute;
+    inset: auto 0 0;
+    display: grid;
+    gap: var(--size-200);
+    padding: var(--size-400) var(--size-500) var(--size-300);
+    background: linear-gradient(to top, rgb(0 0 0 / 0.75), transparent);
+    transition: opacity var(--duration-base) var(--ease-out);
+  }
+
+  /* Idle while playing: fade out, unless something inside has focus */
+  .sermon-player__controls:not([data-visible]):not(:has(:focus-visible)) {
+    opacity: 0;
+  }
+
+  .sermon-player__bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--size-400);
+  }
+
+  .sermon-player__group {
+    display: flex;
+    align-items: center;
+    gap: var(--size-100);
+  }
+
+  .sermon-player__button {
+    display: inline-grid;
+    place-items: center;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    color: inherit;
+    border-radius: var(--border-radius-pill);
+    cursor: pointer;
+    opacity: 0.8;
+    transition:
+      opacity var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out);
+  }
+
+  .sermon-player__button[hidden] {
+    display: none;
+  }
+
+  /* Where layouts stack (.equal-columns), the player is already full width */
+  @media (width <= 720px) {
+    [data-expand-toggle] {
+      display: none;
+    }
+  }
+
+  /* On: the accent, like the timeline */
+  .sermon-player__button[aria-pressed="true"] {
+    opacity: 1;
+    color: var(--background-accent);
+  }
+
+  .sermon-player__button:hover {
+    opacity: 1;
+    background-color: rgb(255 255 255 / 0.1);
+  }
+
+  .sermon-player__button:focus-visible {
+    opacity: 1;
+    outline: var(--border-width-2) solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .sermon-player__button :global(svg) {
+    grid-area: 1 / 1;
+    inline-size: 1.125rem;
+    block-size: 1.125rem;
+  }
+
+  /* One icon per state: play / pause / replay */
+  [data-control="play"] :global(svg:nth-of-type(n + 2)),
+  [data-control="play"]:not([data-paused]) :global(svg:nth-of-type(1)),
+  [data-control="play"][data-ended] :global(svg:nth-of-type(1)) {
+    display: none;
+  }
+
+  [data-control="play"]:not([data-paused]):not([data-ended]) :global(svg:nth-of-type(2)),
+  [data-control="play"][data-ended] :global(svg:nth-of-type(3)) {
+    display: block;
+  }
+
+  /* Seek icon is the clockwise arrow; mirror it for back */
+  [data-control="back"] :global(svg) {
+    scale: -1 1;
+  }
+
+  [data-control="mute"][data-muted] :global(svg:nth-of-type(1)),
+  [data-control="mute"]:not([data-muted]) :global(svg:nth-of-type(2)),
+  [data-control="fullscreen"][data-fullscreen] :global(svg:nth-of-type(1)),
+  [data-control="fullscreen"]:not([data-fullscreen]) :global(svg:nth-of-type(2)) {
+    display: none;
+  }
+
+  .sermon-player__rate {
+    font-family: var(--ff-ui);
+    font-size: var(--font-size-xs);
+    font-weight: var(--fw-bold);
+  }
+
+  .sermon-player__rate::after {
+    content: attr(data-rate) "\00D7";
+  }
+
+  .sermon-player__rate[data-hidden] {
+    display: none;
+  }
+
+  .sermon-player__time {
+    display: inline-flex;
+    gap: 0.35em;
+    margin-inline-start: var(--size-200);
+    font-family: var(--ff-ui);
+    font-size: var(--font-size-xs);
+    font-variant-numeric: tabular-nums;
+    opacity: 0.8;
+  }
+
+  /* Timeline: the slider reports progress as custom properties --------- */
+  .sermon-player__timeline {
+    position: relative;
+    display: flex;
+    align-items: center;
+    block-size: 1.25rem;
+    cursor: pointer;
+  }
+
+  .sermon-player__track {
+    position: relative;
+    inline-size: 100%;
+    block-size: 0.25rem;
+    background-color: rgb(255 255 255 / 0.2);
+    border-radius: var(--border-radius-pill);
+  }
+
+  .sermon-player__buffer,
+  .sermon-player__fill {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    border-radius: inherit;
+  }
+
+  .sermon-player__buffer {
+    inline-size: var(--media-slider-buffer);
+    background-color: rgb(255 255 255 / 0.3);
+  }
+
+  .sermon-player__fill {
+    inline-size: var(--media-slider-fill);
+    background-color: var(--background-accent);
+  }
+
+  .sermon-player__thumb {
+    position: absolute;
+    inset-inline-start: var(--media-slider-fill);
+    inline-size: 0.75rem;
+    block-size: 0.75rem;
+    background-color: var(--background-accent);
+    border-radius: 50%;
+    translate: -50% 0;
+    scale: 0;
+    transition: scale var(--duration-fast) var(--ease-out);
+  }
+
+  .sermon-player__timeline:hover .sermon-player__thumb,
+  .sermon-player__timeline:focus-within .sermon-player__thumb {
+    scale: 1;
+  }
+
+  /* Can't play: covers the frame ---------------------------------------- */
+  .sermon-player__error {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: var(--size-400);
+    padding: var(--size-500);
+    text-align: center;
+    background-color: var(--clr-neutral-1000);
+  }
+
+  .sermon-player__error:not([data-open]) {
+    display: none;
+  }
+
+  .sermon-player__error-title {
+    font-family: var(--ff-ui);
+    font-size: var(--font-size-md);
+    font-weight: var(--fw-bold);
+  }
+
+  /* Phone-width players: drop the skip buttons (the arrow keys still seek)
+     so speed, next and fullscreen keep their place. Last, so it wins over
+     the rules above at equal specificity */
+  @container (width < 30rem) {
+    .sermon-player__controls {
+      padding-inline: var(--size-300);
+    }
+
+    .sermon-player__bar {
+      gap: var(--size-200);
+    }
+
+    .sermon-player__button {
+      inline-size: 2rem;
+      block-size: 2rem;
+    }
+
+    [data-control="back"],
+    [data-control="forward"] {
+      display: none;
+    }
+
+    .sermon-player__time {
+      margin-inline-start: var(--size-100);
+    }
+
+    /* Hour-long services make "0:00:00 / 1:44:56": keep the elapsed half */
+    .sermon-player__time :is(media-time-separator, media-time[type="duration"]) {
+      display: none;
+    }
+  }
+</style>

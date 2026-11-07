@@ -8,6 +8,7 @@ import { type Item } from "../components/ListA/ListA.astro";
 import ListA from "../components/ListA/ListA.astro";
 import ListB from "../components/ListB/ListB.astro";
 import ListBItem from "../components/ListB/ListBItem.astro";
+import ListC, { type Item as ListCItem } from "../components/ListC/ListC.astro";
 import Media from "../components/Media.astro";
 import MediaStrip from "../components/MediaStrip.astro";
 import Hero from "../components/Hero.astro";
@@ -19,6 +20,9 @@ import MenuToggle from "../components/MenuToggle.astro";
 import Field from "../components/Field.astro";
 import Checkbox from "../components/Checkbox.astro";
 import ConnectWidget from "../components/ConnectWidget.astro";
+import SermonPlayer from "../components/SermonPlayer.astro";
+import WeekPanel, { type WeekPanelItem } from "../components/WeekPanel.astro";
+import WeekGrid, { type WeekGridWeek } from "../components/WeekGrid.astro";
 
 import pastorBryanImage from "../assets/images/PastorBryan.jpg";
 import mediaimage from "../assets/images/media-strip.png";
@@ -27,6 +31,72 @@ import testimonialImage from "../assets/images/testimonial.png";
 import BaseLayout from "../layouts/BaseLayout.astro";
 
 // Data
+/* 2026 in weeks: uploads through early November, Easter as a special,
+   the week of Aug 30 shown above with its Wednesday playing */
+const weekGridData: WeekGridWeek[] = Array.from({ length: 53 }, (_, index) => {
+  const date = new Date(Date.UTC(2025, 11, 28 + index * 7));
+  const start = date.toISOString().slice(0, 10);
+  const past = start < "2026-11-08";
+  const current = start === "2026-08-30";
+  return {
+    start,
+    current,
+    sunday: past
+      ? { state: start === "2026-04-05" ? "special" : "uploaded", href: "#", label: `Week of ${start}` }
+      : { state: "empty" },
+    wednesday: past
+      ? { state: current ? "playing" : "uploaded", href: "#", label: `Week of ${start}` }
+      : { state: "empty" },
+  };
+});
+
+const listCData: ListCItem[] = [
+  {
+    href: "#",
+    date: "Sun, Sep 27",
+    datetime: "2026-09-27",
+    label: "Better Together, part 3 of 3",
+    title: "The Power of Agreement",
+    meta: "Pastor Rashida Powe",
+  },
+  {
+    href: "#",
+    date: "Wed, Sep 23",
+    datetime: "2026-09-23",
+    label: "Wednesday night",
+    title: "Valuable Wednesday Night",
+    meta: "Pastor Deborah Powe",
+    current: true,
+  },
+  {
+    href: "#",
+    date: "Sun, Sep 20",
+    datetime: "2026-09-20",
+    label: "Message",
+    title: "One Body",
+  },
+];
+
+const weekPanelData: WeekPanelItem[] = [
+  {
+    href: "#",
+    weekday: "Sun",
+    day: "30",
+    label: "Message",
+    title: "Content in All Things",
+    meta: ["Pastor Rashida Powe"],
+  },
+  {
+    href: "#",
+    weekday: "Wed",
+    day: "2",
+    label: "Wednesday night",
+    title: "Valuable Wednesday Night",
+    meta: ["Pastor Deborah Powe"],
+    playing: true,
+  },
+];
+
 const listAData: Item[] = [
   {
     index: "tp",
@@ -102,6 +172,8 @@ const listAData: Item[] = [
             <Button>Connect with us</Button>
             <Button type="accent">Connect with us</Button>
             <Button type="outline">Connect with us</Button>
+            <Button type="outline" shape="circle" label="Previous">←</Button>
+            <Button type="outline" shape="circle" label="Next">→</Button>
           </div>
         </figure>
         <figure class="flow">
@@ -110,6 +182,8 @@ const listAData: Item[] = [
             <Button>Connect with us</Button>
             <Button type="accent">Connect with us</Button>
             <Button type="outline">Connect with us</Button>
+            <Button type="outline" shape="circle" label="Previous">←</Button>
+            <Button type="outline" shape="circle" label="Next">→</Button>
           </div>
         </figure>
       </div>
@@ -393,6 +467,34 @@ const listAData: Item[] = [
   <section class="section flow wrapper" data-padding="compact">
     <article class="flow">
       <header class="flow">
+        <h3 class="h3">List C</h3>
+        <code>.list-C</code>
+        <p style="max-inline-size: 34em;">
+          Dated archive rows: date, serif-italic label, title and a detail
+          pushed to the end, with hairline rules. The current row's title takes
+          the brand colour. Stacks to date and label over title on phones.
+        </p>
+      </header>
+      <div class="flow">
+        <figure class="flow">
+          <figcaption>Light</figcaption>
+          <div class="fig-content" data-theme="light">
+            <ListC items={listCData} />
+          </div>
+        </figure>
+        <figure class="flow">
+          <figcaption>Dark</figcaption>
+          <div class="fig-content" data-theme="dark">
+            <ListC items={listCData} />
+          </div>
+        </figure>
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
         <h3 class="h3">Media</h3>
         <code>.media</code>
         <p style="max-inline-size: 34em;">
@@ -490,6 +592,94 @@ const listAData: Item[] = [
           are impacted, and Christ is put on display through the Simple Truth of
           God’s Word.”
         </Testimony>
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Sermon player</h3>
+        <code>.sermon-player</code>
+        <p style="max-inline-size: 34em;">
+          Video.js player for a YouTube sermon with our own controls: play,
+          back and forward 10s, mute, time, speed, next and fullscreen. The
+          poster hides YouTube's title bar until playback starts; when a video
+          won't embed, it offers Watch on YouTube instead. Keys: Space/K, M, F,
+          ← →. Inside a [data-theater] area it adds a theater toggle that
+          switches that area to the dark theme and remembers the choice.
+        </p>
+      </header>
+      <div class="equal-columns">
+        <figure class="flow fig-content" data-theme="light" data-theater>
+          <SermonPlayer
+            id="s_ns8jEYAzk"
+            title="Delightful Sunday"
+            next={{ href: "/sermons", title: "Next sermon" }}
+          />
+          <figcaption>With next · theater area</figcaption>
+        </figure>
+        <figure class="flow">
+          <SermonPlayer id="xxxxxxxxxxx" title="Unavailable video" />
+          <figcaption>Can't play (invalid id)</figcaption>
+        </figure>
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Week panel</h3>
+        <code>.week-panel</code>
+        <p style="max-inline-size: 34em;">
+          One week of services beside the sermon player: prev/next week
+          arrows, then a row per service with its day tile. The playing row's
+          tile fills with the accent and its meta starts with Playing.
+        </p>
+      </header>
+      <div class="equal-columns">
+        <figure class="flow">
+          <figcaption>Light</figcaption>
+          <div class="fig-content" data-theme="light">
+            <WeekPanel heading="Aug 30, 2026" previous="#" next="#" items={weekPanelData} />
+          </div>
+        </figure>
+        <figure class="flow">
+          <figcaption>Dark · empty week</figcaption>
+          <div class="fig-content flow" data-theme="dark">
+            <WeekPanel heading="Aug 30, 2026" previous="#" next="#" items={weekPanelData} />
+            <WeekPanel heading="Dec 27, 2026" previous="#" next="#" items={[]} />
+          </div>
+        </figure>
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Week grid</h3>
+        <code>.week-grid</code>
+        <p style="max-inline-size: 34em;">
+          A year at a glance: one column per week, Sundays and specials above,
+          Wednesdays below. Filled cells link to their week; the ring marks the
+          week the panel is showing. Below 1080px it scrolls inside itself.
+        </p>
+      </header>
+      <div class="flow">
+        <figure class="flow">
+          <figcaption>Light</figcaption>
+          <div class="fig-content" data-theme="light">
+            <WeekGrid weeks={weekGridData} label="Weeks in 2026" />
+          </div>
+        </figure>
+        <figure class="flow">
+          <figcaption>Dark</figcaption>
+          <div class="fig-content" data-theme="dark">
+            <WeekGrid weeks={weekGridData} label="Weeks in 2026" />
+          </div>
+        </figure>
       </div>
     </article>
   </section>

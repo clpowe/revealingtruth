@@ -19,12 +19,16 @@ const { inline = false } = Astro.props;
 const launcherId = "connect-launcher";
 const panelId = "connect-panel";
 const titleId = inline ? "connect-title-demo" : "connect-title";
+/* Pages with the ClientRouter keep the live widget, its listeners and
+   whether it's open across navigations instead of swapping it out */
+const persist = inline ? undefined : "connect-widget";
 ---
 
 <aside
   class="connect"
   aria-label="Connect with us"
   data-inline={inline || undefined}
+  data-astro-transition-persist={persist}
 >
   {/* A manual popover: no light dismiss, and the close toggle can hide it
       (and draw its X) the same way it does the site menu */}

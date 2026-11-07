@@ -32,7 +32,8 @@
     },
   ],
   "triggers": {
-    "crons": ["*/2 * * * *"],
+    // Live state and the sermons archive, together (see src/workers.ts)
+    "crons": ["*/5 * * * *"],
   },
   /**
    * Worker Previews (e.g. the "staging" alias) do NOT inherit top-level bindings.
