@@ -64,17 +64,22 @@ export async function syncSermons(
       const page = await fetchPage(apiKey, pageToken);
       await merge(apiKey, streams, page.items);
       for (const item of page.items) seen.add(item.id);
-      // Newest first, so once a whole page predates the window the rest does too
-      pageToken = page.items.every((item) => item.publishedAt < cutoff)
-        ? undefined
-        : page.nextPageToken;
+      // Newest first, so once a whole page predates the window the rest does too.
+      // A page of only private or deleted videos is empty after filtering and
+      // says nothing about dates, so the sweep keeps going
+      const pastWindow =
+        page.items.length > 0 && page.items.every((item) => item.publishedAt < cutoff);
+      pageToken = pastWindow ? undefined : page.nextPageToken;
     }
 
     if (pageToken) {
       sweep = { pageToken, seen: [...seen] };
     } else {
-      // Missing from a complete pass: deleted or made private
-      for (const id of streams.keys()) if (!seen.has(id)) streams.delete(id);
+      // Missing from a complete pass: deleted or made private. A pass that saw
+      // nothing at all is more likely a bad response than an empty channel
+      if (seen.size > 0) {
+        for (const id of streams.keys()) if (!seen.has(id)) streams.delete(id);
+      }
       sweep = undefined;
       sweptAt = now.toISOString();
     }

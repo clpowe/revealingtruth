@@ -42,7 +42,7 @@ const youtubeHref = videoId
 >
   <main>
     {/* Dark band continuing the static header's, so the two read as one */}
-    <section class="live-player" data-theme="dark">
+    <section class="live-player" data-theme="dark" data-live-status={state.status}>
       <h1 class="visually-hidden">Watch Revealing Truth Church live</h1>
       {/* YouTube refuses to play (error 153) when the embed sends no
           referrer, so the policy is set explicitly */}
@@ -137,6 +137,8 @@ const youtubeHref = videoId
 </BaseLayout>
 
 <script>
+  import { reloadDelay } from "../lib/live-refresh";
+
   // The toggle stays hidden until this runs: without script it would do nothing
   const live = document.querySelector<HTMLElement>(".live");
   const toggle = document.querySelector<HTMLElement>("[data-chat-toggle]");
@@ -159,8 +161,9 @@ const youtubeHref = videoId
 
   const time = document.querySelector<HTMLTimeElement>("[data-starts-at]");
   const countdown = document.querySelector<HTMLElement>("[data-countdown]");
-  if (time && countdown) {
-    const start = Date.parse(time.dateTime);
+  const start = time ? Date.parse(time.dateTime) : undefined;
+
+  if (time && countdown && start !== undefined) {
     time.textContent = new Intl.DateTimeFormat(undefined, {
       weekday: "long",
       hour: "numeric",
@@ -180,18 +183,17 @@ const youtubeHref = videoId
     };
     tick();
     setInterval(tick, 1000);
+  }
 
-    // Reload once the cron can have flipped the live state. It runs on each
-    // 5-minute mark; 70s later it has finished and any copy of this page the
-    // edge cached (60s) is gone. So: the first such moment after the start,
-    // then each one after while the stream is late. Waits are capped at a
-    // day: setTimeout overflows past ~24.8 days and would fire at once
-    const step = 5 * 60 * 1000;
-    const settle = 70 * 1000;
-    const nextCheck = (after: number) => Math.floor((after - settle) / step) * step + step + settle;
-    const day = 24 * 60 * 60 * 1000;
-    const wait = nextCheck(Math.max(start, Date.now())) - Date.now();
-    setTimeout(() => location.reload(), Math.min(wait, day));
+  // Pick up a new live state without cutting off a stream being watched
+  const status = document.querySelector<HTMLElement>("[data-live-status]")?.dataset.liveStatus;
+  const delay = reloadDelay(status, Date.now(), start);
+  if (delay !== undefined) setTimeout(reload, delay);
+
+  // A hidden tab waits until it's looked at, so a forgotten one costs nothing
+  function reload() {
+    if (document.visibilityState === "visible") location.reload();
+    else document.addEventListener("visibilitychange", () => location.reload(), { once: true });
   }
 </script>
 

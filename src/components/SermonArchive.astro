@@ -25,14 +25,16 @@ const years = [...new Set(sermons.map((sermon) => sermon.date.slice(0, 4)))];
 const yearSermons = sermons.filter((sermon) => sermon.date.startsWith(year));
 const months = Map.groupBy(yearSermons, (sermon) => sermon.date.slice(0, 7));
 
-/* Week grid: every week touching the year, Sunday-first like the panel */
+/* Week grid: every week touching the year, Sunday-first like the panel.
+   Sermons are bucketed by week once, not re-scanned for each of ~53 weeks */
+const byWeek = Map.groupBy(sermons, (sermon) => startOfWeek(sermon.date));
 const gridWeeks: WeekGridWeek[] = [];
 for (
   let start = startOfWeek(`${year}-01-01`);
   start <= `${year}-12-31`;
   start = addDays(start, 7)
 ) {
-  const inWeek = sermons.filter((sermon) => startOfWeek(sermon.date) === start);
+  const inWeek = byWeek.get(start) ?? [];
   const heading = `Week of ${format(start, "MMM D")}`;
   gridWeeks.push({
     start,

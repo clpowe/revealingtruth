@@ -11,9 +11,32 @@ export function today() {
   });
 }
 
+/* tempo costs ~0.25ms a call and a render asks for the same few hundred
+   dates over and over; kept per isolate, bounded by the dates that exist */
+const weekStarts = new Map<string, string>();
+
 /** The Sunday a "YYYY-MM-DD" date's week starts on */
 export function startOfWeek(date: string) {
-  return format(weekStart(date, 0), "YYYY-MM-DD");
+  let start = weekStarts.get(date);
+  if (!start) {
+    start = format(weekStart(date, 0), "YYYY-MM-DD");
+    weekStarts.set(date, start);
+  }
+  return start;
+}
+
+const isoDate = /^\d{4}-\d{2}-\d{2}$/;
+
+/** `value` if it's a real "YYYY-MM-DD" calendar date, else undefined */
+export function validDate(value: string | null): string | undefined {
+  if (!value || !isoDate.test(value)) return;
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  const real =
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day;
+  return real ? value : undefined;
 }
 
 export function addDays(date: string, days: number) {

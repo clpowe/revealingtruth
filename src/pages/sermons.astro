@@ -17,6 +17,7 @@ import {
   playLink,
   startOfWeek,
   today,
+  validDate,
 } from "../config/sermon-view";
 
 export const prerender = false;
@@ -27,7 +28,7 @@ const params = Astro.url.searchParams;
 const playing =
   sermons.find((sermon) => sermon.id === params.get("v")) ?? sermons[0];
 const newer = playing && sermons[sermons.indexOf(playing) - 1];
-const week = startOfWeek(params.get("week") ?? playing?.date ?? today());
+const week = startOfWeek(validDate(params.get("week")) ?? playing?.date ?? today());
 const weekSermons = sermons
   .filter((sermon) => startOfWeek(sermon.date) === week)
   .reverse();
