@@ -16,7 +16,10 @@ interface Props {
 
 const { position = "overlay" } = Astro.props;
 
-const navigation = [
+const navigation: {
+  heading: string;
+  links: { label: string; href: string; external?: boolean }[];
+}[] = [
   {
     heading: "New Here",
     links: [

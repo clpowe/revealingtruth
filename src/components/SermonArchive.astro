@@ -1,0 +1,131 @@
+---
+import Tag from "./Tag.astro";
+import Statement from "./Statement.astro";
+import Button from "./Button.astro";
+import ListC from "./ListC/ListC.astro";
+import WeekGrid, { type WeekGridCell, type WeekGridWeek } from "./WeekGrid.astro";
+import { format } from "@formkit/tempo";
+import type { Sermon } from "../config/sermons";
+import { addDays, label, link, playLink, startOfWeek } from "../config/sermon-view";
+
+interface Props {
+  sermons: Sermon[];
+  /** The year shown, "YYYY" */
+  year: string;
+  /** Sunday ("YYYY-MM-DD") of the week the panel shows */
+  week: string;
+  /** The sermon in the player, marked in the grid and list */
+  playingId?: string;
+}
+
+const { sermons, year, week, playingId } = Astro.props;
+const params = Astro.url.searchParams;
+
+const years = [...new Set(sermons.map((sermon) => sermon.date.slice(0, 4)))];
+const yearSermons = sermons.filter((sermon) => sermon.date.startsWith(year));
+const months = Map.groupBy(yearSermons, (sermon) => sermon.date.slice(0, 7));
+
+/* Week grid: every week touching the year, Sunday-first like the panel */
+const gridWeeks: WeekGridWeek[] = [];
+for (
+  let start = startOfWeek(`${year}-01-01`);
+  start <= `${year}-12-31`;
+  start = addDays(start, 7)
+) {
+  const inWeek = sermons.filter((sermon) => startOfWeek(sermon.date) === start);
+  const heading = `Week of ${format(start, "MMM D")}`;
+  gridWeeks.push({
+    start,
+    current: start === week,
+    sunday: gridCell(
+      inWeek.filter((sermon) => sermon.kind !== "wednesday"),
+      start,
+      heading,
+    ),
+    wednesday: gridCell(
+      inWeek.filter((sermon) => sermon.kind === "wednesday"),
+      start,
+      heading,
+    ),
+  });
+}
+
+function gridCell(
+  items: Sermon[],
+  start: string,
+  heading: string,
+): WeekGridCell {
+  if (!items.length) return { state: "empty" };
+  const state = items.some((sermon) => sermon.id === playingId)
+    ? "playing"
+    : items.some((sermon) => sermon.kind === "special")
+      ? "special"
+      : "uploaded";
+  const titles = [...new Set(items.map((sermon) => sermon.title))].join(", ");
+  return { state, href: link(params, { week: start }), label: `${heading}: ${titles}` };
+}
+
+const count = (kind: Sermon["kind"]) =>
+  yearSermons.filter((sermon) => sermon.kind === kind).length;
+---
+
+{/* Archive -------------------------------------------------------- */}
+<section class="section flow" data-divider="top">
+  <div class="wrapper flow">
+    <div class="repel">
+      <Statement>
+        <Tag slot="tag" as="h2">
+          week by week
+        </Tag>{" "}
+        Every Sunday and Wednesday,{" "}
+        <span class="font-accent text-high-contrast">in order.</span>
+      </Statement>
+      <nav class="cluster" aria-label="Year">
+        {years.map((y) => (
+          <Button
+            type={y === year ? undefined : "outline"}
+            current={y === year}
+            href={link(params, { year: y })}
+          >
+            {y}
+          </Button>
+        ))}
+      </nav>
+    </div>
+    <p class="sermon-meta">
+      <strong>{year}</strong> · {yearSermons.length} uploads ·{" "}
+      {count("sunday")} messages · {count("wednesday")} Wednesday nights ·{" "}
+      {count("special")} special services
+    </p>
+    <WeekGrid weeks={gridWeeks} label={`Weeks in ${year}`} />
+  </div>
+
+  {[...months].map(([month, items]) => (
+    <div class="wrapper flow">
+      <h3 class="sermon-month">{format(`${month}-01`, "MMMM")}</h3>
+      <ListC
+        items={items.map((sermon) => ({
+          href: playLink(params, sermon),
+          date: format(sermon.date, "ddd, MMM D"),
+          datetime: sermon.date,
+          label: label(sermon),
+          title: sermon.title,
+          meta:
+            [sermon.speaker, sermon.gathering]
+              .filter(Boolean)
+              .join(" · ") || undefined,
+          current: sermon.id === playingId,
+        }))}
+      />
+    </div>
+  ))}
+</section>
+
+<style>
+  .sermon-month {
+    font-family: var(--ff-heading);
+    font-size: var(--fs-500);
+    font-weight: var(--fw-semi-bold);
+    color: var(--text-high-contrast);
+  }
+</style>

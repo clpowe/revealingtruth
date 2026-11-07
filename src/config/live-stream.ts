@@ -1,24 +1,18 @@
+import { youtube, youtubeHtml } from "../lib/youtube";
+
 export const youtubeChannelId = "UCLQfHqzkzdBwitvJcFqGYAA";
 
 const liveURL = `https://www.youtube.com/channel/${youtubeChannelId}/live`;
 
 export async function getLiveVideoId(): Promise<string | undefined> {
-  try {
-    const response = await fetch(liveURL, {
-      headers: { "Accept-Language": "en-US,en;q=0.9" },
-      signal: AbortSignal.timeout(3000),
-      // Share one lookup per minute across visitors at each edge location
-      cf: { cacheTtl: 60, cacheEverything: true },
-    });
-    if (!response.ok) return undefined;
-
-    const html = await response.text();
-    return html.match(
-      /<link rel="canonical" href="https:\/\/www\.youtube\.com\/watch\?v=([\w-]{11})"/,
-    )?.[1];
-  } catch {
-    return undefined;
-  }
+  const html = await youtubeHtml(liveURL, {
+    headers: { "Accept-Language": "en-US,en;q=0.9" },
+    timeout: 3000,
+    cf: { cacheTtl: 60, cacheEverything: true },
+  });
+  return html?.match(
+    /<link rel="canonical" href="https:\/\/www\.youtube\.com\/watch\?v=([\w-]{11})"/,
+  )?.[1];
 }
 
 export type LiveState =
@@ -39,17 +33,12 @@ export async function fetchLiveState(apiKey: string): Promise<LiveState> {
   const videoId = await getLiveVideoId();
   if (!videoId) return { status: "none" };
 
-  const response = await fetch(
-    `https://www.googleapis.com/youtube/v3/videos?${new URLSearchParams({
-      part: "snippet,liveStreamingDetails",
-      id: videoId,
-      key: apiKey,
-    })}`,
-    { signal: AbortSignal.timeout(5000) },
+  const data = await youtube<VideosResponse>(
+    "videos",
+    { part: "snippet,liveStreamingDetails", id: videoId, key: apiKey },
+    5000,
   );
-  if (!response.ok) throw new Error(`YouTube videos responded ${response.status}`);
-
-  const video = ((await response.json()) as VideosResponse).items?.[0];
+  const video = data.items?.[0];
   if (!video) return { status: "none" };
 
   switch (video.snippet.liveBroadcastContent) {

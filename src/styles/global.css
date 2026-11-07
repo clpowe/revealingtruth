@@ -404,6 +404,18 @@
       rgb(0 0 0 / 0)
     );
   }
+
+  /* Sermon meta — speaker, date and counts: the UI voice, names picked out */
+  .sermon-meta {
+    --cluster-gap: var(--size-200) var(--size-500);
+
+    font-family: var(--ff-ui);
+    font-size: var(--font-size-sm);
+  }
+
+  .sermon-meta strong {
+    color: var(--text-high-contrast);
+  }
 }
 
 /* ==========================================================================

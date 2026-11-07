@@ -157,7 +157,7 @@ const youtubeHref = videoId
     });
   }
 
-  const time = document.querySelector<HTMLElement>("[data-starts-at]");
+  const time = document.querySelector<HTMLTimeElement>("[data-starts-at]");
   const countdown = document.querySelector<HTMLElement>("[data-countdown]");
   if (time && countdown) {
     const start = Date.parse(time.dateTime);

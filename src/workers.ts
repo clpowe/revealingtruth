@@ -12,6 +12,9 @@ const cachedPages: Record<string, number> = {
   "/live": 60,
 };
 
+// The DOM lib's CacheStorage (pulled in by Astro's tsconfig) lacks Workers' `default`
+const edgeCache = () => (caches as unknown as { default: Cache }).default;
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -20,7 +23,7 @@ export default {
 
     // Keyed by URL alone: ?v=, ?week= and ?year= each get their own copy
     const key = new Request(url.toString());
-    const cached = await caches.default.match(key);
+    const cached = await edgeCache().match(key);
     if (cached) return cached;
 
     const response = await handle(request, env, ctx);
@@ -31,7 +34,7 @@ export default {
     // The edge keeps it; browsers check back each visit
     fresh.headers.set("Cache-Control", `public, max-age=0, s-maxage=${ttl}`);
     fresh.headers.set("X-Rendered-At", new Date().toISOString());
-    ctx.waitUntil(caches.default.put(key, fresh.clone()));
+    ctx.waitUntil(edgeCache().put(key, fresh.clone()));
     return fresh;
   },
 
