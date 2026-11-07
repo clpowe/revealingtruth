@@ -29,7 +29,10 @@ const week = startOfWeek(params.get("week") ?? playing?.date ?? today());
 const weekSermons = sermons.filter((sermon) => startOfWeek(sermon.date) === week).reverse();
 
 const years = [...new Set(sermons.map((sermon) => sermon.date.slice(0, 4)))];
-const year = years.find((y) => y === params.get("year")) ?? playing?.date.slice(0, 4) ?? years[0];
+// An empty archive (a fresh KV, before the cron's first run) still needs a
+// real year: the week grid builds its dates from it
+const year =
+  years.find((y) => y === params.get("year")) ?? playing?.date.slice(0, 4) ?? today().slice(0, 4);
 const yearSermons = sermons.filter((sermon) => sermon.date.startsWith(year));
 const months = Map.groupBy(yearSermons, (sermon) => sermon.date.slice(0, 7));
 
