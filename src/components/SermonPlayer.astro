@@ -28,11 +28,21 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
     IFrame API fullscreens the iframe itself */}
 <video-player class="sermon-player">
   <media-container class="sermon-player__frame">
-    <youtube-video src={id} title={title} playsinline></youtube-video>
+    {/* No src until someone reaches for the player: the script below sets it,
+        so YouTube's iframe, scripts, fonts and ads stay off the first load */}
+    <youtube-video data-src={id} title={title} playsinline></youtube-video>
 
-    {/* Covers YouTube's own title bar and play button until playback starts */}
+    {/* Covers YouTube's own title bar and play button until playback starts.
+        It's the page's LCP: WebP, fetched first */}
     <media-poster class="sermon-player__poster">
-      <img src={`https://i.ytimg.com/vi/${id}/maxresdefault.jpg`} alt="" />
+      <img
+        src={`https://i.ytimg.com/vi_webp/${id}/maxresdefault.webp`}
+        alt=""
+        width="1280"
+        height="720"
+        fetchpriority="high"
+        decoding="async"
+      />
     </media-poster>
 
     <media-controls>
@@ -206,9 +216,36 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
     }
   }
 
+  // Load YouTube on the first press or focus. A play() sent before the embed
+  // is ready gets lost, so a press embeds with autoplay and YouTube starts
+  // itself. Focus (keyboard) loads it paused, ready for Space or k
+  function setUpDeferredEmbeds() {
+    for (const player of document.querySelectorAll<HTMLElement>(".sermon-player")) {
+      const media = player.querySelector<HTMLElement & { autoplay: boolean; src: string }>(
+        "youtube-video[data-src]",
+      );
+      if (!media) continue;
+
+      const events = ["pointerdown", "focusin"] as const;
+      const load = (event: Event) => {
+        for (const type of events) player.removeEventListener(type, load, true);
+        // Properties, not attributes: the embed URL is built when src is set
+        if (event.type === "pointerdown") media.autoplay = true;
+        media.src = media.dataset.src!;
+        media.removeAttribute("data-src");
+      };
+      // Capture: the controls stop pointerdown before it bubbles up here
+      for (const type of events) player.addEventListener(type, load, true);
+    }
+  }
+
   setUpToggles();
+  setUpDeferredEmbeds();
   // Pages with the ClientRouter swap in a new player without rerunning this
-  document.addEventListener("astro:after-swap", setUpToggles);
+  document.addEventListener("astro:after-swap", () => {
+    setUpToggles();
+    setUpDeferredEmbeds();
+  });
 </script>
 
 <style>
