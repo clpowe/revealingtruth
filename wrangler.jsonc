@@ -35,6 +35,27 @@
     "crons": ["*/2 * * * *"],
   },
   /**
+   * Worker Previews (e.g. the "staging" alias) do NOT inherit top-level bindings.
+   * Without this block env.LIVE_KV / env.PRAYER_DB are undefined in staging.
+   * Separate staging KV + D1 so staging never touches production data.
+   */
+  "previews": {
+    "kv_namespaces": [
+      {
+        "binding": "LIVE_KV",
+        "id": "a0517ac050064b52be7d3866e98a1cf4",
+      },
+    ],
+    "d1_databases": [
+      {
+        "binding": "PRAYER_DB",
+        "database_name": "revealingtruth-prayer-staging",
+        "database_id": "59d02d5c-1a8a-42b1-a86d-ffee81d028bc",
+        "migrations_dir": "migrations",
+      },
+    ],
+  },
+  /**
    * Smart Placement
    * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
    */
