@@ -5,7 +5,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "revealingtruth",
-  "main": "@astrojs/cloudflare/entrypoints/server",
+  "main": "src/workers.ts",
   "compatibility_date": "2026-10-06",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
@@ -24,6 +24,16 @@
       "migrations_dir": "migrations",
     },
   ],
+  "kv_namespaces": [
+    {
+      "binding": "LIVE_KV",
+      "id": "0c35895496a3421daf82962c5f58354c",
+      "remote": true,
+    },
+  ],
+  "triggers": {
+    "crons": ["*/2 * * * *"],
+  },
   /**
    * Smart Placement
    * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
@@ -48,3 +58,4 @@
    */
   // "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
 }
+
