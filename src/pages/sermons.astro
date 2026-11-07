@@ -36,6 +36,21 @@ const year =
 const yearSermons = sermons.filter((sermon) => sermon.date.startsWith(year));
 const months = Map.groupBy(yearSermons, (sermon) => sermon.date.slice(0, 7));
 
+/* Title: names what the view shows beyond the default (latest sermon, its
+   week and year), so tabs and history read apart and the ClientRouter,
+   which announces the title after each swap, says what changed:
+   "A Leap of Faith · Week of Nov 8, 2026 · Sermons" */
+const title = [
+  params.has("v") && playing?.title,
+  params.has("week") &&
+    week !== startOfWeek(playing?.date ?? week) &&
+    `Week of ${format(week, { month: "short", day: "numeric", year: "numeric" })}`,
+  params.has("year") && year !== playing?.date.slice(0, 4) && `${year} archive`,
+  "Sermons",
+]
+  .filter(Boolean)
+  .join(" · ");
+
 /* Week grid: every week touching the year, Sunday-first like the panel */
 const gridWeeks: WeekGridWeek[] = [];
 for (let start = startOfWeek(`${year}-01-01`); start <= `${year}-12-31`; start = addDays(start, 7)) {
@@ -105,7 +120,7 @@ const playLink = (sermon: Sermon) =>
 ---
 
 <BaseLayout
-  title="Sermons"
+  title={title}
   description="Watch every Sunday message and Wednesday night from Revealing Truth Church, week by week."
   position="static"
 >
@@ -148,7 +163,8 @@ const playLink = (sermon: Sermon) =>
               <div class="repel" data-align="end">
                 <div class="flow" style="--flow-space: var(--size-300);">
                   <Tag>{label(playing)}</Tag>
-                  <h2 class="sermon-title">{playing.title}</h2>
+                  {/* Focusable by script only: picking a sermon lands here */}
+                  <h2 class="sermon-title" tabindex="-1">{playing.title}</h2>
                   <p class="sermon-meta cluster">
                     {playing.speaker && <strong>{playing.speaker}</strong>}
                     <span>{format(playing.date, { weekday: "long", month: "short", day: "numeric", year: "numeric" })}</span>
@@ -200,7 +216,7 @@ const playLink = (sermon: Sermon) =>
           </Statement>
           <nav class="cluster" aria-label="Year">
             {years.map((y) => (
-              <Button type={y === year ? undefined : "outline"} href={link({ year: y })}>
+              <Button type={y === year ? undefined : "outline"} current={y === year} href={link({ year: y })}>
                 {y}
               </Button>
             ))}
@@ -240,11 +256,30 @@ const playLink = (sermon: Sermon) =>
      page where it was; one that picks a sermon goes up to the player */
   let keepScroll: { x: number; y: number } | undefined;
 
+  /* Focus: the swap replaces every element, so focus would fall back to
+     <body> and a keyboard user would start over from the top. A week or
+     year link hands focus to the same control on the new page (found by
+     its nav and name, "Weeks" + "Next week"); a sermon link to its title */
+  let refocus: { nav: string | null; name: string } | "title" | undefined;
+
+  const nameOf = (el: Element) => (el.getAttribute("aria-label") ?? el.textContent ?? "").trim();
+
+  function findControl({ nav, name }: { nav: string | null; name: string }) {
+    const area = nav ? document.querySelector(`nav[aria-label="${CSS.escape(nav)}"]`) : document.querySelector("main");
+    return [...(area?.querySelectorAll<HTMLElement>("a[href], button") ?? [])].find((el) => nameOf(el) === name);
+  }
+
   document.addEventListener("astro:before-preparation", (event) => {
     const sameSermon =
       event.to.pathname === event.from.pathname &&
       event.to.searchParams.get("v") === event.from.searchParams.get("v");
-    keepScroll = event.navigationType === "push" && sameSermon ? { x: scrollX, y: scrollY } : undefined;
+    const push = event.navigationType === "push";
+    keepScroll = push && sameSermon ? { x: scrollX, y: scrollY } : undefined;
+
+    const source = event.sourceElement ?? document.activeElement;
+    if (!push || !(source instanceof HTMLElement) || !source.closest("main")) refocus = undefined;
+    else if (!sameSermon) refocus = "title";
+    else refocus = { nav: source.closest("nav")?.getAttribute("aria-label") ?? null, name: nameOf(source) };
   });
 
   // Carry theater and wide over before the new page paints, so it never
@@ -261,6 +296,13 @@ const playLink = (sermon: Sermon) =>
   document.addEventListener("astro:after-swap", () => {
     if (keepScroll) scrollTo(keepScroll.x, keepScroll.y);
     keepScroll = undefined;
+
+    const target =
+      refocus === "title"
+        ? document.querySelector<HTMLElement>(".sermon-title")
+        : refocus && findControl(refocus);
+    target?.focus({ preventScroll: true });
+    refocus = undefined;
   });
 </script>
 
@@ -283,6 +325,11 @@ const playLink = (sermon: Sermon) =>
     font-weight: var(--fw-semi-bold);
     line-height: var(--lh-heading);
     color: var(--text-high-contrast);
+  }
+
+  /* Script focus after picking a sermon: a heading isn't a control, so no ring */
+  .sermon-title:focus {
+    outline: none;
   }
 
   /* Speaker, date and counts: the UI voice, names picked out */

@@ -7,13 +7,23 @@ interface Props {
   label?: string;
   /** Renders a link instead of a button */
   href?: string;
+  /** The selected one of a set of links, like the year shown: tells screen
+      readers what the filled style shows */
+  current?: boolean;
 }
 
-const { type, shape, label, href } = Astro.props;
+const { type, shape, label, href, current } = Astro.props;
 const Element = href ? "a" : "button";
 ---
 
-<Element class="button" data-type={type} data-shape={shape} aria-label={label} href={href}>
+<Element
+  class="button"
+  data-type={type}
+  data-shape={shape}
+  aria-label={label}
+  aria-current={current ? "page" : undefined}
+  href={href}
+>
   <slot />
 </Element>
 

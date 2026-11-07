@@ -196,6 +196,18 @@ const legend: { state: WeekGridState | "current"; name: string }[] = [
     background-color: var(--background-accent);
   }
 
+  /* Lime on white is 1.6:1; an edge in the text colour gives the tile the
+     3:1 a UI graphic needs. On dark the fill alone clears it */
+  :global([data-theme="light"]) .week-grid__cell[data-state="playing"] {
+    box-shadow: inset 0 0 0 1px var(--text-high-contrast);
+  }
+
+  /* <body> is always light, so a dark area (theater mode) inside it matches
+     both; this comes later and wins */
+  :global([data-theme="dark"]) .week-grid__cell[data-state="playing"] {
+    box-shadow: none;
+  }
+
   /* Special: a solid tile with a punched dot */
   .week-grid__cell[data-state="special"] {
     background: radial-gradient(circle, var(--background-main) 22%, var(--text-high-contrast) 25%);

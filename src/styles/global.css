@@ -94,7 +94,9 @@
     --clr-neutral-1000: #000000;
 
     --clr-brand-400: #c8d500;
-    --clr-brand-600: #9aa300;
+    /* Lime text on white: the darkest shade still in the family that
+       clears WCAG AA 4.5:1 (4.63:1). #9aa300 was 2.76:1 */
+    --clr-brand-600: #737a00;
     --clr-accent-400: var(--clr-brand-400);
 
     --clr-overlay: rgb(0 0 0 / 0.4);
