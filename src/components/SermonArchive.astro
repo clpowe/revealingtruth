@@ -3,10 +3,19 @@ import Tag from "./Tag.astro";
 import Statement from "./Statement.astro";
 import Button from "./Button.astro";
 import ListC from "./ListC/ListC.astro";
-import WeekGrid, { type WeekGridCell, type WeekGridWeek } from "./WeekGrid.astro";
+import WeekGrid, {
+  type WeekGridCell,
+  type WeekGridWeek,
+} from "./WeekGrid.astro";
 import { format } from "@formkit/tempo";
 import type { Sermon } from "../config/sermons";
-import { addDays, label, link, playLink, startOfWeek } from "../config/sermon-view";
+import {
+  addDays,
+  label,
+  link,
+  playLink,
+  startOfWeek,
+} from "../config/sermon-view";
 
 interface Props {
   sermons: Sermon[];
@@ -64,7 +73,11 @@ function gridCell(
       ? "special"
       : "uploaded";
   const titles = [...new Set(items.map((sermon) => sermon.title))].join(", ");
-  return { state, href: link(params, { week: start }), label: `${heading}: ${titles}` };
+  return {
+    state,
+    href: link(params, { week: start }),
+    label: `${heading}: ${titles}`,
+  };
 }
 
 const count = (kind: Sermon["kind"]) =>
@@ -95,9 +108,9 @@ const count = (kind: Sermon["kind"]) =>
       </nav>
     </div>
     <p class="sermon-meta">
-      <strong>{year}</strong> · {yearSermons.length} uploads ·{" "}
-      {count("sunday")} messages · {count("wednesday")} Wednesday nights ·{" "}
-      {count("special")} special services
+      <strong>{year}</strong> · {yearSermons.length} uploads · {count("sunday")}{" "}
+      messages · {count("wednesday")} Wednesday nights · {count("special")}{" "}
+      special services
     </p>
     <WeekGrid weeks={gridWeeks} label={`Weeks in ${year}`} />
   </div>
@@ -113,9 +126,8 @@ const count = (kind: Sermon["kind"]) =>
           label: label(sermon),
           title: sermon.title,
           meta:
-            [sermon.speaker, sermon.gathering]
-              .filter(Boolean)
-              .join(" · ") || undefined,
+            [sermon.speaker, sermon.gathering].filter(Boolean).join(" · ") ||
+            undefined,
           current: sermon.id === playingId,
         }))}
       />

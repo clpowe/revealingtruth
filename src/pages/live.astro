@@ -8,14 +8,19 @@ import ListA from "../components/ListA/ListA.astro";
 import { seo } from "../config/seo";
 import { locations } from "../config/locations";
 import { env } from "cloudflare:workers";
-import { youtubeChannelId, type LiveState } from "../config/live-stream";
+import {
+  liveKey,
+  parseLiveState,
+  youtubeChannelId,
+  type LiveState,
+} from "../config/live-stream";
 
 // Rendered per request so the player follows whichever stream is current
 export const prerender = false;
 
-const state: LiveState = JSON.parse(
-  (await env.LIVE_KV.get("live")) ?? "null",
-) ?? { status: "none" };
+const state: LiveState = parseLiveState(await env.LIVE_KV.get(liveKey)) ?? {
+  status: "none",
+};
 
 const videoId = state.status === "none" ? undefined : state.videoId;
 

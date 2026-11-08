@@ -1,4 +1,5 @@
 import { diffDays, format } from "@formkit/tempo";
+import { z } from "astro/zod";
 import { youtubeChannelId } from "./live-stream";
 import { sermonOverrides } from "./sermon-overrides";
 import { youtube } from "../lib/youtube";
@@ -21,22 +22,36 @@ const sweepInterval = 24 * 60 * 60 * 1000;
 /** Each page costs up to two subrequests; Workers Free allows 50 a run */
 const sweepPagesPerRun = 5;
 
-export interface Stream {
-  id: string;
-  title: string;
+const stream = z.object({
+  id: z.string(),
+  title: z.string(),
   /** Start in church-local wall time, "2026-11-01T11:22" */
-  local: string;
+  local: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/),
   /** Length in seconds */
-  duration: number;
-}
+  duration: z.number().nonnegative(),
+});
 
-export interface SermonsCache {
+const sermonsCache = z.object({
   /** Newest first */
-  streams: Stream[];
+  streams: z.array(stream),
   /** When the last full sweep finished */
-  sweptAt?: string;
+  sweptAt: z.iso.datetime().optional(),
   /** A sweep in progress: where it resumes and which ids it has seen */
-  sweep?: { pageToken: string; seen: string[] };
+  sweep: z.object({ pageToken: z.string(), seen: z.array(z.string()) }).optional(),
+});
+
+export type Stream = z.infer<typeof stream>;
+export type SermonsCache = z.infer<typeof sermonsCache>;
+
+/** The stored cache, or null when it's missing or isn't one */
+export function parseSermonsCache(raw: string | null): SermonsCache | null {
+  if (!raw) return null;
+  try {
+    const parsed = sermonsCache.safeParse(JSON.parse(raw));
+    if (parsed.success) return parsed.data;
+  } catch {}
+  console.warn("sermons: ignoring malformed stored cache");
+  return null;
 }
 
 export async function syncSermons(
@@ -114,15 +129,23 @@ interface PlaylistItem {
   publishedAt: string;
 }
 
-interface PlaylistItemsResponse {
-  nextPageToken?: string;
-  items?: {
-    snippet: { title: string; publishedAt: string; resourceId: { videoId: string } };
-  }[];
-}
+const playlistItemsResponse = z.object({
+  nextPageToken: z.string().optional(),
+  items: z
+    .array(
+      z.object({
+        snippet: z.object({
+          title: z.string(),
+          publishedAt: z.iso.datetime(),
+          resourceId: z.object({ videoId: z.string() }),
+        }),
+      }),
+    )
+    .optional(),
+});
 
 async function fetchPage(apiKey: string, pageToken?: string) {
-  const data = await youtube<PlaylistItemsResponse>("playlistItems", {
+  const data = await youtube("playlistItems", playlistItemsResponse, {
     key: apiKey,
     part: "snippet",
     playlistId: streamsPlaylistId,
@@ -142,20 +165,29 @@ async function fetchPage(apiKey: string, pageToken?: string) {
   return { items, nextPageToken: data.nextPageToken };
 }
 
-interface VideosResponse {
-  items?: {
-    id: string;
-    snippet: { title: string; liveBroadcastContent: "live" | "upcoming" | "none" };
-    contentDetails: { duration: string };
-    liveStreamingDetails?: { actualStartTime?: string };
-  }[];
-}
+const videosResponse = z.object({
+  items: z
+    .array(
+      z.object({
+        id: z.string(),
+        snippet: z.object({
+          title: z.string(),
+          liveBroadcastContent: z.enum(["live", "upcoming", "none"]),
+        }),
+        contentDetails: z.object({ duration: z.string() }),
+        liveStreamingDetails: z
+          .object({ actualStartTime: z.iso.datetime().optional() })
+          .optional(),
+      }),
+    )
+    .optional(),
+});
 
 /** Details for finished broadcasts; live and upcoming ones are left for a later run */
 async function fetchStreams(apiKey: string, ids: string[]): Promise<Stream[]> {
   const streams: Stream[] = [];
   for (let start = 0; start < ids.length; start += 50) {
-    const data = await youtube<VideosResponse>("videos", {
+    const data = await youtube("videos", videosResponse, {
       key: apiKey,
       part: "snippet,contentDetails,liveStreamingDetails",
       id: ids.slice(start, start + 50).join(","),
@@ -234,7 +266,7 @@ const gatheringTime = /\b(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m\b/i;
 const seriesGap = 35;
 
 export async function getSermons(kv: KVNamespace): Promise<Sermon[]> {
-  const cache = await kv.get<SermonsCache>(sermonsKey, "json");
+  const cache = parseSermonsCache(await kv.get(sermonsKey));
   return toSermons(cache?.streams ?? []);
 }
 

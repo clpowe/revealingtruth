@@ -1,3 +1,4 @@
+import { z } from "astro/zod";
 import { FetchError, ofetch } from "ofetch";
 
 const api = ofetch.create({
@@ -8,16 +9,26 @@ const api = ofetch.create({
   parseResponse: JSON.parse,
 });
 
-export async function youtube<T>(
+/** A Data API resource, checked against `schema` before anything reads it */
+export async function youtube<S extends z.ZodType>(
   resource: string,
+  schema: S,
   query: Record<string, string>,
   timeout = 10_000,
-): Promise<T> {
+): Promise<z.output<S>> {
+  let data: unknown;
   try {
-    return await api<T>(resource, { query, timeout });
+    data = await api<unknown>(resource, { query, timeout });
   } catch (error) {
     throw sanitize(error, `YouTube ${resource}`);
   }
+  const parsed = schema.safeParse(data);
+  // Paths only: the issues' own text can quote the response
+  if (!parsed.success) {
+    const paths = parsed.error.issues.map((issue) => issue.path.join(".") || "(root)");
+    throw new Error(`YouTube ${resource} sent unexpected data at ${paths.join(", ")}`);
+  }
+  return parsed.data;
 }
 
 export async function youtubeHtml(

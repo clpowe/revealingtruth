@@ -1,6 +1,7 @@
+import { z } from "astro/zod";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { youtube } from "../lib/youtube";
-import { syncSermons, type Stream } from "./sermons";
+import { parseSermonsCache, syncSermons, type Stream } from "./sermons";
 
 vi.mock("../lib/youtube", () => ({ youtube: vi.fn() }));
 
@@ -10,12 +11,16 @@ const recent = "2026-11-01T15:00:00Z";
 type Item = { id: string; title?: string };
 type Page = { items: Item[]; next?: string };
 
-/** Fakes the API: playlist pages keyed by page token ("" is the first) */
+/** Fakes the API: playlist pages keyed by page token ("" is the first).
+    Each response goes through the caller's schema, as the real client does */
 function playlist(pages: Record<string, Page>) {
   vi.mocked(youtube).mockImplementation((async (
     resource: string,
+    schema: z.ZodType,
     query: Record<string, string>,
-  ) => {
+  ) => schema.parse(respond(resource, query))) as typeof youtube);
+
+  function respond(resource: string, query: Record<string, string>) {
     if (resource === "playlistItems") {
       const page = pages[query.pageToken ?? ""];
       return {
@@ -38,7 +43,7 @@ function playlist(pages: Record<string, Page>) {
         liveStreamingDetails: { actualStartTime: recent },
       })),
     };
-  }) as typeof youtube);
+  }
 }
 
 const cached = (id: string): Stream => ({
@@ -106,5 +111,21 @@ describe("syncSermons sweep", () => {
     playlist({ "": { items: [] } });
     const cache = await syncSermons("key", { streams: [cached("b")] }, now);
     expect(ids(cache.streams)).toEqual(["b"]);
+  });
+});
+
+describe("parseSermonsCache", () => {
+  it("reads a well-formed cache", () => {
+    const cache = { streams: [cached("a")], sweptAt: "2026-11-07T12:00:00.000Z" };
+    expect(parseSermonsCache(JSON.stringify(cache))).toEqual(cache);
+  });
+
+  it.each([
+    ["missing", null],
+    ["not JSON", "{"],
+    ["wrong shape", JSON.stringify({ streams: "nope" })],
+    ["bad stream", JSON.stringify({ streams: [{ ...cached("a"), local: "Sunday" }] })],
+  ])("treats a %s cache as absent", (_, raw) => {
+    expect(parseSermonsCache(raw)).toBeNull();
   });
 });

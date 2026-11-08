@@ -41,7 +41,10 @@ const months = weeks.flatMap((week, column) => {
     const date = new Date(start);
     date.setUTCDate(start.getUTCDate() + day);
     if (date.getUTCDate() === 1) {
-      const name = date.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" });
+      const name = date.toLocaleDateString("en-US", {
+        month: "short",
+        timeZone: "UTC",
+      });
       if (seen.has(name)) return [];
       seen.add(name);
       return [{ column, name }];
@@ -92,7 +95,11 @@ const legend: { state: WeekGridState | "current"; name: string }[] = [
         </>
       ))}
       {months.map((month) => (
-        <span class="week-grid__month" aria-hidden="true" style={`grid-column: ${month.column + 2};`}>
+        <span
+          class="week-grid__month"
+          aria-hidden="true"
+          style={`grid-column: ${month.column + 2};`}
+        >
           {month.name}
         </span>
       ))}
@@ -117,7 +124,9 @@ const legend: { state: WeekGridState | "current"; name: string }[] = [
 <script>
   // A scrolling grid opens on January; bring the week shown above into view
   function centerCurrentWeek() {
-    for (const scroller of document.querySelectorAll<HTMLElement>(".week-grid__scroller")) {
+    for (const scroller of document.querySelectorAll<HTMLElement>(
+      ".week-grid__scroller",
+    )) {
       const current = scroller.querySelector<HTMLElement>("[data-current]");
       if (!current || scroller.scrollWidth <= scroller.clientWidth) continue;
       scroller.scrollLeft = current.offsetLeft - scroller.clientWidth / 2;
@@ -157,7 +166,10 @@ const legend: { state: WeekGridState | "current"; name: string }[] = [
   /* Wide enough for the year: the weeks share the width */
   @media (width > 1080px) {
     .week-grid__grid {
-      grid-template-columns: max-content repeat(var(--week-count), minmax(0, 1fr));
+      grid-template-columns: max-content repeat(
+          var(--week-count),
+          minmax(0, 1fr)
+        );
       inline-size: auto;
     }
   }
@@ -185,7 +197,11 @@ const legend: { state: WeekGridState | "current"; name: string }[] = [
     min-inline-size: 0.875rem;
     aspect-ratio: 1;
     border-radius: 3px;
-    background-color: color-mix(in srgb, var(--text-high-contrast) 8%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--text-high-contrast) 8%,
+      transparent
+    );
   }
 
   .week-grid__cell[data-state="uploaded"] {
@@ -210,7 +226,11 @@ const legend: { state: WeekGridState | "current"; name: string }[] = [
 
   /* Special: a solid tile with a punched dot */
   .week-grid__cell[data-state="special"] {
-    background: radial-gradient(circle, var(--background-main) 22%, var(--text-high-contrast) 25%);
+    background: radial-gradient(
+      circle,
+      var(--background-main) 22%,
+      var(--text-high-contrast) 25%
+    );
   }
 
   .week-grid__cell[data-current] {

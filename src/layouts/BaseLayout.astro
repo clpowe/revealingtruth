@@ -7,9 +7,13 @@ import SiteFooter from "../components/SiteFooter.astro";
 import SEO from "../components/SEO.astro";
 import ConnectWidget from "../components/ConnectWidget.astro";
 
-type Props = ComponentProps<typeof SEO> & ComponentProps<typeof SiteHeader>;
+type Props = ComponentProps<typeof SEO> &
+  ComponentProps<typeof SiteHeader> & {
+    /** The corner Connect widget; off where the page is the form itself */
+    connect?: boolean;
+  };
 
-const { position, ...seoProps } = Astro.props;
+const { position, connect = true, ...seoProps } = Astro.props;
 ---
 
 <!doctype html>
@@ -31,6 +35,6 @@ const { position, ...seoProps } = Astro.props;
     <SiteHeader position={position} />
     <slot />
     <SiteFooter />
-    <ConnectWidget />
+    {connect && <ConnectWidget />}
   </body>
 </html>

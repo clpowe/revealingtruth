@@ -17,27 +17,26 @@ import {
   playLink,
   startOfWeek,
   today,
-  validDate,
+  parseSermonsQuery,
 } from "../config/sermon-view";
 
 export const prerender = false;
 
 const sermons = await getSermons(env.LIVE_KV);
 const params = Astro.url.searchParams;
+const query = parseSermonsQuery(params);
 
 const playing =
-  sermons.find((sermon) => sermon.id === params.get("v")) ?? sermons[0];
+  sermons.find((sermon) => sermon.id === query.v) ?? sermons[0];
 const newer = playing && sermons[sermons.indexOf(playing) - 1];
-const week = startOfWeek(
-  validDate(params.get("week")) ?? playing?.date ?? today(),
-);
+const week = startOfWeek(query.week ?? playing?.date ?? today());
 const weekSermons = sermons
   .filter((sermon) => startOfWeek(sermon.date) === week)
   .reverse();
 
 const years = [...new Set(sermons.map((sermon) => sermon.date.slice(0, 4)))];
 const year =
-  years.find((y) => y === params.get("year")) ??
+  years.find((y) => y === query.year) ??
   playing?.date.slice(0, 4) ??
   today().slice(0, 4);
 
@@ -46,11 +45,11 @@ const year =
    which announces the title after each swap, says what changed:
    "A Leap of Faith · Week of Nov 8, 2026 · Sermons" */
 const title = [
-  params.has("v") && playing?.title,
-  params.has("week") &&
+  query.v && playing?.title,
+  query.week &&
     week !== startOfWeek(playing?.date ?? week) &&
     `Week of ${format(week, "MMM D, YYYY")}`,
-  params.has("year") && year !== playing?.date.slice(0, 4) && `${year} archive`,
+  query.year && year !== playing?.date.slice(0, 4) && `${year} archive`,
   "Sermons",
 ]
   .filter(Boolean)

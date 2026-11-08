@@ -1,3 +1,4 @@
+import { z } from "astro/zod";
 import { youtube, youtubeHtml } from "../lib/youtube";
 
 export const youtubeChannelId = "UCLQfHqzkzdBwitvJcFqGYAA";
@@ -15,26 +16,49 @@ export async function getLiveVideoId(): Promise<string | undefined> {
   )?.[1];
 }
 
-export type LiveState =
-  | { status: "live"; videoId: string }
-  | { status: "upcoming"; videoId: string; startsAt: string }
-  | { status: "none" };
+export const liveKey = "live";
+
+const videoId = z.string().regex(/^[\w-]{11}$/);
+
+const liveState = z.discriminatedUnion("status", [
+  z.object({ status: z.literal("live"), videoId }),
+  z.object({ status: z.literal("upcoming"), videoId, startsAt: z.iso.datetime() }),
+  z.object({ status: z.literal("none") }),
+]);
+
+export type LiveState = z.infer<typeof liveState>;
+
+/** The stored state, or null when it's missing or isn't one */
+export function parseLiveState(raw: string | null): LiveState | null {
+  if (!raw) return null;
+  try {
+    const parsed = liveState.safeParse(JSON.parse(raw));
+    if (parsed.success) return parsed.data;
+  } catch {}
+  console.warn("live: ignoring malformed stored state");
+  return null;
+}
 
 const startGrace = 2 * 60 * 60 * 1000;
 
-interface VideosResponse {
-  items?: {
-    snippet: { liveBroadcastContent: "live" | "upcoming" | "none" };
-    liveStreamingDetails?: { scheduledStartTime?: string };
-  }[];
-}
+const videosResponse = z.object({
+  items: z
+    .array(
+      z.object({
+        snippet: z.object({ liveBroadcastContent: z.enum(["live", "upcoming", "none"]) }),
+        liveStreamingDetails: z.object({ scheduledStartTime: z.iso.datetime().optional() }).optional(),
+      }),
+    )
+    .optional(),
+});
 
 export async function fetchLiveState(apiKey: string): Promise<LiveState> {
   const videoId = await getLiveVideoId();
   if (!videoId) return { status: "none" };
 
-  const data = await youtube<VideosResponse>(
+  const data = await youtube(
     "videos",
+    videosResponse,
     { part: "snippet,liveStreamingDetails", id: videoId, key: apiKey },
     5000,
   );
