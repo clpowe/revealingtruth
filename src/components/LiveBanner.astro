@@ -1,0 +1,186 @@
+---
+import { env } from "cloudflare:workers";
+import { liveKey, parseLiveState } from "../config/live-stream";
+
+/* Rendered as a server island (server:defer in BaseLayout), so prerendered
+   pages still show the current state. Not live, or a stream further off
+   than the window below: renders nothing, and the header sits at the top */
+
+// The countdown starts this long before a scheduled stream
+const soonWindow = 15 * 60 * 1000;
+
+const state = parseLiveState(await env.LIVE_KV.get(liveKey));
+
+const status =
+  state?.status === "live"
+    ? "live"
+    : state?.status === "upcoming" &&
+        Date.parse(state.startsAt) - Date.now() <= soonWindow
+      ? "upcoming"
+      : undefined;
+
+const startsAt = state?.status === "upcoming" ? state.startsAt : undefined;
+const isLive = status === "live";
+---
+
+{
+  status && (
+    <aside class="live-banner" data-status={status} aria-label="Live stream">
+      <div class="live-banner__inner wrapper repel">
+        <p class="live-banner__message">
+          <span class="live-banner__badge">
+            {isLive ? "Live" : "Starting soon"}
+          </span>
+          {isLive ? (
+            <span class="live-banner__text">Worship is live now</span>
+          ) : (
+            <span class="live-banner__text">
+              Service begins{" "}
+              {/* The script turns this into a ticking m:ss */}
+              <time datetime={startsAt} data-live-countdown>
+                shortly
+              </time>
+            </span>
+          )}
+        </p>
+        <a class="live-banner__link" href="/live">
+          {isLive ? "Join now" : "Get ready"}
+          <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </aside>
+  )
+}
+
+<script>
+  /* The island arrives after the page loads, so wait for its countdown to
+     appear rather than looking once */
+  function start(time: HTMLTimeElement) {
+    const at = Date.parse(time.dateTime);
+    if (Number.isNaN(at)) return;
+    time.textContent = "";
+
+    const tick = () => {
+      const s = Math.max(0, Math.ceil((at - Date.now()) / 1000));
+      time.textContent =
+        s === 0
+          ? "any moment"
+          : `in ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+      if (s === 0) clearInterval(timer);
+    };
+    const timer = setInterval(tick, 1000);
+    tick();
+  }
+
+  function find() {
+    const time = document.querySelector<HTMLTimeElement>(
+      "[data-live-countdown]:not([data-started])",
+    );
+    if (!time) return false;
+    time.dataset.started = "";
+    start(time);
+    return true;
+  }
+
+  if (!find()) {
+    const observer = new MutationObserver(() => {
+      if (find()) observer.disconnect();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    // Nothing arrived: the island rendered no banner
+    addEventListener("load", () => setTimeout(() => observer.disconnect(), 5000));
+  }
+</script>
+
+<style>
+  .live-banner {
+    padding-block: var(--size-300);
+    font-family: var(--ff-ui);
+    font-size: var(--font-size-sm);
+    line-height: var(--lh-heading);
+    color: var(--text-on-accent);
+    background-color: var(--background-accent);
+  }
+
+  .live-banner[data-status="upcoming"] {
+    color: var(--clr-neutral-100);
+    background-color: var(--clr-neutral-900);
+    border-block-end: var(--border-width-hairline) solid var(--clr-neutral-800);
+  }
+
+  .live-banner__message {
+    display: flex;
+    align-items: center;
+    gap: var(--size-400);
+    min-inline-size: 0;
+  }
+
+  .live-banner__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--size-200);
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .live-banner__badge::before {
+    content: "";
+    inline-size: 0.5em;
+    aspect-ratio: 1;
+    background-color: currentColor;
+    border-radius: var(--border-radius-pill);
+  }
+
+  .live-banner[data-status="upcoming"] .live-banner__badge {
+    color: var(--clr-brand-400);
+  }
+
+  /* Phones: badge and link only */
+  .live-banner__text {
+    display: none;
+  }
+
+  @media (width > 720px) {
+    .live-banner__text {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  /* Digits keep one width, so the ticking countdown doesn't jitter */
+  .live-banner__text time {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .live-banner__inner {
+    --repel-gap: var(--size-400);
+    flex-wrap: nowrap;
+  }
+
+  /* Flex gap, not a space character: Astro drops the line break between
+     the label and the arrow */
+  .live-banner__link {
+    display: inline-flex;
+    gap: var(--size-100);
+    flex-shrink: 0;
+    font-weight: var(--fw-bold);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .live-banner__link:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+  }
+
+  /* The site's green ring would vanish on the green bar */
+  .live-banner__link:focus-visible {
+    outline: var(--border-width-2) solid currentColor;
+    outline-offset: 4px;
+    border-radius: var(--border-radius-1);
+  }
+</style>
