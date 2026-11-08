@@ -1,6 +1,6 @@
 import { handle } from "@astrojs/cloudflare/handler";
-import { fetchLiveState, type LiveState } from "./config/live-stream";
-import { sermonsKey, syncSermons, type SermonsCache } from "./config/sermons";
+import { fetchLiveState, liveKey, parseLiveState } from "./config/live-stream";
+import { parseSermonsCache, sermonsKey, syncSermons } from "./config/sermons";
 
 /* Pages ----------------------------------------------------------------
    These read KV but look the same to everyone (theater and wide player
@@ -12,6 +12,9 @@ const cachedPages: Record<string, number> = {
   "/live": 60,
 };
 
+// The DOM lib's CacheStorage (pulled in by Astro's tsconfig) lacks Workers' `default`
+const edgeCache = () => (caches as unknown as { default: Cache }).default;
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -20,7 +23,7 @@ export default {
 
     // Keyed by URL alone: ?v=, ?week= and ?year= each get their own copy
     const key = new Request(url.toString());
-    const cached = await caches.default.match(key);
+    const cached = await edgeCache().match(key);
     if (cached) return cached;
 
     const response = await handle(request, env, ctx);
@@ -31,7 +34,7 @@ export default {
     // The edge keeps it; browsers check back each visit
     fresh.headers.set("Cache-Control", `public, max-age=0, s-maxage=${ttl}`);
     fresh.headers.set("X-Rendered-At", new Date().toISOString());
-    ctx.waitUntil(caches.default.put(key, fresh.clone()));
+    ctx.waitUntil(edgeCache().put(key, fresh.clone()));
     return fresh;
   },
 
@@ -57,8 +60,8 @@ const churchHour = new Intl.DateTimeFormat("en-US", {
 
 async function refreshLive(env: Env, now: Date) {
   try {
-    const previous = await env.LIVE_KV.get("live");
-    const state = previous ? (JSON.parse(previous) as LiveState) : null;
+    const previous = await env.LIVE_KV.get(liveKey);
+    const state = parseLiveState(previous);
 
     const active =
       state?.status === "live" ||
@@ -67,7 +70,7 @@ async function refreshLive(env: Env, now: Date) {
 
     const next = JSON.stringify(await fetchLiveState(env.YOUTUBE_API_KEY));
     // The state rarely changes; KV Free allows 1,000 writes a day
-    if (next !== previous) await env.LIVE_KV.put("live", next);
+    if (next !== previous) await env.LIVE_KV.put(liveKey, next);
   } catch (error) {
     console.error("live: refresh failed", error instanceof Error ? error.message : error);
   }
@@ -77,10 +80,8 @@ async function refreshLive(env: Env, now: Date) {
 async function refreshSermons(env: Env) {
   try {
     const previous = await env.LIVE_KV.get(sermonsKey);
-    const cache = await syncSermons(
-      env.YOUTUBE_API_KEY,
-      previous ? (JSON.parse(previous) as SermonsCache) : null,
-    );
+    // A malformed cache is rebuilt from scratch rather than trusted
+    const cache = await syncSermons(env.YOUTUBE_API_KEY, parseSermonsCache(previous));
     const next = JSON.stringify(cache);
     // Most runs find nothing new
     if (next !== previous) await env.LIVE_KV.put(sermonsKey, next);

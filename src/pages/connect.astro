@@ -1,0 +1,73 @@
+---
+import { actions, isInputError } from "astro:actions";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ConnectForm from "../components/ConnectForm.astro";
+import { connectInput, type ConnectInput } from "../config/prayers.ts";
+
+/* The connect form without script: it posts here, the action runs first,
+   and this page renders its result. Rendered per request for that reason */
+export const prerender = false;
+
+const result = Astro.getActionResult(actions.submitPrayerRequest);
+const sent = result?.data?.ok === true;
+const fieldNames = connectInput.keyof().options;
+
+let errors: string[] = [];
+let invalid: (keyof ConnectInput)[] = [];
+let values: Partial<Record<keyof ConnectInput, string>> = {};
+
+if (result?.error) {
+  if (isInputError(result.error)) {
+    const fields = result.error.fields as Partial<Record<keyof ConnectInput, string[]>>;
+    invalid = fieldNames.filter((name) => fields[name]?.length);
+    errors = invalid.flatMap((name) => fields[name] ?? []);
+  } else {
+    errors = ["We couldn't send your message. Please try again."];
+  }
+
+  // Refill what was typed, so an error never costs the visitor their message.
+  // The action read a clone, so the body is still unread here
+  const form = await Astro.request.formData().catch(() => null);
+  for (const name of fieldNames) {
+    const value = form?.get(name);
+    if (typeof value === "string") values[name] = value;
+  }
+}
+
+if (result?.error) Astro.response.status = isInputError(result.error) ? 400 : 500;
+---
+
+<BaseLayout
+  title={sent ? "Thank you" : "Connect with us"}
+  description="Reach the Revealing Truth Church team. Tell us how we can pray for you or help, and we'll be in touch."
+  connect={false}
+>
+  <main>
+    {/* Dark band, like the privacy page: the site header overlays it */}
+    <header class="section" data-theme="dark">
+      <div class="wrapper flow" data-width="narrow">
+        <h1 class="font-display text-high-contrast">
+          Connect <span class="font-accent text-brand">with us</span>
+        </h1>
+      </div>
+    </header>
+
+    <section class="section">
+      <div class="connect-page wrapper" data-width="narrow">
+        <ConnectForm
+          titleId="connect-page-title"
+          sent={sent}
+          errors={errors}
+          invalid={invalid}
+          values={values}
+        />
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .connect-page {
+    max-inline-size: 32rem;
+  }
+</style>

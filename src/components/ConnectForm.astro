@@ -1,0 +1,143 @@
+---
+import { actions } from "astro:actions";
+import { LIMITS, type ConnectInput } from "../config/prayers.ts";
+
+import Tag from "./Tag.astro";
+import Button from "./Button.astro";
+import Field from "./Field.astro";
+
+interface Props {
+  /** Unique per page: names the form for screen readers */
+  titleId: string;
+  /** Shows the thank-you instead of the form */
+  sent?: boolean;
+  /** Server-side messages, shown below the button */
+  errors?: string[];
+  /** Fields the server rejected, marked invalid */
+  invalid?: (keyof ConnectInput)[];
+  /** What was sent, to refill the form after an error */
+  values?: Partial<Record<keyof ConnectInput, string>>;
+}
+
+const { titleId, sent = false, errors = [], invalid = [], values = {} } = Astro.props;
+const isInvalid = (field: keyof ConnectInput) => invalid.includes(field) || undefined;
+---
+
+{/* Posts to /connect, which renders the result: the path when script is
+    off. With script the widget sends it in place */}
+<form
+  class="connect__form"
+  aria-labelledby={titleId}
+  method="POST"
+  action={`/connect${actions.submitPrayerRequest}`}
+  hidden={sent}
+>
+  <header class="connect__header flow">
+    <Tag>connect</Tag>
+    <h2 class="connect__title" id={titleId}>
+      We'd love to <span class="font-accent">meet you</span>.
+    </h2>
+  </header>
+  <Field
+    label="Name"
+    name="name"
+    autocomplete="name"
+    required
+    maxlength={LIMITS.name}
+    value={values.name}
+    aria-invalid={isInvalid("name")}
+  />
+  <Field
+    label="Email"
+    name="email"
+    type="email"
+    autocomplete="email"
+    required
+    maxlength={LIMITS.email}
+    value={values.email}
+    aria-invalid={isInvalid("email")}
+  />
+  <Field
+    label="Phone (optional)"
+    name="phone"
+    type="tel"
+    autocomplete="tel"
+    maxlength={LIMITS.phone}
+    value={values.phone}
+    aria-invalid={isInvalid("phone")}
+  />
+  <Field
+    label="How can we help?"
+    name="message"
+    multiline
+    required
+    maxlength={LIMITS.message}
+    value={values.message}
+    aria-invalid={isInvalid("message")}
+  />
+  <Button type="accent">Send</Button>
+  {/* Script writes here with textContent; the server renders one line per
+      message. Kept on one line: any whitespace inside would defeat :empty */}
+  <p class="connect__status" role="alert">{errors.map((error) => <span class="connect__error">{error}</span>)}</p>
+</form>
+<div class="connect__thanks flow" hidden={!sent}>
+  <Tag>connect</Tag>
+  <h2 class="connect__title" tabindex="-1">
+    Thank you. <span class="font-accent">We'll be in touch.</span>
+  </h2>
+  <p class="connect__note">Your message reached our team.</p>
+</div>
+
+<style>
+  .connect__form {
+    display: grid;
+    gap: var(--size-300);
+  }
+
+  /* The grid display above would otherwise beat the hidden attribute */
+  .connect__form[hidden] {
+    display: none;
+  }
+
+  .connect__header {
+    --flow-space: var(--size-300);
+
+    margin-block-end: var(--size-100);
+  }
+
+  .connect__title {
+    font-family: var(--ff-heading);
+    font-size: var(--font-size-heading-sm);
+    font-weight: var(--fw-semi-bold);
+    line-height: var(--lh-heading);
+    color: var(--text-high-contrast);
+  }
+
+  .connect__note {
+    font-family: var(--ff-ui);
+    font-size: var(--font-size-xs);
+    line-height: var(--lh-heading);
+    color: var(--text-main);
+  }
+
+  .connect__status {
+    font-family: var(--ff-ui);
+    font-size: var(--font-size-sm);
+    font-weight: var(--fw-bold);
+    color: var(--text-high-contrast);
+  }
+
+  .connect__error {
+    display: block;
+  }
+
+  /* No empty row in the grid until there's something to say */
+  .connect__status:empty {
+    display: none;
+  }
+
+  /* Focus moves here only so screen readers hear the thank-you */
+  .connect__thanks .connect__title:focus {
+    outline: none;
+  }
+</style>

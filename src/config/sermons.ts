@@ -1,5 +1,8 @@
+import { diffDays, format } from "@formkit/tempo";
+import { z } from "astro/zod";
 import { youtubeChannelId } from "./live-stream";
 import { sermonOverrides } from "./sermon-overrides";
+import { youtube } from "../lib/youtube";
 
 /* Sync ----------------------------------------------------------------
    The cron keeps a cache of every past broadcast from the channel's
@@ -19,22 +22,36 @@ const sweepInterval = 24 * 60 * 60 * 1000;
 /** Each page costs up to two subrequests; Workers Free allows 50 a run */
 const sweepPagesPerRun = 5;
 
-export interface Stream {
-  id: string;
-  title: string;
+const stream = z.object({
+  id: z.string(),
+  title: z.string(),
   /** Start in church-local wall time, "2026-11-01T11:22" */
-  local: string;
+  local: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/),
   /** Length in seconds */
-  duration: number;
-}
+  duration: z.number().nonnegative(),
+});
 
-export interface SermonsCache {
+const sermonsCache = z.object({
   /** Newest first */
-  streams: Stream[];
+  streams: z.array(stream),
   /** When the last full sweep finished */
-  sweptAt?: string;
+  sweptAt: z.iso.datetime().optional(),
   /** A sweep in progress: where it resumes and which ids it has seen */
-  sweep?: { pageToken: string; seen: string[] };
+  sweep: z.object({ pageToken: z.string(), seen: z.array(z.string()) }).optional(),
+});
+
+export type Stream = z.infer<typeof stream>;
+export type SermonsCache = z.infer<typeof sermonsCache>;
+
+/** The stored cache, or null when it's missing or isn't one */
+export function parseSermonsCache(raw: string | null): SermonsCache | null {
+  if (!raw) return null;
+  try {
+    const parsed = sermonsCache.safeParse(JSON.parse(raw));
+    if (parsed.success) return parsed.data;
+  } catch {}
+  console.warn("sermons: ignoring malformed stored cache");
+  return null;
 }
 
 export async function syncSermons(
@@ -43,7 +60,7 @@ export async function syncSermons(
   now = new Date(),
 ): Promise<SermonsCache> {
   const streams = new Map(cache?.streams.map((stream) => [stream.id, stream]));
-  const cutoff = `${Number(toLocal(now).slice(0, 4)) - yearsKept + 1}-01-01`;
+  const cutoff = `${Number(format({ date: now, format: "YYYY", tz: timeZone })) - yearsKept + 1}-01-01`;
   let { sweptAt, sweep } = cache ?? {};
 
   // The newest page every run, so a finished service shows within minutes
@@ -62,17 +79,22 @@ export async function syncSermons(
       const page = await fetchPage(apiKey, pageToken);
       await merge(apiKey, streams, page.items);
       for (const item of page.items) seen.add(item.id);
-      // Newest first, so once a whole page predates the window the rest does too
-      pageToken = page.items.every((item) => item.publishedAt < cutoff)
-        ? undefined
-        : page.nextPageToken;
+      // Newest first, so once a whole page predates the window the rest does too.
+      // A page of only private or deleted videos is empty after filtering and
+      // says nothing about dates, so the sweep keeps going
+      const pastWindow =
+        page.items.length > 0 && page.items.every((item) => item.publishedAt < cutoff);
+      pageToken = pastWindow ? undefined : page.nextPageToken;
     }
 
     if (pageToken) {
       sweep = { pageToken, seen: [...seen] };
     } else {
-      // Missing from a complete pass: deleted or made private
-      for (const id of streams.keys()) if (!seen.has(id)) streams.delete(id);
+      // Missing from a complete pass: deleted or made private. A pass that saw
+      // nothing at all is more likely a bad response than an empty channel
+      if (seen.size > 0) {
+        for (const id of streams.keys()) if (!seen.has(id)) streams.delete(id);
+      }
       sweep = undefined;
       sweptAt = now.toISOString();
     }
@@ -107,15 +129,23 @@ interface PlaylistItem {
   publishedAt: string;
 }
 
-interface PlaylistItemsResponse {
-  nextPageToken?: string;
-  items?: {
-    snippet: { title: string; publishedAt: string; resourceId: { videoId: string } };
-  }[];
-}
+const playlistItemsResponse = z.object({
+  nextPageToken: z.string().optional(),
+  items: z
+    .array(
+      z.object({
+        snippet: z.object({
+          title: z.string(),
+          publishedAt: z.iso.datetime(),
+          resourceId: z.object({ videoId: z.string() }),
+        }),
+      }),
+    )
+    .optional(),
+});
 
 async function fetchPage(apiKey: string, pageToken?: string) {
-  const data = await youtube<PlaylistItemsResponse>("playlistItems", {
+  const data = await youtube("playlistItems", playlistItemsResponse, {
     key: apiKey,
     part: "snippet",
     playlistId: streamsPlaylistId,
@@ -135,20 +165,29 @@ async function fetchPage(apiKey: string, pageToken?: string) {
   return { items, nextPageToken: data.nextPageToken };
 }
 
-interface VideosResponse {
-  items?: {
-    id: string;
-    snippet: { title: string; liveBroadcastContent: "live" | "upcoming" | "none" };
-    contentDetails: { duration: string };
-    liveStreamingDetails?: { actualStartTime?: string };
-  }[];
-}
+const videosResponse = z.object({
+  items: z
+    .array(
+      z.object({
+        id: z.string(),
+        snippet: z.object({
+          title: z.string(),
+          liveBroadcastContent: z.enum(["live", "upcoming", "none"]),
+        }),
+        contentDetails: z.object({ duration: z.string() }),
+        liveStreamingDetails: z
+          .object({ actualStartTime: z.iso.datetime().optional() })
+          .optional(),
+      }),
+    )
+    .optional(),
+});
 
 /** Details for finished broadcasts; live and upcoming ones are left for a later run */
 async function fetchStreams(apiKey: string, ids: string[]): Promise<Stream[]> {
   const streams: Stream[] = [];
   for (let start = 0; start < ids.length; start += 50) {
-    const data = await youtube<VideosResponse>("videos", {
+    const data = await youtube("videos", videosResponse, {
       key: apiKey,
       part: "snippet,contentDetails,liveStreamingDetails",
       id: ids.slice(start, start + 50).join(","),
@@ -169,30 +208,8 @@ async function fetchStreams(apiKey: string, ids: string[]): Promise<Stream[]> {
   return streams;
 }
 
-async function youtube<T>(resource: string, params: Record<string, string>): Promise<T> {
-  const response = await fetch(
-    `https://www.googleapis.com/youtube/v3/${resource}?${new URLSearchParams(params)}`,
-    { signal: AbortSignal.timeout(10_000) },
-  );
-  if (!response.ok) throw new Error(`YouTube ${resource} responded ${response.status}`);
-  return response.json();
-}
-
-const localFormat = new Intl.DateTimeFormat("en-CA", {
-  timeZone,
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-  hourCycle: "h23",
-});
-
 function toLocal(date: Date): string {
-  const part = Object.fromEntries(
-    localFormat.formatToParts(date).map(({ type, value }) => [type, value]),
-  );
-  return `${part.year}-${part.month}-${part.day}T${part.hour}:${part.minute}`;
+  return format({ date, format: "YYYY-MM-DDTHH:mm", tz: timeZone });
 }
 
 /** ISO 8601 duration ("PT1H16M47S", "P0D") to seconds */
@@ -237,7 +254,8 @@ const specialTitle =
   /easter|sunrise|resurrection|good friday|christmas eve|watch ?night|new years? eve|night of (?:prayer|worship)|founders? day/i;
 
 const separator = /\s*(?:\||\/\/|\s[-–—]\s)\s*/;
-const speakerSegment = /^(?:pastors?|p\.|apostle|bishop|minister|elder|evangelist|prophet(?:ess)?|dr\.)\s/i;
+const speakerSegment =
+  /^(?:pastors?|p\.|apostle|bishop|minister|elder|evangelist|prophet(?:ess)?|dr\.)\s/i;
 /** Service labels rather than words worth showing */
 const labelSegment =
   /gathering|service|full experience|round table|valuable wednesday|revealing truth|#rtm|^sunday|^\d{1,2}(?::\d{2})?\s*[ap]\.?m\.?$|^\d{1,2}[./_-]\d{1,2}[./_-]\d{2,4}$/i;
@@ -248,7 +266,7 @@ const gatheringTime = /\b(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m\b/i;
 const seriesGap = 35;
 
 export async function getSermons(kv: KVNamespace): Promise<Sermon[]> {
-  const cache = await kv.get<SermonsCache>(sermonsKey, "json");
+  const cache = parseSermonsCache(await kv.get(sermonsKey));
   return toSermons(cache?.streams ?? []);
 }
 
@@ -285,10 +303,10 @@ function classify(stream: Stream, date: string, time: string): SermonKind | unde
   if (stream.duration < minDuration) return;
   if (specialTitle.test(stream.title)) return "special";
 
-  const weekday = new Date(`${date}T00:00Z`).getUTCDay();
+  const weekday = format(date, "dddd", "en");
   const hour = Number(time.slice(0, 2));
-  if (weekday === 0 && hour >= 5 && hour < 14) return "sunday";
-  if (weekday === 3 && hour >= 17) return "wednesday";
+  if (weekday === "Sunday" && hour >= 5 && hour < 14) return "sunday";
+  if (weekday === "Wednesday" && hour >= 17) return "wednesday";
 }
 
 function parseTitle(raw: string) {
@@ -324,7 +342,12 @@ function fallbackTitle(kind: SermonKind, raw: string) {
   if (kind === "sunday") return "Sunday Service";
   if (kind === "wednesday") return "Valuable Wednesday";
   // A special's own label: "Good Friday Service", "Sunrise Service 2026"
-  return raw.split(separator).find((segment) => specialTitle.test(segment))?.trim() ?? raw;
+  return (
+    raw
+      .split(separator)
+      .find((segment) => specialTitle.test(segment))
+      ?.trim() ?? raw
+  );
 }
 
 function toGathering(raw: string) {
@@ -363,5 +386,6 @@ function numberSeries(sermons: Sermon[]) {
 }
 
 function daysBetween(from: string, to: string) {
-  return (Date.parse(to) - Date.parse(from)) / 86_400_000;
+  // Rounded: a DST change makes a local-time day 23 or 25 hours
+  return diffDays(to, from, "round");
 }

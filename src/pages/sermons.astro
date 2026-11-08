@@ -1,122 +1,59 @@
 ---
+import { format } from "@formkit/tempo";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Tag from "../components/Tag.astro";
-import Statement from "../components/Statement.astro";
 import Button from "../components/Button.astro";
 import SermonPlayer from "../components/SermonPlayer.astro";
 import WeekPanel from "../components/WeekPanel.astro";
-import ListC from "../components/ListC/ListC.astro";
-import WeekGrid, { type WeekGridCell, type WeekGridWeek } from "../components/WeekGrid.astro";
+import SermonArchive from "../components/SermonArchive.astro";
 import { seo } from "../config/seo";
 import { ClientRouter } from "astro:transitions";
 import { env } from "cloudflare:workers";
-import { getSermons, type Sermon } from "../config/sermons";
+import { getSermons } from "../config/sermons";
+import {
+  addDays,
+  label,
+  link,
+  playLink,
+  startOfWeek,
+  today,
+  parseSermonsQuery,
+} from "../config/sermon-view";
 
-// Rendered per request from the cache the cron keeps in KV
 export const prerender = false;
 
 const sermons = await getSermons(env.LIVE_KV);
 const params = Astro.url.searchParams;
+const query = parseSermonsQuery(params);
 
-/* Selection ------------------------------------------------------------
-   Everything is a link: ?v= picks the sermon, ?week= the week panel and
-   ?year= the archive, so any view can be shared and works without script */
-
-const playing = sermons.find((sermon) => sermon.id === params.get("v")) ?? sermons[0];
-// Sermons are newest first, so the one after this in time sits before it
+const playing =
+  sermons.find((sermon) => sermon.id === query.v) ?? sermons[0];
 const newer = playing && sermons[sermons.indexOf(playing) - 1];
-const week = startOfWeek(params.get("week") ?? playing?.date ?? today());
-const weekSermons = sermons.filter((sermon) => startOfWeek(sermon.date) === week).reverse();
+const week = startOfWeek(query.week ?? playing?.date ?? today());
+const weekSermons = sermons
+  .filter((sermon) => startOfWeek(sermon.date) === week)
+  .reverse();
 
 const years = [...new Set(sermons.map((sermon) => sermon.date.slice(0, 4)))];
-// An empty archive (a fresh KV, before the cron's first run) still needs a
-// real year: the week grid builds its dates from it
 const year =
-  years.find((y) => y === params.get("year")) ?? playing?.date.slice(0, 4) ?? today().slice(0, 4);
-const yearSermons = sermons.filter((sermon) => sermon.date.startsWith(year));
-const months = Map.groupBy(yearSermons, (sermon) => sermon.date.slice(0, 7));
+  years.find((y) => y === query.year) ??
+  playing?.date.slice(0, 4) ??
+  today().slice(0, 4);
 
 /* Title: names what the view shows beyond the default (latest sermon, its
    week and year), so tabs and history read apart and the ClientRouter,
    which announces the title after each swap, says what changed:
    "A Leap of Faith · Week of Nov 8, 2026 · Sermons" */
 const title = [
-  params.has("v") && playing?.title,
-  params.has("week") &&
+  query.v && playing?.title,
+  query.week &&
     week !== startOfWeek(playing?.date ?? week) &&
-    `Week of ${format(week, { month: "short", day: "numeric", year: "numeric" })}`,
-  params.has("year") && year !== playing?.date.slice(0, 4) && `${year} archive`,
+    `Week of ${format(week, "MMM D, YYYY")}`,
+  query.year && year !== playing?.date.slice(0, 4) && `${year} archive`,
   "Sermons",
 ]
   .filter(Boolean)
   .join(" · ");
-
-/* Week grid: every week touching the year, Sunday-first like the panel */
-const gridWeeks: WeekGridWeek[] = [];
-for (let start = startOfWeek(`${year}-01-01`); start <= `${year}-12-31`; start = addDays(start, 7)) {
-  const inWeek = sermons.filter((sermon) => startOfWeek(sermon.date) === start);
-  const heading = `Week of ${format(start, { month: "short", day: "numeric" })}`;
-  gridWeeks.push({
-    start,
-    current: start === week,
-    sunday: gridCell(inWeek.filter((sermon) => sermon.kind !== "wednesday"), start, heading),
-    wednesday: gridCell(inWeek.filter((sermon) => sermon.kind === "wednesday"), start, heading),
-  });
-}
-
-function gridCell(items: Sermon[], start: string, heading: string): WeekGridCell {
-  if (!items.length) return { state: "empty" };
-  const state = items.some((sermon) => sermon.id === playing?.id)
-    ? "playing"
-    : items.some((sermon) => sermon.kind === "special")
-      ? "special"
-      : "uploaded";
-  const titles = [...new Set(items.map((sermon) => sermon.title))].join(", ");
-  return { state, href: link({ week: start }), label: `${heading}: ${titles}` };
-}
-
-const count = (kind: Sermon["kind"]) => yearSermons.filter((sermon) => sermon.kind === kind).length;
-
-/* Helpers --------------------------------------------------------------- */
-
-function today() {
-  return new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
-}
-
-/** The Sunday a "YYYY-MM-DD" date's week starts on */
-function startOfWeek(date: string) {
-  const day = new Date(`${date}T00:00Z`);
-  day.setUTCDate(day.getUTCDate() - day.getUTCDay());
-  return day.toISOString().slice(0, 10);
-}
-
-function addDays(date: string, days: number) {
-  const day = new Date(`${date}T00:00Z`);
-  day.setUTCDate(day.getUTCDate() + days);
-  return day.toISOString().slice(0, 10);
-}
-
-function format(date: string, options: Intl.DateTimeFormatOptions) {
-  return new Date(`${date}T00:00Z`).toLocaleDateString("en-US", { timeZone: "UTC", ...options });
-}
-
-function label(sermon: Sermon) {
-  if (sermon.kind === "wednesday") return "Wednesday night";
-  if (sermon.kind === "special") return "Special service";
-  if (!sermon.series) return "Message";
-  return sermon.parts && sermon.parts > 1
-    ? `${sermon.series}, part ${sermon.part} of ${sermon.parts}`
-    : sermon.series;
-}
-
-function link(changes: Record<string, string>) {
-  const next = new URLSearchParams(params);
-  for (const [key, value] of Object.entries(changes)) next.set(key, value);
-  return `?${next}`;
-}
-
-const playLink = (sermon: Sermon) =>
-  link({ v: sermon.id, week: startOfWeek(sermon.date), year: sermon.date.slice(0, 4) });
 ---
 
 <BaseLayout
@@ -128,14 +65,14 @@ const playLink = (sermon: Sermon) =>
       reloading it; without script they stay plain links */}
   <ClientRouter slot="head" />
 
-  {/* Light by default; theater mode (the player's toggle) turns it dark */}
-  <main data-theme="light" data-theater>
-    {/* Before anything paints: a theater choice survives the reload every
-        sermon and week link causes, without flashing light first */}
+  {/* Dark by default (theater mode); the player's toggle turns it light */}
+  <main data-theme="dark" data-theater>
+    {/* Before anything paints: a choice to leave theater mode survives the
+        reload every sermon and week link causes, without flashing dark first */}
     <script is:inline>
       try {
-        if (localStorage.getItem("theater") === "on") {
-          document.currentScript.parentElement.dataset.theme = "dark";
+        if (localStorage.getItem("theater") === "off") {
+          document.currentScript.parentElement.dataset.theme = "light";
         }
       } catch {}
     </script>
@@ -143,110 +80,95 @@ const playLink = (sermon: Sermon) =>
 
     {/* Player + this week ------------------------------------------- */}
     <section class="section">
-      <div class="wrapper equal-columns" data-ratio="2:1" data-align="start" data-expandable>
+      {playing && (
+        <div
+          class="wrapper repel sermon-head"
+          data-align="end"
+          style="padding-bottom: var(--size-300);"
+        >
+          <div class="flow" style="--flow-space: var(--size-300);">
+            <Tag>{label(playing)}</Tag>
+            {/* Focusable by script only: picking a sermon lands here */}
+            <h2 class="sermon-title" tabindex="-1">
+              {playing.title}
+            </h2>
+            <p class="sermon-meta cluster">
+              {playing.speaker && <strong>{playing.speaker}</strong>}
+              <span>{format(playing.date, "dddd, MMM D, YYYY")}</span>
+              {playing.gathering && <span>{playing.gathering} gathering</span>}
+              <span>Streamed live</span>
+            </p>
+          </div>
+          <div class="cluster" style="--cluster-gap: var(--size-300);">
+            <Button type="accent" href="https://pushpay.com/g/revealingtruth">
+              Give
+            </Button>
+          </div>
+        </div>
+      )}
+      <div
+        id="sermon-stage"
+        class="wrapper equal-columns"
+        data-ratio="2:1"
+        data-align="start"
+        data-expandable
+      >
         {/* The player's wide toggle, reapplied before paint like theater */}
         <script is:inline>
           try {
             if (localStorage.getItem("player-wide") === "on") {
-              document.currentScript.parentElement.setAttribute("data-expanded", "");
+              document.currentScript.parentElement.setAttribute(
+                "data-expanded",
+                "",
+              );
             }
           } catch {}
         </script>
-        <div class="flow" style="--flow-space: var(--size-600);">
-          {playing ? (
-            <>
-              <SermonPlayer
-                id={playing.id}
-                title={playing.title}
-                next={newer && { href: playLink(newer), title: newer.title }}
-              />
-              <div class="repel" data-align="end">
-                <div class="flow" style="--flow-space: var(--size-300);">
-                  <Tag>{label(playing)}</Tag>
-                  {/* Focusable by script only: picking a sermon lands here */}
-                  <h2 class="sermon-title" tabindex="-1">{playing.title}</h2>
-                  <p class="sermon-meta cluster">
-                    {playing.speaker && <strong>{playing.speaker}</strong>}
-                    <span>{format(playing.date, { weekday: "long", month: "short", day: "numeric", year: "numeric" })}</span>
-                    {playing.gathering && <span>{playing.gathering} gathering</span>}
-                    <span>Streamed live</span>
-                  </p>
-                </div>
-                <div class="cluster" style="--cluster-gap: var(--size-300);">
-                  <Button type="accent" href={`https://www.youtube.com/watch?v=${playing.id}`}>
-                    Watch on YouTube ↗
-                  </Button>
-                  <Button type="outline" href={`${seo.social.youtube}?sub_confirmation=1`}>
-                    Subscribe
-                  </Button>
-                </div>
-              </div>
-            </>
-          ) : (
-            <p>Sermons are on their way. Check back soon.</p>
-          )}
-        </div>
+        {playing ? (
+          <div class="sermon-stage">
+            <SermonPlayer
+              id={playing.id}
+              title={playing.title}
+              next={
+                newer && {
+                  href: playLink(params, newer),
+                  title: newer.title,
+                }
+              }
+            />
+          </div>
+        ) : (
+          <p>Sermons are on their way. Check back soon.</p>
+        )}
 
-        <WeekPanel
-          heading={format(week, { month: "short", day: "numeric", year: "numeric" })}
-          previous={link({ week: addDays(week, -7) })}
-          next={link({ week: addDays(week, 7) })}
-          items={weekSermons.map((sermon) => ({
-            href: playLink(sermon),
-            weekday: format(sermon.date, { weekday: "short" }),
-            day: format(sermon.date, { day: "numeric" }),
-            label: label(sermon),
-            title: sermon.title,
-            meta: [sermon.speaker, sermon.gathering && `${sermon.gathering} gathering`].filter(
-              (part): part is string => Boolean(part),
-            ),
-            playing: sermon.id === playing?.id,
-          }))}
-        />
-      </div>
-    </section>
-
-    {/* Archive -------------------------------------------------------- */}
-    <section class="section flow" data-divider="top">
-      <div class="wrapper flow">
-        <div class="repel">
-          <Statement>
-            <Tag slot="tag" as="h2">week by week</Tag>{" "}
-            Every Sunday and Wednesday, <span class="font-accent text-high-contrast">in order.</span>
-          </Statement>
-          <nav class="cluster" aria-label="Year">
-            {years.map((y) => (
-              <Button type={y === year ? undefined : "outline"} current={y === year} href={link({ year: y })}>
-                {y}
-              </Button>
-            ))}
-          </nav>
-        </div>
-        <p class="sermon-meta">
-          <strong>{year}</strong> · {yearSermons.length} uploads ·{" "}
-          {count("sunday")} messages · {count("wednesday")} Wednesday nights · {count("special")}{" "}
-          special services
-        </p>
-        <WeekGrid weeks={gridWeeks} label={`Weeks in ${year}`} />
-      </div>
-
-      {[...months].map(([month, items]) => (
-        <div class="wrapper flow">
-          <h3 class="sermon-month">{format(`${month}-01`, { month: "long" })}</h3>
-          <ListC
-            items={items.map((sermon) => ({
-              href: playLink(sermon),
-              date: format(sermon.date, { weekday: "short", month: "short", day: "numeric" }),
-              datetime: sermon.date,
+        <div class="week-stage">
+          <WeekPanel
+            heading={format(week, "MMM D, YYYY")}
+            previous={link(params, { week: addDays(week, -7) })}
+            next={link(params, { week: addDays(week, 7) })}
+            items={weekSermons.map((sermon) => ({
+              href: playLink(params, sermon),
+              weekday: format(sermon.date, "ddd"),
+              day: format(sermon.date, "D"),
               label: label(sermon),
               title: sermon.title,
-              meta: [sermon.speaker, sermon.gathering].filter(Boolean).join(" · ") || undefined,
-              current: sermon.id === playing?.id,
+              meta: [
+                sermon.speaker,
+                sermon.gathering && `${sermon.gathering} gathering`,
+              ].filter((part): part is string => Boolean(part)),
+              playing: sermon.id === playing?.id,
             }))}
           />
         </div>
-      ))}
+      </div>
     </section>
+
+    <SermonArchive
+      sermons={sermons}
+      year={year}
+      week={week}
+      playingId={playing?.id}
+    />
   </main>
 </BaseLayout>
 
@@ -262,11 +184,16 @@ const playLink = (sermon: Sermon) =>
      its nav and name, "Weeks" + "Next week"); a sermon link to its title */
   let refocus: { nav: string | null; name: string } | "title" | undefined;
 
-  const nameOf = (el: Element) => (el.getAttribute("aria-label") ?? el.textContent ?? "").trim();
+  const nameOf = (el: Element) =>
+    (el.getAttribute("aria-label") ?? el.textContent ?? "").trim();
 
   function findControl({ nav, name }: { nav: string | null; name: string }) {
-    const area = nav ? document.querySelector(`nav[aria-label="${CSS.escape(nav)}"]`) : document.querySelector("main");
-    return [...(area?.querySelectorAll<HTMLElement>("a[href], button") ?? [])].find((el) => nameOf(el) === name);
+    const area = nav
+      ? document.querySelector(`nav[aria-label="${CSS.escape(nav)}"]`)
+      : document.querySelector("main");
+    return [
+      ...(area?.querySelectorAll<HTMLElement>("a[href], button") ?? []),
+    ].find((el) => nameOf(el) === name);
   }
 
   document.addEventListener("astro:before-preparation", (event) => {
@@ -277,20 +204,31 @@ const playLink = (sermon: Sermon) =>
     keepScroll = push && sameSermon ? { x: scrollX, y: scrollY } : undefined;
 
     const source = event.sourceElement ?? document.activeElement;
-    if (!push || !(source instanceof HTMLElement) || !source.closest("main")) refocus = undefined;
+    if (!push || !(source instanceof HTMLElement) || !source.closest("main"))
+      refocus = undefined;
     else if (!sameSermon) refocus = "title";
-    else refocus = { nav: source.closest("nav")?.getAttribute("aria-label") ?? null, name: nameOf(source) };
+    else
+      refocus = {
+        nav: source.closest("nav")?.getAttribute("aria-label") ?? null,
+        name: nameOf(source),
+      };
   });
 
   // Carry theater and wide over before the new page paints, so it never
   // flashes back to the defaults the inline scripts would fix a beat later
   document.addEventListener("astro:before-swap", (event) => {
     const theater = document.querySelector<HTMLElement>("[data-theater]");
-    const nextTheater = event.newDocument.querySelector<HTMLElement>("[data-theater]");
-    if (theater && nextTheater) nextTheater.dataset.theme = theater.dataset.theme;
+    const nextTheater =
+      event.newDocument.querySelector<HTMLElement>("[data-theater]");
+    if (theater && nextTheater)
+      nextTheater.dataset.theme = theater.dataset.theme;
 
-    const wide = document.querySelector("[data-expandable]")?.hasAttribute("data-expanded");
-    event.newDocument.querySelector("[data-expandable]")?.toggleAttribute("data-expanded", !!wide);
+    const wide = document
+      .querySelector("[data-expandable]")
+      ?.hasAttribute("data-expanded");
+    event.newDocument
+      .querySelector("[data-expandable]")
+      ?.toggleAttribute("data-expanded", !!wide);
   });
 
   document.addEventListener("astro:after-swap", () => {
@@ -314,14 +252,25 @@ const playLink = (sermon: Sermon) =>
       color var(--duration-slow) var(--ease-smooth);
   }
 
-  /* Wide player: one column, the week panel drops below */
+  /* Wide player, or too narrow for two columns: one column, the week panel
+     drops below */
   [data-expandable][data-expanded] {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  @media (width <= 960px) {
+    [data-expandable] {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .sermon-head {
+    margin-block-end: var(--size-600);
+  }
+
   .sermon-title {
     font-family: var(--ff-heading);
-    font-size: var(--fs-600);
+    font-size: var(--fs-800);
     font-weight: var(--fw-semi-bold);
     line-height: var(--lh-heading);
     color: var(--text-high-contrast);
@@ -330,24 +279,5 @@ const playLink = (sermon: Sermon) =>
   /* Script focus after picking a sermon: a heading isn't a control, so no ring */
   .sermon-title:focus {
     outline: none;
-  }
-
-  /* Speaker, date and counts: the UI voice, names picked out */
-  .sermon-meta {
-    --cluster-gap: var(--size-200) var(--size-500);
-
-    font-family: var(--ff-ui);
-    font-size: var(--font-size-sm);
-  }
-
-  .sermon-meta strong {
-    color: var(--text-high-contrast);
-  }
-
-  .sermon-month {
-    font-family: var(--ff-heading);
-    font-size: var(--fs-500);
-    font-weight: var(--fw-semi-bold);
-    color: var(--text-high-contrast);
   }
 </style>

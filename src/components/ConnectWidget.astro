@@ -1,11 +1,5 @@
 ---
-import { actions } from "astro:actions";
-import { LIMITS } from "../config/prayers.ts";
-
-import Tag from "./Tag.astro";
-import Button from "./Button.astro";
-import Field from "./Field.astro";
-import Checkbox from "./Checkbox.astro";
+import ConnectForm from "./ConnectForm.astro";
 import MenuToggle from "./MenuToggle.astro";
 
 interface Props {
@@ -28,7 +22,7 @@ const persist = inline ? undefined : "connect-widget";
   class="connect"
   aria-label="Connect with us"
   data-inline={inline || undefined}
-  data-astro-transition-persist={persist}
+  transition:persist={persist}
 >
   {/* A manual popover: no light dismiss, and the close toggle can hide it
       (and draw its X) the same way it does the site menu */}
@@ -69,63 +63,7 @@ const persist = inline ? undefined : "connect-widget";
       )}
     </div>
 
-    <form
-      class="connect__form"
-      aria-labelledby={titleId}
-      method="POST"
-      action={`/connect${actions.submitPrayerRequest}`}
-    >
-      <header class="connect__header flow">
-        <Tag>connect</Tag>
-        <h2 class="connect__title" id={titleId}>
-          We'd love to <span class="font-accent">meet you</span>.
-        </h2>
-      </header>
-      <Field
-        label="Name"
-        name="name"
-        autocomplete="name"
-        aria-required
-        required
-        maxlength={LIMITS.name}
-      />
-      <Field
-        label="Email"
-        name="email"
-        type="email"
-        autocomplete="email"
-        maxlength={LIMITS.email}
-        required
-      />
-      <Field
-        label="Phone"
-        name="phone"
-        type="tel"
-        autocomplete="tel"
-        maxlength={LIMITS.phone}
-      />
-      <Field
-        label="How can we help? (optional)"
-        name="message"
-        multiline
-        maxlength={LIMITS.message}
-      />
-      <Checkbox name="sms" value="false">
-        Text me updates
-      </Checkbox>
-      <Button type="accent">Send</Button>
-      <p class="connect__note">
-        Message and data rates may apply. Reply STOP to opt out.
-      </p>
-      <p class="connect__status" role="alert"></p>
-    </form>
-    <div class="connect__thanks flow" hidden>
-      <Tag>connect</Tag>
-      <h2 class="connect__title" tabindex="-1">
-        Thank you. <span class="font-accent">We'll be in touch.</span>
-      </h2>
-      <p class="connect__note">Your message reached our team.</p>
-    </div>
+    <ConnectForm titleId={titleId} />
   </div>
 </aside>
 
@@ -266,36 +204,33 @@ const persist = inline ? undefined : "connect-widget";
   /* Form rows follow the card up, one after another, with the site menu's
      timing. A keyframe rather than a transition: the rows are other
      components (Button keeps its own transitions), and the animation lives
-     only on the open state, so on close they leave with the card. */
-  .connect__form > :global(:nth-child(2)) {
+     only on the open state, so on close they leave with the card. The form
+     is ConnectForm's, so its selectors are global */
+  .connect__panel :global(.connect__form > :nth-child(2)) {
     --index: 1;
   }
 
-  .connect__form > :global(:nth-child(3)) {
+  .connect__panel :global(.connect__form > :nth-child(3)) {
     --index: 2;
   }
 
-  .connect__form > :global(:nth-child(4)) {
+  .connect__panel :global(.connect__form > :nth-child(4)) {
     --index: 3;
   }
 
-  .connect__form > :global(:nth-child(5)) {
+  .connect__panel :global(.connect__form > :nth-child(5)) {
     --index: 4;
   }
 
-  .connect__form > :global(:nth-child(6)) {
+  .connect__panel :global(.connect__form > :nth-child(6)) {
     --index: 5;
   }
 
-  .connect__form > :global(:nth-child(7)) {
+  .connect__panel :global(.connect__form > :nth-child(7)) {
     --index: 6;
   }
 
-  .connect__form > :global(:nth-child(8)) {
-    --index: 7;
-  }
-
-  .connect__panel:popover-open .connect__form > :global(*) {
+  .connect__panel:popover-open :global(.connect__form > *) {
     animation: connect-row-in var(--duration-slower) var(--ease-smooth)
       backwards;
     animation-delay: calc(var(--duration-fast) + var(--index, 0) * 60ms);
@@ -309,7 +244,7 @@ const persist = inline ? undefined : "connect-widget";
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .connect__panel:popover-open .connect__form > :global(*) {
+    .connect__panel:popover-open :global(.connect__form > *) {
       animation-delay: 0s;
     }
   }
@@ -329,65 +264,12 @@ const persist = inline ? undefined : "connect-widget";
     --bar-gap: 0.25rem;
   }
 
-  .connect__form {
-    display: grid;
-    gap: var(--size-300);
-  }
-
-  .connect__header {
-    --flow-space: var(--size-300);
-
-    margin-block-end: var(--size-100);
-  }
-
-  .connect__title {
-    font-family: var(--ff-heading);
-    font-size: var(--font-size-heading-sm);
-    font-weight: var(--fw-semi-bold);
-    line-height: var(--lh-heading);
-    color: var(--text-high-contrast);
-  }
-
-  .connect__form > :global(.checkbox) {
-    justify-self: start;
-    margin-block: var(--size-300);
-  }
-
-  .connect__note {
-    font-family: var(--ff-ui);
-    font-size: var(--font-size-xs);
-    line-height: var(--lh-heading);
-    color: var(--text-main);
-  }
-
   /* Components page: both parts side by side, in the flow */
   .connect[data-inline] {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
     gap: var(--size-600);
-  }
-
-  /* The grid display above would otherwise beat the hidden attribute */
-  .connect__form[hidden] {
-    display: none;
-  }
-
-  .connect__status {
-    font-family: var(--ff-ui);
-    font-size: var(--font-size-sm);
-    font-weight: var(--fw-bold);
-    color: var(--text-high-contrast);
-  }
-
-  /* No empty row in the grid until there's something to say */
-  .connect__status:empty {
-    display: none;
-  }
-
-  /* Focus moves here only so screen readers hear the thank-you */
-  .connect__thanks .connect__title:focus {
-    outline: none;
   }
 </style>
 

@@ -8,20 +8,19 @@ type Props = (HTMLAttributes<"input"> | HTMLAttributes<"textarea">) & {
   multiline?: boolean;
 };
 
-const { label, multiline = false, ...rest } = Astro.props;
-const Control = multiline ? "textarea" : "input";
+const { label, multiline = false, value, ...rest } = Astro.props;
 ---
 
 {/* The label stays in the accessibility tree, so the placeholder is never
     the only name the control has */}
 <label class="field">
   <span class="visually-hidden">{label}</span>
-  <Control
-    class="field__control"
-    placeholder={label}
-    rows={multiline ? 4 : undefined}
-    {...rest}
-  />
+  {multiline ? (
+    /* A textarea's value is its content, not an attribute */
+    <textarea class="field__control" placeholder={label} rows={4} {...rest}>{value}</textarea>
+  ) : (
+    <input class="field__control" placeholder={label} value={value} {...rest} />
+  )}
 </label>
 
 <style>

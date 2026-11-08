@@ -56,19 +56,36 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
         </media-time-slider>
 
         <div class="sermon-player__bar">
-          <media-controls-group class="sermon-player__group" aria-label="Playback controls">
-            <media-play-button class="sermon-player__button" data-control="play">
+          <media-controls-group
+            class="sermon-player__group"
+            aria-label="Playback controls"
+          >
+            <media-play-button
+              class="sermon-player__button"
+              data-control="play"
+            >
               <Fragment set:html={playIcon} />
               <Fragment set:html={pauseIcon} />
               <Fragment set:html={restartIcon} />
             </media-play-button>
-            <media-seek-button seconds="-10" class="sermon-player__button" data-control="back">
+            <media-seek-button
+              seconds="-10"
+              class="sermon-player__button"
+              data-control="back"
+            >
               <Fragment set:html={seekIcon} />
             </media-seek-button>
-            <media-seek-button seconds="10" class="sermon-player__button" data-control="forward">
+            <media-seek-button
+              seconds="10"
+              class="sermon-player__button"
+              data-control="forward"
+            >
               <Fragment set:html={seekIcon} />
             </media-seek-button>
-            <media-mute-button class="sermon-player__button" data-control="mute">
+            <media-mute-button
+              class="sermon-player__button"
+              data-control="mute"
+            >
               <Fragment set:html={volumeHighIcon} />
               <Fragment set:html={volumeOffIcon} />
             </media-mute-button>
@@ -79,15 +96,28 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
             </media-time-group>
           </media-controls-group>
 
-          <media-controls-group class="sermon-player__group" aria-label="More controls">
+          <media-controls-group
+            class="sermon-player__group"
+            aria-label="More controls"
+          >
             <media-playback-rate-button
               class="sermon-player__button sermon-player__rate"
               rates="1 1.25 1.5 2"
             ></media-playback-rate-button>
             {next && (
-              <a class="sermon-player__button" href={next.href} aria-label={`Next: ${next.title}`}>
+              <a
+                class="sermon-player__button"
+                href={next.href}
+                aria-label={`Next: ${next.title}`}
+              >
                 {/* Skip-next: Video.js has no icon for it */}
-                <svg viewBox="0 0 18 18" width="18" height="18" fill="currentColor" aria-hidden="true">
+                <svg
+                  viewBox="0 0 18 18"
+                  width="18"
+                  height="18"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
                   <path d="M3 4.04c0-1.13 1.25-1.8 2.2-1.2l7.4 4.96a1.44 1.44 0 0 1 0 2.4l-7.4 4.96c-.95.6-2.2-.07-2.2-1.2zM14 3a1 1 0 0 1 2 0v12a1 1 0 0 1-2 0z" />
                 </svg>
               </a>
@@ -102,7 +132,13 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
               aria-pressed="false"
               hidden
             >
-              <svg viewBox="0 0 18 18" width="18" height="18" fill="currentColor" aria-hidden="true">
+              <svg
+                viewBox="0 0 18 18"
+                width="18"
+                height="18"
+                fill="currentColor"
+                aria-hidden="true"
+              >
                 <path d="M1.22 8.47 4.47 5.22a.75.75 0 0 1 1.06 1.06L3.81 8h10.38l-1.72-1.72a.75.75 0 1 1 1.06-1.06l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 1 1-1.06-1.06l1.72-1.72H3.81l1.72 1.72a.75.75 0 1 1-1.06 1.06L1.22 9.53a.75.75 0 0 1 0-1.06" />
               </svg>
             </button>
@@ -116,11 +152,20 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
               aria-pressed="false"
               hidden
             >
-              <svg viewBox="0 0 18 18" width="18" height="18" fill="currentColor" aria-hidden="true">
+              <svg
+                viewBox="0 0 18 18"
+                width="18"
+                height="18"
+                fill="currentColor"
+                aria-hidden="true"
+              >
                 <path d="M3 4h12a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2m0 1.75a.25.25 0 0 0-.25.25v6c0 .14.11.25.25.25h12a.25.25 0 0 0 .25-.25V6a.25.25 0 0 0-.25-.25z" />
               </svg>
             </button>
-            <media-fullscreen-button class="sermon-player__button" data-control="fullscreen">
+            <media-fullscreen-button
+              class="sermon-player__button"
+              data-control="fullscreen"
+            >
               <Fragment set:html={fullscreenEnterIcon} />
               <Fragment set:html={fullscreenExitIcon} />
             </media-fullscreen-button>
@@ -143,7 +188,9 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
     <media-error-dialog>
       <media-dialog-popup class="sermon-player__error">
         <p class="sermon-player__error-title">This message can’t play here.</p>
-        <Button type="accent" href={watchURL}>Watch on YouTube</Button>
+        <Button type="accent" href={watchURL}>
+          Watch on YouTube
+        </Button>
       </media-dialog-popup>
     </media-error-dialog>
   </media-container>
@@ -178,11 +225,17 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
   function setUpToggles() {
     // Wide player: the page's [data-expandable] area gets data-expanded and
     // lays itself out around it. The page applies a saved choice before paint
-    for (const toggle of document.querySelectorAll<HTMLButtonElement>("[data-expand-toggle]")) {
+    for (const toggle of document.querySelectorAll<HTMLButtonElement>(
+      "[data-expand-toggle]",
+    )) {
       const area = toggle.closest<HTMLElement>("[data-expandable]");
       if (!area) continue;
 
-      const sync = () => toggle.setAttribute("aria-pressed", String(area.hasAttribute("data-expanded")));
+      const sync = () =>
+        toggle.setAttribute(
+          "aria-pressed",
+          String(area.hasAttribute("data-expanded")),
+        );
       sync();
       toggle.hidden = false;
 
@@ -197,11 +250,17 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
 
     // Theater mode: the page's [data-theater] area switches to the dark theme.
     // The page applies a saved choice before paint; this keeps it in step
-    for (const toggle of document.querySelectorAll<HTMLButtonElement>("[data-theater-toggle]")) {
+    for (const toggle of document.querySelectorAll<HTMLButtonElement>(
+      "[data-theater-toggle]",
+    )) {
       const area = toggle.closest<HTMLElement>("[data-theater]");
       if (!area) continue;
 
-      const sync = () => toggle.setAttribute("aria-pressed", String(area.dataset.theme === "dark"));
+      const sync = () =>
+        toggle.setAttribute(
+          "aria-pressed",
+          String(area.dataset.theme === "dark"),
+        );
       sync();
       toggle.hidden = false;
 
@@ -220,10 +279,12 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
   // is ready gets lost, so a press embeds with autoplay and YouTube starts
   // itself. Focus (keyboard) loads it paused, ready for Space or k
   function setUpDeferredEmbeds() {
-    for (const player of document.querySelectorAll<HTMLElement>(".sermon-player")) {
-      const media = player.querySelector<HTMLElement & { autoplay: boolean; src: string }>(
-        "youtube-video[data-src]",
-      );
+    for (const player of document.querySelectorAll<HTMLElement>(
+      ".sermon-player",
+    )) {
+      const media = player.querySelector<
+        HTMLElement & { autoplay: boolean; src: string }
+      >("youtube-video[data-src]");
       if (!media) continue;
 
       const events = ["pointerdown", "focusin"] as const;
@@ -339,8 +400,8 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
     display: none;
   }
 
-  /* Where layouts stack (.equal-columns), the player is already full width */
-  @media (width <= 720px) {
+  /* Where the page stacks its columns, the player is already full width */
+  @media (width <= 960px) {
     [data-expand-toggle] {
       display: none;
     }
@@ -376,7 +437,8 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
     display: none;
   }
 
-  [data-control="play"]:not([data-paused]):not([data-ended]) :global(svg:nth-of-type(2)),
+  [data-control="play"]:not([data-paused]):not([data-ended])
+    :global(svg:nth-of-type(2)),
   [data-control="play"][data-ended] :global(svg:nth-of-type(3)) {
     display: block;
   }
@@ -389,7 +451,8 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
   [data-control="mute"][data-muted] :global(svg:nth-of-type(1)),
   [data-control="mute"]:not([data-muted]) :global(svg:nth-of-type(2)),
   [data-control="fullscreen"][data-fullscreen] :global(svg:nth-of-type(1)),
-  [data-control="fullscreen"]:not([data-fullscreen]) :global(svg:nth-of-type(2)) {
+  [data-control="fullscreen"]:not([data-fullscreen])
+    :global(svg:nth-of-type(2)) {
     display: none;
   }
 
@@ -519,7 +582,8 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
     }
 
     /* Hour-long services make "0:00:00 / 1:44:56": keep the elapsed half */
-    .sermon-player__time :is(media-time-separator, media-time[type="duration"]) {
+    .sermon-player__time
+      :is(media-time-separator, media-time[type="duration"]) {
       display: none;
     }
   }
