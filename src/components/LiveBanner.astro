@@ -1,98 +1,82 @@
----
-import { env } from "cloudflare:workers";
-import { liveKey, parseLiveState } from "../config/live-stream";
-
-/* Rendered as a server island (server:defer in BaseLayout), so prerendered
-   pages still show the current state. Not live, or a stream further off
-   than the window below: renders nothing, and the header sits at the top */
-
-// The countdown starts this long before a scheduled stream
-const soonWindow = 15 * 60 * 1000;
-
-const state = parseLiveState(await env.LIVE_KV.get(liveKey));
-
-const status =
-  state?.status === "live"
-    ? "live"
-    : state?.status === "upcoming" &&
-        Date.parse(state.startsAt) - Date.now() <= soonWindow
-      ? "upcoming"
-      : undefined;
-
-const startsAt = state?.status === "upcoming" ? state.startsAt : undefined;
-const isLive = status === "live";
----
-
-{
-  status && (
-    <aside class="live-banner" data-status={status} aria-label="Live stream">
-      <div class="live-banner__inner wrapper repel">
-        <p class="live-banner__message">
-          <span class="live-banner__badge">
-            {isLive ? "Live" : "Starting soon"}
-          </span>
-          {isLive ? (
-            <span class="live-banner__text">Worship is live now</span>
-          ) : (
-            <span class="live-banner__text">
-              Service begins{" "}
-              {/* The script turns this into a ticking m:ss */}
-              <time datetime={startsAt} data-live-countdown>
-                shortly
-              </time>
-            </span>
-          )}
-        </p>
-        <a class="live-banner__link" href="/live">
-          {isLive ? "Join now" : "Get ready"}
-          <span aria-hidden="true">→</span>
-        </a>
-      </div>
-    </aside>
-  )
-}
+<live-banner>
+  <aside class="live-banner" hidden aria-label="Live stream">
+    <div class="live-banner__inner wrapper repel">
+      <p class="live-banner__message">
+        <span class="live-banner__badge" data-badge></span>
+        <span class="live-banner__text" data-message></span>
+      </p>
+      <a class="live-banner__link" href="/live">
+        <span data-link-label></span>
+        <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </aside>
+</live-banner>
 
 <script>
-  /* The island arrives after the page loads, so wait for its countdown to
-     appear rather than looking once */
-  function start(time: HTMLTimeElement) {
-    const at = Date.parse(time.dateTime);
-    if (Number.isNaN(at)) return;
-    time.textContent = "";
+  import { watchLiveState } from "../lib/live-refresh";
+  import { bannerStatus, type LiveState } from "../lib/live-state";
 
-    const tick = () => {
-      const s = Math.max(0, Math.ceil((at - Date.now()) / 1000));
-      time.textContent =
-        s === 0
-          ? "any moment"
-          : `in ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-      if (s === 0) clearInterval(timer);
-    };
-    const timer = setInterval(tick, 1000);
-    tick();
-  }
+  class LiveBanner extends HTMLElement {
+    private cleanup?: () => void;
 
-  function find() {
-    const time = document.querySelector<HTMLTimeElement>(
-      "[data-live-countdown]:not([data-started])",
-    );
-    if (!time) return false;
-    time.dataset.started = "";
-    start(time);
-    return true;
-  }
+    connectedCallback() {
+      const banner = this.querySelector<HTMLElement>(".live-banner")!;
+      const badge = this.querySelector<HTMLElement>("[data-badge]")!;
+      const message = this.querySelector<HTMLElement>("[data-message]")!;
+      const label = this.querySelector<HTMLElement>("[data-link-label]")!;
+      let state: LiveState = { status: "unknown" };
+      let timer: ReturnType<typeof setInterval> | undefined;
 
-  if (!find()) {
-    const observer = new MutationObserver(() => {
-      if (find()) observer.disconnect();
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-    // Nothing arrived: the island rendered no banner
-    addEventListener("load", () => setTimeout(() => observer.disconnect(), 5000));
+      const render = () => {
+        if (document.visibilityState !== "visible") return;
+        const status = bannerStatus(state);
+        banner.hidden = !status;
+        if (!status) return;
+        banner.dataset.status = status;
+        badge.textContent = status === "live" ? "Live" : "Starting soon";
+        label.textContent = status === "live" ? "Join now" : "Get ready";
+        if (state.status === "upcoming") {
+          const seconds = Math.max(
+            0,
+            Math.ceil((Date.parse(state.startsAt) - Date.now()) / 1000),
+          );
+          message.textContent =
+            seconds === 0
+              ? "Service begins any moment"
+              : `Service begins in ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+        } else {
+          message.textContent = "Worship is live now";
+        }
+      };
+      const stop = watchLiveState((next) => {
+        state = next;
+        clearInterval(timer);
+        render();
+        // Also brings a scheduled banner into its 15-minute window between polls.
+        if (state.status === "upcoming") timer = setInterval(render, 1000);
+      });
+      this.cleanup = () => {
+        stop();
+        clearInterval(timer);
+      };
+    }
+
+    disconnectedCallback() {
+      this.cleanup?.();
+    }
   }
+  if (!customElements.get("live-banner"))
+    customElements.define("live-banner", LiveBanner);
 </script>
 
 <style>
+  live-banner {
+    display: block;
+  }
+  [hidden] {
+    display: none !important;
+  }
   .live-banner {
     padding-block: var(--size-300);
     font-family: var(--ff-ui);
@@ -151,8 +135,8 @@ const isLive = status === "live";
     }
   }
 
-  /* Digits keep one width, so the ticking countdown doesn't jitter */
-  .live-banner__text time {
+  /* Digits keep one width, so the ticking countdown does not jitter. */
+  .live-banner__text {
     font-variant-numeric: tabular-nums;
   }
 

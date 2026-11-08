@@ -33,11 +33,8 @@ const { position, connect = true, ...seoProps } = Astro.props;
   </head>
 
   <body data-theme="light">
-    {/* Server island: fetched per visit, so prerendered pages still show
-        the current stream. Left off /live, which is the player itself */}
-    {Astro.url.pathname.replace(/\/$/, "") !== "/live" && (
-      <LiveBanner server:defer />
-    )}
+    {/* The banner refreshes status in place, including on prerendered pages. */}
+    {Astro.url.pathname.replace(/\/$/, "") !== "/live" && <LiveBanner />}
     <SiteHeader position={position} />
     <slot />
     <SiteFooter />
