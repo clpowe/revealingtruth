@@ -28,7 +28,9 @@ const params = Astro.url.searchParams;
 const playing =
   sermons.find((sermon) => sermon.id === params.get("v")) ?? sermons[0];
 const newer = playing && sermons[sermons.indexOf(playing) - 1];
-const week = startOfWeek(validDate(params.get("week")) ?? playing?.date ?? today());
+const week = startOfWeek(
+  validDate(params.get("week")) ?? playing?.date ?? today(),
+);
 const weekSermons = sermons
   .filter((sermon) => startOfWeek(sermon.date) === week)
   .reverse();
@@ -64,14 +66,14 @@ const title = [
       reloading it; without script they stay plain links */}
   <ClientRouter slot="head" />
 
-  {/* Light by default; theater mode (the player's toggle) turns it dark */}
-  <main data-theme="light" data-theater>
-    {/* Before anything paints: a theater choice survives the reload every
-        sermon and week link causes, without flashing light first */}
+  {/* Dark by default (theater mode); the player's toggle turns it light */}
+  <main data-theme="dark" data-theater>
+    {/* Before anything paints: a choice to leave theater mode survives the
+        reload every sermon and week link causes, without flashing dark first */}
     <script is:inline>
       try {
-        if (localStorage.getItem("theater") === "on") {
-          document.currentScript.parentElement.dataset.theme = "dark";
+        if (localStorage.getItem("theater") === "off") {
+          document.currentScript.parentElement.dataset.theme = "light";
         }
       } catch {}
     </script>
@@ -79,7 +81,34 @@ const title = [
 
     {/* Player + this week ------------------------------------------- */}
     <section class="section">
+      {playing && (
+        <div
+          class="wrapper repel sermon-head"
+          data-align="end"
+          style="padding-bottom: var(--size-300);"
+        >
+          <div class="flow" style="--flow-space: var(--size-300);">
+            <Tag>{label(playing)}</Tag>
+            {/* Focusable by script only: picking a sermon lands here */}
+            <h2 class="sermon-title" tabindex="-1">
+              {playing.title}
+            </h2>
+            <p class="sermon-meta cluster">
+              {playing.speaker && <strong>{playing.speaker}</strong>}
+              <span>{format(playing.date, "dddd, MMM D, YYYY")}</span>
+              {playing.gathering && <span>{playing.gathering} gathering</span>}
+              <span>Streamed live</span>
+            </p>
+          </div>
+          <div class="cluster" style="--cluster-gap: var(--size-300);">
+            <Button type="accent" href="https://pushpay.com/g/revealingtruth">
+              Give
+            </Button>
+          </div>
+        </div>
+      )}
       <div
+        id="sermon-stage"
         class="wrapper equal-columns"
         data-ratio="2:1"
         data-align="start"
@@ -96,68 +125,42 @@ const title = [
             }
           } catch {}
         </script>
-        <div class="flow" style="--flow-space: var(--size-600);">
-          {playing ? (
-            <>
-              <SermonPlayer
-                id={playing.id}
-                title={playing.title}
-                next={newer && { href: playLink(params, newer), title: newer.title }}
-              />
-              <div class="repel" data-align="end">
-                <div class="flow" style="--flow-space: var(--size-300);">
-                  <Tag>{label(playing)}</Tag>
-                  {/* Focusable by script only: picking a sermon lands here */}
-                  <h2 class="sermon-title" tabindex="-1">
-                    {playing.title}
-                  </h2>
-                  <p class="sermon-meta cluster">
-                    {playing.speaker && <strong>{playing.speaker}</strong>}
-                    <span>{format(playing.date, "dddd, MMM D, YYYY")}</span>
-                    {playing.gathering && (
-                      <span>{playing.gathering} gathering</span>
-                    )}
-                    <span>Streamed live</span>
-                  </p>
-                </div>
-                <div class="cluster" style="--cluster-gap: var(--size-300);">
-                  <Button
-                    type="accent"
-                    href={`https://www.youtube.com/watch?v=${playing.id}`}
-                  >
-                    Watch on YouTube ↗
-                  </Button>
-                  <Button
-                    type="outline"
-                    href={`${seo.social.youtube}?sub_confirmation=1`}
-                  >
-                    Subscribe
-                  </Button>
-                </div>
-              </div>
-            </>
-          ) : (
-            <p>Sermons are on their way. Check back soon.</p>
-          )}
-        </div>
+        {playing ? (
+          <div class="sermon-stage">
+            <SermonPlayer
+              id={playing.id}
+              title={playing.title}
+              next={
+                newer && {
+                  href: playLink(params, newer),
+                  title: newer.title,
+                }
+              }
+            />
+          </div>
+        ) : (
+          <p>Sermons are on their way. Check back soon.</p>
+        )}
 
-        <WeekPanel
-          heading={format(week, "MMM D, YYYY")}
-          previous={link(params, { week: addDays(week, -7) })}
-          next={link(params, { week: addDays(week, 7) })}
-          items={weekSermons.map((sermon) => ({
-            href: playLink(params, sermon),
-            weekday: format(sermon.date, "ddd"),
-            day: format(sermon.date, "D"),
-            label: label(sermon),
-            title: sermon.title,
-            meta: [
-              sermon.speaker,
-              sermon.gathering && `${sermon.gathering} gathering`,
-            ].filter((part): part is string => Boolean(part)),
-            playing: sermon.id === playing?.id,
-          }))}
-        />
+        <div class="week-stage">
+          <WeekPanel
+            heading={format(week, "MMM D, YYYY")}
+            previous={link(params, { week: addDays(week, -7) })}
+            next={link(params, { week: addDays(week, 7) })}
+            items={weekSermons.map((sermon) => ({
+              href: playLink(params, sermon),
+              weekday: format(sermon.date, "ddd"),
+              day: format(sermon.date, "D"),
+              label: label(sermon),
+              title: sermon.title,
+              meta: [
+                sermon.speaker,
+                sermon.gathering && `${sermon.gathering} gathering`,
+              ].filter((part): part is string => Boolean(part)),
+              playing: sermon.id === playing?.id,
+            }))}
+          />
+        </div>
       </div>
     </section>
 
@@ -250,14 +253,25 @@ const title = [
       color var(--duration-slow) var(--ease-smooth);
   }
 
-  /* Wide player: one column, the week panel drops below */
+  /* Wide player, or too narrow for two columns: one column, the week panel
+     drops below */
   [data-expandable][data-expanded] {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  @media (width <= 960px) {
+    [data-expandable] {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .sermon-head {
+    margin-block-end: var(--size-600);
+  }
+
   .sermon-title {
     font-family: var(--ff-heading);
-    font-size: var(--fs-600);
+    font-size: var(--fs-800);
     font-weight: var(--fw-semi-bold);
     line-height: var(--lh-heading);
     color: var(--text-high-contrast);

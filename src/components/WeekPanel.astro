@@ -29,46 +29,61 @@ const { heading, previous, next, items } = Astro.props;
 
 <section class="week-panel" aria-labelledby="week-panel-heading">
   <div class="week-panel__body">
-  <header class="week-panel__header">
-    <Tag>week of</Tag>
-    <h2 id="week-panel-heading" class="week-panel__heading font-display">{heading}</h2>
-    <nav class="cluster" style="--cluster-gap: var(--size-300);" aria-label="Weeks">
-      <Button type="outline" shape="circle" label="Previous week" href={previous}>←</Button>
-      <Button type="outline" shape="circle" label="Next week" href={next}>→</Button>
-    </nav>
-  </header>
+    <header class="week-panel__header">
+      <Tag>week of</Tag>
+      <h2 id="week-panel-heading" class="week-panel__heading font-display">
+        {heading}
+      </h2>
+      <nav
+        class="cluster"
+        style="--cluster-gap: var(--size-300);"
+        aria-label="Weeks"
+      >
+        <Button
+          type="outline"
+          shape="circle"
+          label="Previous week"
+          href={previous}
+        >
+          ←
+        </Button>
+        <Button type="outline" shape="circle" label="Next week" href={next}>
+          →
+        </Button>
+      </nav>
+    </header>
 
-  {items.length ? (
-    <ul role="list" class="week-panel__list">
-      {items.map((item) => (
-        <li>
-          <a
-            class="week-panel__item"
-            href={item.href}
-            aria-current={item.playing ? "true" : undefined}
-          >
-            <span class="week-panel__date">
-              <span class="week-panel__weekday">{item.weekday}</span>
-              <span class="week-panel__day">{item.day}</span>
-            </span>
-            <span class="week-panel__text">
-              <span class="week-panel__label">{item.label}</span>
-              <span class="week-panel__title">{item.title}</span>
-              {(item.playing || Boolean(item.meta?.length)) && (
-                <span class="week-panel__meta">
-                  {item.playing && <strong>Playing</strong>}
-                  {item.playing && item.meta?.length ? " · " : ""}
-                  {item.meta?.join(" · ")}
-                </span>
-              )}
-            </span>
-          </a>
-        </li>
-      ))}
-    </ul>
-  ) : (
-    <p class="week-panel__empty">No services streamed this week.</p>
-  )}
+    {items.length ? (
+      <ul role="list" class="week-panel__list">
+        {items.map((item) => (
+          <li>
+            <a
+              class="week-panel__item"
+              href={item.href}
+              aria-current={item.playing ? "true" : undefined}
+            >
+              <span class="week-panel__date">
+                <span class="week-panel__weekday">{item.weekday}</span>
+                <span class="week-panel__day">{item.day}</span>
+              </span>
+              <span class="week-panel__text">
+                <span class="week-panel__label">{item.label}</span>
+                <span class="week-panel__title">{item.title}</span>
+                {(item.playing || Boolean(item.meta?.length)) && (
+                  <span class="week-panel__meta">
+                    {item.playing && <strong>Playing</strong>}
+                    {item.playing && item.meta?.length ? " · " : ""}
+                    {item.meta?.join(" · ")}
+                  </span>
+                )}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p class="week-panel__empty">No services streamed this week.</p>
+    )}
   </div>
 </section>
 
@@ -113,7 +128,7 @@ const { heading, previous, next, items } = Astro.props;
   }
 
   .week-panel__heading {
-    font-size: var(--fs-700);
+    font-size: var(--fs-500);
     color: var(--text-high-contrast);
   }
 
