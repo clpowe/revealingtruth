@@ -11,7 +11,9 @@
 		"deploy": "pnpm run build && wrangler deploy",
 		"cf-typegen": "wrangler types",
 		"astro": "astro",
-		"test": "vitest run"
+		"test": "vitest run",
+		"build:staging": "CLOUDFLARE_ENV=staging pnpm run build",
+		"deploy:staging": "pnpm run build:staging && wrangler deploy --env staging"
 	},
 	"dependencies": {
 		"@astrojs/cloudflare": "^14.4.0",

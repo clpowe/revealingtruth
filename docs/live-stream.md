@@ -62,3 +62,36 @@ Before release, exercise these states in a preview:
 - Hide chat and type into Connect, then let status refresh. Both must persist.
 - Fail YouTube checks long enough to expire the KV record, then recover.
 - Disable JavaScript: the initial scheduled date and YouTube link remain usable.
+
+## Deploy the staging refresh worker
+
+A branch Preview cannot run Cron Triggers. Deploy the named staging environment
+as a real Worker to run the scheduled handler against the existing staging KV
+and D1 bindings. Production bindings are unchanged. The staging Worker and branch
+Previews deliberately share staging KV so both receive fresh live and sermon data.
+Only this staging Worker should schedule writes to that namespace.
+
+From a checkout containing this change:
+
+```sh
+pnpm install --frozen-lockfile
+pnpm exec wrangler secret put YOUTUBE_API_KEY --env staging
+pnpm run deploy:staging
+```
+
+Enter the API key at Wrangler's secure prompt, never in source control. The secret
+must be configured for the named environment; a production or Preview secret is
+not inherited. The deploy command builds with CLOUDFLARE_ENV=staging and deploys
+with --env staging so build and runtime select the same bindings.
+
+The new Worker URL is https://revealingtruth-staging.clpowe.workers.dev/ . The
+existing https://staging-revealingtruth.clpowe.workers.dev/ remains a branch Preview.
+After the schedule is active and a successful check runs, both should return a
+fresh status from /api/live. Allow for trigger activation and KV propagation.
+If status remains unknown, inspect the staging Worker's logs for
+"live: refresh failed" and verify its API key and LIVE_KV binding.
+
+For automatic releases, configure a separate Cloudflare Workers Build for
+revealingtruth-staging, tracking the staging branch, using pnpm run deploy:staging.
+Do not replace the production Worker's deployment command. Preview deployments
+alone still do not update the scheduled worker's code.
