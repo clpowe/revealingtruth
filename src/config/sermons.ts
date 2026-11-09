@@ -1,6 +1,6 @@
 import { diffDays, format } from "@formkit/tempo";
 import { z } from "astro/zod";
-import { youtubeChannelId } from "./live-stream";
+import { youtubeChannelId } from "./youtube";
 import { sermonOverrides } from "./sermon-overrides";
 import { youtube } from "../lib/youtube";
 
@@ -175,9 +175,7 @@ const videosResponse = z.object({
           liveBroadcastContent: z.enum(["live", "upcoming", "none"]),
         }),
         contentDetails: z.object({ duration: z.string() }),
-        liveStreamingDetails: z
-          .object({ actualStartTime: z.iso.datetime().optional() })
-          .optional(),
+        liveStreamingDetails: z.object({ actualStartTime: z.iso.datetime().optional() }).optional(),
       }),
     )
     .optional(),

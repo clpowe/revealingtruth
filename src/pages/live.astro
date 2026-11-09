@@ -7,37 +7,10 @@ import SocialFollow from "../components/SocialFollow.astro";
 import ListA from "../components/ListA/ListA.astro";
 import { seo } from "../config/seo";
 import { locations } from "../config/locations";
-import { env } from "cloudflare:workers";
-import {
-  liveKey,
-  parseLiveState,
-  youtubeChannelId,
-  type LiveState,
-} from "../config/live-stream";
+import { youtubeChannelId } from "../config/youtube";
 
-// Rendered per request so the player follows whichever stream is current
-export const prerender = false;
-
-const state: LiveState = parseLiveState(await env.LIVE_KV.get(liveKey)) ?? {
-  status: "none",
-};
-
-const videoId = state.status === "none" ? undefined : state.videoId;
-
-const isLive = state.status === "live";
-const startsAt = state.status === "upcoming" ? state.startsAt : undefined;
-
-const playerSrc = videoId
-  ? `https://www.youtube.com/embed/${videoId}`
-  : `https://www.youtube.com/embed/live_stream?channel=${youtubeChannelId}`;
-// Chat only embeds per video, and only on the domain named here. An upcoming
-// stream has nothing to chat about yet
-const chatSrc = isLive
-  ? `https://www.youtube.com/live_chat?v=${videoId}&embed_domain=${Astro.url.hostname}`
-  : undefined;
-const youtubeHref = videoId
-  ? `https://www.youtube.com/watch?v=${videoId}`
-  : `${seo.social.youtube}/live`;
+const playerSrc = `https://www.youtube.com/embed/live_stream?channel=${youtubeChannelId}`;
+const youtubeHref = `${seo.social.youtube}/live`;
 ---
 
 <BaseLayout
@@ -47,35 +20,21 @@ const youtubeHref = videoId
 >
   <main>
     {/* Dark band continuing the static header's, so the two read as one */}
-    <section class="live-player" data-theme="dark" data-live-status={state.status}>
+    <section class="live-player container" data-theme="dark">
       <h1 class="visually-hidden">Watch Revealing Truth Church live</h1>
       {/* YouTube refuses to play (error 153) when the embed sends no
           referrer, so the policy is set explicitly */}
-      {isLive && <iframe
+      <iframe
         src={playerSrc}
         title="Revealing Truth Church live stream"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         referrerpolicy="strict-origin-when-cross-origin"
         allowfullscreen
-      ></iframe>}
-      {startsAt && (
-        <div class="live-countdown">
-          <p>Next service starts</p>
-          {/* Formatted in the visitor's timezone by the script, so it stays
-              hidden until then */}
-          <time datetime={startsAt} data-starts-at hidden></time>
-          <p data-countdown></p>
-        </div>
-      )}
-      {state.status === "none" && (
-        <div class="live-countdown">
-          <p>Join us Sundays at 9:00 &amp; 11:00AM</p>
-        </div>
-      )}
+      ></iframe>
     </section>
 
     <section class="section">
-      <div class="live wrapper equal-columns" data-align="start">
+      <div class="wrapper">
         <div class="flow" style="--flow-space: var(--size-600);">
           <Statement>
             <Tag slot="tag" as="h2">
@@ -89,11 +48,6 @@ const youtubeHref = videoId
             <Button type="accent" href={seo.givingURL}>
               Give
             </Button>
-            {chatSrc && (
-              <span data-chat-toggle hidden>
-                <Button type="outline">Hide chat</Button>
-              </span>
-            )}
             <Button type="outline" href={youtubeHref}>
               Watch on YouTube
             </Button>
@@ -114,14 +68,6 @@ const youtubeHref = videoId
             ]}
           />
         </div>
-        {chatSrc && <iframe
-          id="live-chat"
-          class="live__chat"
-          src={chatSrc}
-          title="Live chat"
-          referrerpolicy="strict-origin-when-cross-origin"
-          loading="lazy"
-        ></iframe>}
       </div>
     </section>
 
@@ -141,67 +87,6 @@ const youtubeHref = videoId
   </main>
 </BaseLayout>
 
-<script>
-  import { reloadDelay } from "../lib/live-refresh";
-
-  // The toggle stays hidden until this runs: without script it would do nothing
-  const live = document.querySelector<HTMLElement>(".live");
-  const toggle = document.querySelector<HTMLElement>("[data-chat-toggle]");
-  const button = toggle?.querySelector("button");
-
-  if (live && toggle && button) {
-    button.type = "button";
-    button.setAttribute("aria-controls", "live-chat");
-    button.setAttribute("aria-expanded", "true");
-    toggle.hidden = false;
-
-    button.addEventListener("click", () => {
-      const hide = live.dataset.chat !== "hidden";
-      if (hide) live.dataset.chat = "hidden";
-      else delete live.dataset.chat;
-      button.textContent = hide ? "Show chat" : "Hide chat";
-      button.setAttribute("aria-expanded", String(!hide));
-    });
-  }
-
-  const time = document.querySelector<HTMLTimeElement>("[data-starts-at]");
-  const countdown = document.querySelector<HTMLElement>("[data-countdown]");
-  const start = time ? Date.parse(time.dateTime) : undefined;
-
-  if (time && countdown && start !== undefined) {
-    time.textContent = new Intl.DateTimeFormat(undefined, {
-      weekday: "long",
-      hour: "numeric",
-      minute: "2-digit",
-      timeZoneName: "short",
-    }).format(start);
-    time.hidden = false;
-
-    const tick = () => {
-      const s = Math.max(0, Math.floor((start - Date.now()) / 1000));
-      const d = Math.floor(s / 86400),
-        h = Math.floor(s / 3600) % 24;
-      const m = Math.floor(s / 60) % 60,
-        sec = s % 60;
-      countdown.textContent =
-        s === 0 ? "Starting soon…" : `${d ? d + "d " : ""}${h}h ${m}m ${sec}s`;
-    };
-    tick();
-    setInterval(tick, 1000);
-  }
-
-  // Pick up a new live state without cutting off a stream being watched
-  const status = document.querySelector<HTMLElement>("[data-live-status]")?.dataset.liveStatus;
-  const delay = reloadDelay(status, Date.now(), start);
-  if (delay !== undefined) setTimeout(reload, delay);
-
-  // A hidden tab waits until it's looked at, so a forgotten one costs nothing
-  function reload() {
-    if (document.visibilityState === "visible") location.reload();
-    else document.addEventListener("visibilitychange", () => location.reload(), { once: true });
-  }
-</script>
-
 <style>
   /* Player band ---------------------------------------------------------
      Sits below the static site header, which would otherwise cover the
@@ -213,32 +98,5 @@ const youtubeHref = videoId
     aspect-ratio: 16 / 9;
     max-block-size: 100svh;
     border: 0;
-  }
-
-  /* Countdown / no-stream message, shown in place of the player */
-  .live-countdown {
-    display: grid;
-    gap: var(--size-300);
-    justify-items: center;
-    padding-block: var(--size-800);
-    text-align: center;
-  }
-
-  /* Chat ---------------------------------------------------------------- */
-  .live__chat {
-    inline-size: 100%;
-    block-size: clamp(28rem, 70svh, 40rem);
-    background-color: var(--clr-neutral-200);
-    border: var(--border-width-hairline) solid var(--border-subtle);
-    border-radius: var(--border-radius-2);
-  }
-
-  /* Exception: chat hidden, the copy takes the full width */
-  .live[data-chat="hidden"] {
-    --column-count: 1;
-  }
-
-  .live[data-chat="hidden"] .live__chat {
-    display: none;
   }
 </style>

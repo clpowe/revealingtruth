@@ -32,7 +32,7 @@
     },
   ],
   "triggers": {
-    // Live state and the sermons archive, together (see src/workers.ts)
+    // Refresh the sermons archive (see src/workers.ts)
     "crons": ["*/5 * * * *"],
   },
   /**
