@@ -59,11 +59,7 @@ export function parseSermon(stream: Stream, kind?: SermonKind) {
   };
 }
 
-export function classifySermon(
-  title: string,
-  date: string,
-  time: string,
-): SermonKind | undefined {
+export function classifySermon(title: string, date: string, time: string): SermonKind | undefined {
   if (specialTitle.test(title)) return "special";
 
   const weekday = format(date, "dddd", "en");

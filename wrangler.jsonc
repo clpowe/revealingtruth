@@ -33,7 +33,7 @@
   ],
   "triggers": {
     // Refresh the sermons archive (see src/workers.ts)
-    "crons": ["*/5 * * * *"],
+    "crons": ["0 10 * * *"],
   },
   /**
    * Worker Previews (e.g. the "staging" alias) do NOT inherit top-level bindings.
