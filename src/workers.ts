@@ -1,5 +1,5 @@
 import { handle } from "@astrojs/cloudflare/handler";
-import { parseSermonsCache, sermonsKey, syncSermons } from "./config/sermons";
+import { syncSermons } from "./config/sermon-sync";
 
 const cachedPages: Record<string, number> = {
   "/sermons": 5 * 60,
@@ -32,21 +32,11 @@ export default {
   },
 
   // Keep the sermon archive up to date.
-  async scheduled(_controller, env, ctx) {
-    ctx.waitUntil(refreshSermons(env));
+  async scheduled(_controller, env) {
+    try {
+      await syncSermons(env.PRAYER_DB, env.YOUTUBE_API_KEY);
+    } catch (error) {
+      console.error("sermons: refresh failed", error instanceof Error ? error.message : error);
+    }
   },
 } satisfies ExportedHandler<Env>;
-
-/* Sermons --------------------------------------------------------------- */
-async function refreshSermons(env: Env) {
-  try {
-    const previous = await env.LIVE_KV.get(sermonsKey);
-    // A malformed cache is rebuilt from scratch rather than trusted
-    const cache = await syncSermons(env.YOUTUBE_API_KEY, parseSermonsCache(previous));
-    const next = JSON.stringify(cache);
-    // Most runs find nothing new
-    if (next !== previous) await env.LIVE_KV.put(sermonsKey, next);
-  } catch (error) {
-    console.error("sermons: refresh failed", error instanceof Error ? error.message : error);
-  }
-}

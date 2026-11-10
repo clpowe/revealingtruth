@@ -1,253 +1,29 @@
-import { diffDays, format } from "@formkit/tempo";
-import { z } from "astro/zod";
-import { youtubeChannelId } from "./youtube";
-import { sermonOverrides } from "./sermon-overrides";
-import { youtube } from "../lib/youtube";
+import { format } from "@formkit/tempo";
 
-/* Sync ----------------------------------------------------------------
-   The cron keeps a cache of every past broadcast from the channel's
-   auto-generated live-streams playlist (UULV…), the same list as its
-   /streams tab: no uploads or Shorts. Pages turn it into sermons with
-   toSermons(), so rule and override changes apply on the next deploy
-   without refetching anything. */
-
-export const sermonsKey = "sermons";
-
-const streamsPlaylistId = `UULV${youtubeChannelId.slice(2)}`;
-const timeZone = "America/New_York";
-/** Calendar years kept, counting the current one */
-const yearsKept = 3;
-/** How often every page is re-read to catch edited titles and removed videos */
-const sweepInterval = 24 * 60 * 60 * 1000;
-/** Each page costs up to two subrequests; Workers Free allows 50 a run */
-const sweepPagesPerRun = 5;
-
-const stream = z.object({
-  id: z.string(),
-  title: z.string(),
-  /** Start in church-local wall time, "2026-11-01T11:22" */
-  local: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/),
-  /** Length in seconds */
-  duration: z.number().nonnegative(),
-});
-
-const sermonsCache = z.object({
-  /** Newest first */
-  streams: z.array(stream),
-  /** When the last full sweep finished */
-  sweptAt: z.iso.datetime().optional(),
-  /** A sweep in progress: where it resumes and which ids it has seen */
-  sweep: z.object({ pageToken: z.string(), seen: z.array(z.string()) }).optional(),
-});
-
-export type Stream = z.infer<typeof stream>;
-export type SermonsCache = z.infer<typeof sermonsCache>;
-
-/** The stored cache, or null when it's missing or isn't one */
-export function parseSermonsCache(raw: string | null): SermonsCache | null {
-  if (!raw) return null;
-  try {
-    const parsed = sermonsCache.safeParse(JSON.parse(raw));
-    if (parsed.success) return parsed.data;
-  } catch {}
-  console.warn("sermons: ignoring malformed stored cache");
-  return null;
-}
-
-export async function syncSermons(
-  apiKey: string,
-  cache: SermonsCache | null,
-  now = new Date(),
-): Promise<SermonsCache> {
-  const streams = new Map(cache?.streams.map((stream) => [stream.id, stream]));
-  const cutoff = `${Number(format({ date: now, format: "YYYY", tz: timeZone })) - yearsKept + 1}-01-01`;
-  let { sweptAt, sweep } = cache ?? {};
-
-  // The newest page every run, so a finished service shows within minutes
-  const first = await fetchPage(apiKey);
-  await merge(apiKey, streams, first.items);
-
-  if (!sweep && (!sweptAt || now.getTime() - Date.parse(sweptAt) > sweepInterval)) {
-    sweep = { pageToken: first.nextPageToken ?? "", seen: [] };
-  }
-
-  if (sweep) {
-    const seen = new Set([...sweep.seen, ...first.items.map((item) => item.id)]);
-    let pageToken: string | undefined = sweep.pageToken || undefined;
-
-    for (let read = 0; pageToken && read < sweepPagesPerRun; read++) {
-      const page = await fetchPage(apiKey, pageToken);
-      await merge(apiKey, streams, page.items);
-      for (const item of page.items) seen.add(item.id);
-      // Newest first, so once a whole page predates the window the rest does too.
-      // A page of only private or deleted videos is empty after filtering and
-      // says nothing about dates, so the sweep keeps going
-      const pastWindow =
-        page.items.length > 0 && page.items.every((item) => item.publishedAt < cutoff);
-      pageToken = pastWindow ? undefined : page.nextPageToken;
-    }
-
-    if (pageToken) {
-      sweep = { pageToken, seen: [...seen] };
-    } else {
-      // Missing from a complete pass: deleted or made private. A pass that saw
-      // nothing at all is more likely a bad response than an empty channel
-      if (seen.size > 0) {
-        for (const id of streams.keys()) if (!seen.has(id)) streams.delete(id);
-      }
-      sweep = undefined;
-      sweptAt = now.toISOString();
-    }
-  }
-
-  return {
-    // Sorted so an unchanged cache serialises identically and skips the write
-    streams: [...streams.values()]
-      .filter((stream) => stream.local >= cutoff)
-      .sort((a, b) => b.local.localeCompare(a.local) || a.id.localeCompare(b.id)),
-    sweptAt,
-    sweep,
-  };
-}
-
-/** Adds unseen streams and refreshes the titles of known ones */
-async function merge(apiKey: string, streams: Map<string, Stream>, items: PlaylistItem[]) {
-  const unseen: string[] = [];
-  for (const item of items) {
-    const known = streams.get(item.id);
-    if (known) known.title = item.title;
-    else unseen.push(item.id);
-  }
-  for (const stream of await fetchStreams(apiKey, unseen)) {
-    streams.set(stream.id, stream);
-  }
-}
-
-interface PlaylistItem {
-  id: string;
-  title: string;
-  publishedAt: string;
-}
-
-const playlistItemsResponse = z.object({
-  nextPageToken: z.string().optional(),
-  items: z
-    .array(
-      z.object({
-        snippet: z.object({
-          title: z.string(),
-          publishedAt: z.iso.datetime(),
-          resourceId: z.object({ videoId: z.string() }),
-        }),
-      }),
-    )
-    .optional(),
-});
-
-async function fetchPage(apiKey: string, pageToken?: string) {
-  const data = await youtube("playlistItems", playlistItemsResponse, {
-    key: apiKey,
-    part: "snippet",
-    playlistId: streamsPlaylistId,
-    maxResults: "50",
-    fields: "nextPageToken,items/snippet(title,publishedAt,resourceId/videoId)",
-    ...(pageToken && { pageToken }),
-  });
-
-  const items: PlaylistItem[] = (data.items ?? [])
-    // Placeholders left behind in the playlist; dropping them lets a sweep remove them
-    .filter(({ snippet }) => snippet.title !== "Private video" && snippet.title !== "Deleted video")
-    .map(({ snippet }) => ({
-      id: snippet.resourceId.videoId,
-      title: snippet.title,
-      publishedAt: snippet.publishedAt,
-    }));
-  return { items, nextPageToken: data.nextPageToken };
-}
-
-const videosResponse = z.object({
-  items: z
-    .array(
-      z.object({
-        id: z.string(),
-        snippet: z.object({
-          title: z.string(),
-          liveBroadcastContent: z.enum(["live", "upcoming", "none"]),
-        }),
-        contentDetails: z.object({ duration: z.string() }),
-        liveStreamingDetails: z.object({ actualStartTime: z.iso.datetime().optional() }).optional(),
-      }),
-    )
-    .optional(),
-});
-
-/** Details for finished broadcasts; live and upcoming ones are left for a later run */
-async function fetchStreams(apiKey: string, ids: string[]): Promise<Stream[]> {
-  const streams: Stream[] = [];
-  for (let start = 0; start < ids.length; start += 50) {
-    const data = await youtube("videos", videosResponse, {
-      key: apiKey,
-      part: "snippet,contentDetails,liveStreamingDetails",
-      id: ids.slice(start, start + 50).join(","),
-      fields:
-        "items(id,snippet(title,liveBroadcastContent),contentDetails/duration,liveStreamingDetails/actualStartTime)",
-    });
-    for (const video of data.items ?? []) {
-      const startedAt = video.liveStreamingDetails?.actualStartTime;
-      if (video.snippet.liveBroadcastContent !== "none" || !startedAt) continue;
-      streams.push({
-        id: video.id,
-        title: video.snippet.title,
-        local: toLocal(new Date(startedAt)),
-        duration: toSeconds(video.contentDetails.duration),
-      });
-    }
-  }
-  return streams;
-}
-
-function toLocal(date: Date): string {
-  return format({ date, format: "YYYY-MM-DDTHH:mm", tz: timeZone });
-}
-
-/** ISO 8601 duration ("PT1H16M47S", "P0D") to seconds */
-function toSeconds(duration: string): number {
-  const match = duration.match(/^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/);
-  if (!match) return 0;
-  const [days, hours, minutes, seconds] = match.slice(1).map((n) => Number(n ?? 0));
-  return ((days * 24 + hours) * 60 + minutes) * 60 + seconds;
-}
-
-/* Sermons --------------------------------------------------------------
-   Services are recognised by when they streamed, since title formats
-   change from year to year; titles only supply the words shown. Anything
-   the rules get wrong is fixed per video in sermon-overrides.ts */
+export const sermonTimeZone = "America/New_York";
+export const seriesGap = 35;
 
 export type SermonKind = "sunday" | "wednesday" | "special";
 
 export interface Sermon {
-  /** YouTube video id */
   id: string;
   kind: SermonKind;
-  /** Church-local date, "2026-11-01" */
   date: string;
-  /** Church-local start, "11:22" */
-  time: string;
   title: string;
   series?: string;
-  /** Place in the series, counted by service date */
   part?: number;
-  /** Services in the series so far */
   parts?: number;
   speaker?: string;
-  /** Sunday gathering named in the title, "9:00 AM" */
   gathering?: string;
-  /** Length in seconds */
+}
+
+interface Stream {
+  id: string;
+  startedAt: string;
+  title: string;
   duration: number;
 }
 
-/** Devotionals and clips run well under this; services well over */
-const minDuration = 35 * 60;
 const specialTitle =
   /easter|sunrise|resurrection|good friday|christmas eve|watch ?night|new years? eve|night of (?:prayer|worship)|founders? day/i;
 
@@ -259,47 +35,36 @@ const labelSegment =
   /gathering|service|full experience|round table|valuable wednesday|revealing truth|#rtm|^sunday|^\d{1,2}(?::\d{2})?\s*[ap]\.?m\.?$|^\d{1,2}[./_-]\d{1,2}[./_-]\d{2,4}$/i;
 /** "Art of War (Part 11): Title", "Every Generation Matters Part 2" */
 const partSegment = /^(.*?)\s*\(?\b(?:pt\.?|part)\s*(\d+)\)?\s*(?::\s*(.+))?$/i;
-const gatheringTime = /\b(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m\b/i;
-/** Days between services before a series counts as starting over */
-const seriesGap = 35;
+export function parseSermon(stream: Stream, kind?: SermonKind) {
+  const startedAt = new Date(stream.startedAt);
+  const [date, time] = format({
+    date: startedAt,
+    format: "YYYY-MM-DDTHH:mm",
+    tz: sermonTimeZone,
+  }).split("T");
+  kind ??= classifySermon(stream.title, date, time) ?? "special";
 
-export async function getSermons(kv: KVNamespace): Promise<Sermon[]> {
-  const cache = parseSermonsCache(await kv.get(sermonsKey));
-  return toSermons(cache?.streams ?? []);
+  const parsed = parseTitle(stream.title);
+  return {
+    youtube_id: stream.id,
+    started_at: startedAt.toISOString(),
+    local_date: date,
+    duration_seconds: stream.duration,
+    raw_title: stream.title,
+    title: parsed.title ?? fallbackTitle(kind, stream.title),
+    kind,
+    series: parsed.series ?? null,
+    part: parsed.part ?? null,
+    speaker: parsed.speaker ?? null,
+  };
 }
 
-/** Newest first, like the streams */
-export function toSermons(streams: Stream[]): Sermon[] {
-  const sermons: Sermon[] = [];
-
-  for (const stream of streams) {
-    const [date, time] = stream.local.split("T");
-    const override = sermonOverrides[stream.id];
-    const kind = override?.kind ?? classify(stream, date, time);
-    if (!kind || kind === "hidden") continue;
-
-    const parsed = parseTitle(stream.title);
-    sermons.push({
-      id: stream.id,
-      kind,
-      date,
-      time,
-      title: override?.title ?? parsed.title ?? fallbackTitle(kind, stream.title),
-      series: override?.series ?? parsed.series,
-      part: override?.part ?? parsed.part,
-      speaker: override?.speaker ?? parsed.speaker,
-      gathering: kind === "sunday" ? toGathering(stream.title) : undefined,
-      duration: stream.duration,
-    });
-  }
-
-  numberSeries(sermons);
-  return sermons;
-}
-
-function classify(stream: Stream, date: string, time: string): SermonKind | undefined {
-  if (stream.duration < minDuration) return;
-  if (specialTitle.test(stream.title)) return "special";
+export function classifySermon(
+  title: string,
+  date: string,
+  time: string,
+): SermonKind | undefined {
+  if (specialTitle.test(title)) return "special";
 
   const weekday = format(date, "dddd", "en");
   const hour = Number(time.slice(0, 2));
@@ -346,44 +111,4 @@ function fallbackTitle(kind: SermonKind, raw: string) {
       .find((segment) => specialTitle.test(segment))
       ?.trim() ?? raw
   );
-}
-
-function toGathering(raw: string) {
-  const match = raw.match(gatheringTime);
-  if (!match) return;
-  const [, hour, minute = "00", meridiem] = match;
-  return `${hour}:${minute} ${meridiem.toUpperCase()}M`;
-}
-
-/** Numbers each run of services sharing a series, oldest first */
-function numberSeries(sermons: Sermon[]) {
-  const runs = new Map<string, { dates: string[]; sermons: Sermon[] }>();
-  const finished: { dates: string[]; sermons: Sermon[] }[] = [];
-
-  for (const sermon of [...sermons].reverse()) {
-    if (!sermon.series) continue;
-    const key = sermon.series.toLowerCase();
-    let run = runs.get(key);
-    const last = run?.dates.at(-1);
-    if (!run || !last || daysBetween(last, sermon.date) > seriesGap) {
-      run = { dates: [], sermons: [] };
-      runs.set(key, run);
-      finished.push(run);
-    }
-    if (run.dates.at(-1) !== sermon.date) run.dates.push(sermon.date);
-    run.sermons.push(sermon);
-  }
-
-  for (const run of finished) {
-    const parts = Math.max(run.dates.length, ...run.sermons.map((sermon) => sermon.part ?? 0));
-    for (const sermon of run.sermons) {
-      sermon.part ??= run.dates.indexOf(sermon.date) + 1;
-      sermon.parts = parts;
-    }
-  }
-}
-
-function daysBetween(from: string, to: string) {
-  // Rounded: a DST change makes a local-time day 23 or 25 hours
-  return diffDays(to, from, "round");
 }

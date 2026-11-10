@@ -19,6 +19,7 @@ import {
 
 interface Props {
   sermons: Sermon[];
+  years: string[];
   /** The year shown, "YYYY" */
   year: string;
   /** Sunday ("YYYY-MM-DD") of the week the panel shows */
@@ -27,10 +28,9 @@ interface Props {
   playingId?: string;
 }
 
-const { sermons, year, week, playingId } = Astro.props;
+const { sermons, years, year, week, playingId } = Astro.props;
 const params = Astro.url.searchParams;
 
-const years = [...new Set(sermons.map((sermon) => sermon.date.slice(0, 4)))];
 const yearSermons = sermons.filter((sermon) => sermon.date.startsWith(year));
 const months = Map.groupBy(yearSermons, (sermon) => sermon.date.slice(0, 7));
 

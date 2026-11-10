@@ -512,7 +512,7 @@ const menuId = `site-menu`;
   async function check() {
     try {
       const res = await fetch(liveStatusUrl);
-      const data = await res.json();
+      const data = await res.json<{ title?: string; isLive?: boolean }>();
       banner!.querySelector("[data-live-title]")!.textContent = data.title ?? "";
       banner!.hidden = data.isLive !== true;
     } catch {
