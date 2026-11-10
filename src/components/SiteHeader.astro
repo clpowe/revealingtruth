@@ -80,6 +80,19 @@ const menuId = `site-menu`;
   class="site-header"
   data-position={position === "static" ? "static" : undefined}
 >
+  {Astro.url.pathname.replace(/\/$/, "") !== "/live" && (
+    <a class="live-banner" href="/live" hidden data-live-banner>
+      <span class="live-banner__inner wrapper repel">
+        <span class="live-banner__status cluster">
+          <span class="live-banner__badge">Live</span>
+          <span class="live-banner__title" data-live-title></span>
+        </span>
+        <span class="live-banner__action">
+          Join now <span aria-hidden="true">→</span>
+        </span>
+      </span>
+    </a>
+  )}
   <div class="site-header__inner wrapper repel">
     <a class="site-header__logo" href="/">
       <Image src={logo} alt="Revealing Truth Church home" />
@@ -178,7 +191,6 @@ const menuId = `site-menu`;
     z-index: 10000;
     inset-inline: 0;
     inset-block-start: 0;
-    padding-block: var(--site-header-padding);
     color: var(--text-on-media);
     /* The bar floats over media, including embedded players: only its
        controls take clicks, so the strip between them falls through */
@@ -190,6 +202,10 @@ const menuId = `site-menu`;
   .site-header[data-position="static"] {
     position: relative;
     background-color: var(--background-dark);
+  }
+
+  .site-header__inner {
+    padding-block: var(--site-header-padding);
   }
 
   .site-header__inner > :global(*),
@@ -395,4 +411,117 @@ const menuId = `site-menu`;
     outline-offset: 4px;
     border-radius: var(--border-radius-1);
   }
+
+  /* Live banner ---------------------------------------------------------- */
+  .live-banner {
+    display: block;
+    padding-block: var(--size-200);
+    background-color: var(--background-accent);
+    color: var(--text-on-accent);
+    font-family: var(--ff-ui);
+    font-size: var(--font-size-sm);
+    line-height: var(--lh-heading);
+    text-decoration: none;
+    pointer-events: auto;
+  }
+
+  /* display: block would otherwise override the hidden attribute */
+  .live-banner[hidden] {
+    display: none;
+  }
+
+  /* One line always: the title gives way before anything wraps */
+  .live-banner__inner,
+  .live-banner__status {
+    flex-wrap: nowrap;
+  }
+
+  .live-banner__status {
+    --cluster-gap: var(--size-300);
+
+    min-inline-size: 0;
+  }
+
+  .live-banner__badge {
+    display: flex;
+    align-items: center;
+    gap: var(--size-200);
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .live-banner__badge::before {
+    content: "";
+    inline-size: 0.5em;
+    block-size: 0.5em;
+    background-color: currentColor;
+    border-radius: 50%;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .live-banner__badge::before {
+      animation: live-pulse 2s var(--ease-smooth) infinite alternate;
+    }
+  }
+
+  @keyframes live-pulse {
+    to {
+      opacity: 0.3;
+    }
+  }
+
+  /* Phones get the badge and the action only */
+  .live-banner__title {
+    display: none;
+  }
+
+  @media (width > 720px) {
+    .live-banner__title:not(:empty) {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .live-banner__action {
+    flex-shrink: 0;
+    font-weight: var(--fw-semi-bold);
+    text-decoration: underline 0.12em transparent;
+    text-underline-offset: 0.3em;
+    transition: text-decoration-color var(--duration-base) var(--ease-out);
+  }
+
+  .live-banner:hover .live-banner__action {
+    text-decoration-color: currentColor;
+  }
+
+  /* The brand ring disappears on lime */
+  .live-banner:focus-visible {
+    outline: var(--border-width-2) solid var(--text-on-accent);
+    outline-offset: calc(var(--border-width-2) * -2);
+  }
 </style>
+
+<script>
+  import { liveStatusUrl } from "../config/youtube";
+
+  const banner = document.querySelector<HTMLElement>("[data-live-banner]");
+
+  async function check() {
+    try {
+      const res = await fetch(liveStatusUrl);
+      const data = await res.json();
+      banner!.querySelector("[data-live-title]")!.textContent = data.title ?? "";
+      banner!.hidden = data.isLive !== true;
+    } catch {
+      banner!.hidden = true;
+    }
+  }
+
+  if (banner) {
+    check();
+    setInterval(check, 60_000);
+  }
+</script>

@@ -1,11 +1,6 @@
 import { handle } from "@astrojs/cloudflare/handler";
 import { parseSermonsCache, sermonsKey, syncSermons } from "./config/sermons";
 
-/* Pages ----------------------------------------------------------------
-   These read KV but look the same to everyone (theater and wide player
-   live in each browser), so each data center keeps a rendered copy. The
-   request still counts, but skips the KV read and the render. TTLs follow
-   the 5-minute cron: nothing they show changes faster */
 const cachedPages: Record<string, number> = {
   "/sermons": 5 * 60,
 };
