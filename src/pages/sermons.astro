@@ -6,39 +6,24 @@ import Button from "../components/Button.astro";
 import SermonPlayer from "../components/SermonPlayer.astro";
 import WeekPanel from "../components/WeekPanel.astro";
 import SermonArchive from "../components/SermonArchive.astro";
-import { seo } from "../config/seo";
 import { ClientRouter } from "astro:transitions";
 import { env } from "cloudflare:workers";
-import { getSermons } from "../config/sermons";
 import {
   addDays,
   label,
   link,
   playLink,
   startOfWeek,
-  today,
+  loadSermonView,
   parseSermonsQuery,
 } from "../config/sermon-view";
 
 export const prerender = false;
 
-const sermons = await getSermons(env.LIVE_KV);
 const params = Astro.url.searchParams;
 const query = parseSermonsQuery(params);
-
-const playing =
-  sermons.find((sermon) => sermon.id === query.v) ?? sermons[0];
-const newer = playing && sermons[sermons.indexOf(playing) - 1];
-const week = startOfWeek(query.week ?? playing?.date ?? today());
-const weekSermons = sermons
-  .filter((sermon) => startOfWeek(sermon.date) === week)
-  .reverse();
-
-const years = [...new Set(sermons.map((sermon) => sermon.date.slice(0, 4)))];
-const year =
-  years.find((y) => y === query.year) ??
-  playing?.date.slice(0, 4) ??
-  today().slice(0, 4);
+const { playing, newer, week, weekSermons, year, years, archiveSermons } =
+  await loadSermonView(env.PRAYER_DB, query);
 
 /* Title: names what the view shows beyond the default (latest sermon, its
    week and year), so tabs and history read apart and the ClientRouter,
@@ -164,7 +149,8 @@ const title = [
     </section>
 
     <SermonArchive
-      sermons={sermons}
+      sermons={archiveSermons}
+      years={years}
       year={year}
       week={week}
       playingId={playing?.id}

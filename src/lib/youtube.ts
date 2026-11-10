@@ -31,18 +31,6 @@ export async function youtube<S extends z.ZodType>(
   return parsed.data;
 }
 
-export async function youtubeHtml(
-  url: string,
-  init: { headers?: Record<string, string>; timeout: number; cf?: RequestInitCfProperties },
-): Promise<string | undefined> {
-  try {
-    return await ofetch(url, { ...init, responseType: "text", retry: 1, retryDelay: 500 });
-  } catch (error) {
-    if (error instanceof FetchError && error.statusCode === 404) return undefined;
-    throw sanitize(error, "YouTube page");
-  }
-}
-
 function sanitize(error: unknown, label: string): Error {
   if (error instanceof FetchError) {
     if (error.statusCode) return new Error(`${label} responded ${error.statusCode}`);

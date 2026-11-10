@@ -17,9 +17,11 @@ interface Props {
   title: string;
   /** The sermon after this one, for the next button */
   next?: { href: string; title: string };
+  /** A broadcast on air: no timeline, seeking or speed, only play/mute */
+  live?: boolean;
 }
 
-const { id, title, next } = Astro.props;
+const { id, title, next, live = false } = Astro.props;
 const watchURL = `https://www.youtube.com/watch?v=${id}`;
 ---
 
@@ -36,7 +38,12 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
         It's the page's LCP: WebP, fetched first */}
     <media-poster class="sermon-player__poster">
       <img
-        src={`https://i.ytimg.com/vi_webp/${id}/maxresdefault.webp`}
+        src={
+          live
+            ? // Broadcasts often have no maxres thumbnail yet; hq always exists
+              `https://i.ytimg.com/vi/${id}/hqdefault.jpg`
+            : `https://i.ytimg.com/vi_webp/${id}/maxresdefault.webp`
+        }
         alt=""
         width="1280"
         height="720"
@@ -47,13 +54,15 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
 
     <media-controls>
       <media-controls-content class="sermon-player__controls">
-        <media-time-slider class="sermon-player__timeline">
-          <media-slider-track class="sermon-player__track">
-            <media-slider-buffer class="sermon-player__buffer"></media-slider-buffer>
-            <media-slider-fill class="sermon-player__fill"></media-slider-fill>
-          </media-slider-track>
-          <media-slider-thumb class="sermon-player__thumb"></media-slider-thumb>
-        </media-time-slider>
+        {!live && (
+          <media-time-slider class="sermon-player__timeline">
+            <media-slider-track class="sermon-player__track">
+              <media-slider-buffer class="sermon-player__buffer"></media-slider-buffer>
+              <media-slider-fill class="sermon-player__fill"></media-slider-fill>
+            </media-slider-track>
+            <media-slider-thumb class="sermon-player__thumb"></media-slider-thumb>
+          </media-time-slider>
+        )}
 
         <div class="sermon-player__bar">
           <media-controls-group
@@ -68,20 +77,24 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
               <Fragment set:html={pauseIcon} />
               <Fragment set:html={restartIcon} />
             </media-play-button>
-            <media-seek-button
-              seconds="-10"
-              class="sermon-player__button"
-              data-control="back"
-            >
-              <Fragment set:html={seekIcon} />
-            </media-seek-button>
-            <media-seek-button
-              seconds="10"
-              class="sermon-player__button"
-              data-control="forward"
-            >
-              <Fragment set:html={seekIcon} />
-            </media-seek-button>
+            {!live && (
+              <Fragment>
+                <media-seek-button
+                  seconds="-10"
+                  class="sermon-player__button"
+                  data-control="back"
+                >
+                  <Fragment set:html={seekIcon} />
+                </media-seek-button>
+                <media-seek-button
+                  seconds="10"
+                  class="sermon-player__button"
+                  data-control="forward"
+                >
+                  <Fragment set:html={seekIcon} />
+                </media-seek-button>
+              </Fragment>
+            )}
             <media-mute-button
               class="sermon-player__button"
               data-control="mute"
@@ -89,21 +102,27 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
               <Fragment set:html={volumeHighIcon} />
               <Fragment set:html={volumeOffIcon} />
             </media-mute-button>
-            <media-time-group class="sermon-player__time">
-              <media-time type="current"></media-time>
-              <media-time-separator></media-time-separator>
-              <media-time type="duration"></media-time>
-            </media-time-group>
+            {live ? (
+              <span class="sermon-player__live">Live</span>
+            ) : (
+              <media-time-group class="sermon-player__time">
+                <media-time type="current"></media-time>
+                <media-time-separator></media-time-separator>
+                <media-time type="duration"></media-time>
+              </media-time-group>
+            )}
           </media-controls-group>
 
           <media-controls-group
             class="sermon-player__group"
             aria-label="More controls"
           >
-            <media-playback-rate-button
-              class="sermon-player__button sermon-player__rate"
-              rates="1 1.25 1.5 2"
-            ></media-playback-rate-button>
+            {!live && (
+              <media-playback-rate-button
+                class="sermon-player__button sermon-player__rate"
+                rates="1 1.25 1.5 2"
+              ></media-playback-rate-button>
+            )}
             {next && (
               <a
                 class="sermon-player__button"
@@ -178,8 +197,20 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
     <media-hotkey keys="k" action="togglePaused"></media-hotkey>
     <media-hotkey keys="m" action="toggleMuted"></media-hotkey>
     <media-hotkey keys="f" action="toggleFullscreen"></media-hotkey>
-    <media-hotkey keys="ArrowLeft" action="seekStep" value="-10"></media-hotkey>
-    <media-hotkey keys="ArrowRight" action="seekStep" value="10"></media-hotkey>
+    {!live && (
+      <Fragment>
+        <media-hotkey
+          keys="ArrowLeft"
+          action="seekStep"
+          value="-10"
+        ></media-hotkey>
+        <media-hotkey
+          keys="ArrowRight"
+          action="seekStep"
+          value="10"
+        ></media-hotkey>
+      </Fragment>
+    )}
 
     <media-status-announcer></media-status-announcer>
 
@@ -187,7 +218,11 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
         IFrame API: either way, send people to YouTube */}
     <media-error-dialog>
       <media-dialog-popup class="sermon-player__error">
-        <p class="sermon-player__error-title">This message can’t play here.</p>
+        <p class="sermon-player__error-title">
+          {live
+            ? "The stream can’t play here."
+            : "This message can’t play here."}
+        </p>
         <Button type="accent" href={watchURL}>
           Watch on YouTube
         </Button>
@@ -478,6 +513,27 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
     font-size: var(--font-size-xs);
     font-variant-numeric: tabular-nums;
     opacity: 0.8;
+  }
+
+  /* On air: a dot and the word, in place of the clock */
+  .sermon-player__live {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    margin-inline-start: var(--size-200);
+    font-family: var(--ff-ui);
+    font-size: var(--font-size-xs);
+    font-weight: var(--fw-bold);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .sermon-player__live::before {
+    content: "";
+    inline-size: 0.5em;
+    block-size: 0.5em;
+    border-radius: 50%;
+    background-color: var(--background-accent);
   }
 
   /* Timeline: the slider reports progress as custom properties --------- */
