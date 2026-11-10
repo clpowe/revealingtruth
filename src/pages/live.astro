@@ -9,7 +9,6 @@ import SermonPlayer from "../components/SermonPlayer.astro";
 import { seo } from "../config/seo";
 import { locations } from "../config/locations";
 import { getLiveStream } from "../config/youtube";
-import { getSermons } from "../config/sermons";
 import { env } from "cloudflare:workers";
 
 // Rendered per request: what's on air changes through the day
@@ -18,10 +17,15 @@ export const prerender = false;
 // On air: the broadcast, live. Off air: the latest message, so the page
 // always has something to play
 const live = await getLiveStream(env.LIVE_KV);
-const latest = live ? undefined : (await getSermons(env.LIVE_KV))[0];
 const video = live
   ? { id: live.videoId, title: live.title || "Live stream" }
-  : latest && { id: latest.id, title: latest.title };
+  : await env.PRAYER_DB.prepare(`
+      SELECT youtube_id AS id, title
+      FROM sermons
+      WHERE status = 'published'
+      ORDER BY started_at DESC, youtube_id
+      LIMIT 1
+    `).first<{ id: string; title: string }>();
 const youtubeHref = `${seo.social.youtube}/live`;
 ---
 
