@@ -6,6 +6,7 @@ import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import SEO from "../components/SEO.astro";
 import ConnectWidget from "../components/ConnectWidget.astro";
+import LiveBanner from "../components/LiveBanner.astro";
 
 type Props = ComponentProps<typeof SEO> &
   ComponentProps<typeof SiteHeader> & {
@@ -32,6 +33,11 @@ const { position, connect = true, ...seoProps } = Astro.props;
   </head>
 
   <body data-theme="light">
+    {/* Server island: fetched per visit, so prerendered pages still show
+        the current stream. Left off /live, which is the player itself */}
+    {Astro.url.pathname.replace(/\/$/, "") !== "/live" && (
+      <LiveBanner server:defer />
+    )}
     <SiteHeader position={position} />
     <slot />
     <SiteFooter />

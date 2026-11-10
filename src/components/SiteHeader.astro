@@ -187,10 +187,12 @@ const menuId = `site-menu`;
   .site-header {
     --site-header-padding: clamp(1.5rem, 1.3rem + 0.5vw, 1.875rem);
 
+    /* No block inset: it keeps its place in the flow, so it sits at the
+       top, or just under the live banner while one shows */
     position: absolute;
     z-index: 10000;
     inset-inline: 0;
-    inset-block-start: 0;
+    padding-block: var(--site-header-padding);
     color: var(--text-on-media);
     /* The bar floats over media, including embedded players: only its
        controls take clicks, so the strip between them falls through */
