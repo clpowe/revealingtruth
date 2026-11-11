@@ -6,6 +6,7 @@ import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import SEO from "../components/SEO.astro";
 import ConnectWidget from "../components/ConnectWidget.astro";
+import PostHog from "../components/posthog.astro";
 
 type Props = ComponentProps<typeof SEO> &
   ComponentProps<typeof SiteHeader> & {
@@ -28,6 +29,7 @@ const { position, connect = true, ...seoProps } = Astro.props;
       preload={[{ style: "italic", subset: "latin" }]}
     />
     <Font cssVariable="--font-dm-sans" preload={[{ subset: "latin" }]} />
+    <PostHog />
     <slot name="head" />
   </head>
 

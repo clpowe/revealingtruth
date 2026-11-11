@@ -28,7 +28,11 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
 {/* Video.js owns state and controls; the YouTube iframe only plays, with
     its own chrome hidden. Fullscreen still shows YouTube's chrome: the
     IFrame API fullscreens the iframe itself */}
-<video-player class="sermon-player">
+<video-player
+  class="sermon-player"
+  data-sermon-id={id}
+  data-live={live ? "true" : "false"}
+>
   <media-container class="sermon-player__frame">
     {/* No src until someone reaches for the player: the script below sets it,
         so YouTube's iframe, scripts, fonts and ads stay off the first load */}
@@ -257,6 +261,25 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
   import "@videojs/html/ui/error-dialog";
   import "@videojs/html/ui/dialog-popup";
 
+  const posthog = (
+    window as Window &
+      typeof globalThis & {
+        posthog?: {
+          capture: (
+            event: string,
+            properties?: Record<string, unknown>,
+          ) => void;
+          logger?: {
+            info: (
+              message: string,
+              attributes?: Record<string, unknown>,
+            ) => void;
+          };
+        };
+      }
+  ).posthog;
+  const posthogLogger = () => posthog?.logger;
+
   function setUpToggles() {
     // Wide player: the page's [data-expandable] area gets data-expanded and
     // lays itself out around it. The page applies a saved choice before paint
@@ -326,7 +349,17 @@ const watchURL = `https://www.youtube.com/watch?v=${id}`;
       const load = (event: Event) => {
         for (const type of events) player.removeEventListener(type, load, true);
         // Properties, not attributes: the embed URL is built when src is set
-        if (event.type === "pointerdown") media.autoplay = true;
+        if (event.type === "pointerdown") {
+          media.autoplay = true;
+          posthog?.capture("sermon_playback_started", {
+            sermon_id: player.dataset.sermonId,
+            is_live: player.dataset.live === "true",
+          });
+          posthogLogger()?.info("sermon playback started", {
+            sermon_id: player.dataset.sermonId,
+            is_live: player.dataset.live === "true",
+          });
+        }
         media.src = media.dataset.src!;
         media.removeAttribute("data-src");
       };
