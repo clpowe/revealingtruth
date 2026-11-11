@@ -1,3 +1,6 @@
+---
+// PostHog browser analytics initializes once through the shared base layout.
+---
 <script
   is:inline
   define:vars={{
@@ -82,5 +85,13 @@
         capture_console_errors: false,
       },
     });
+
+    // Only purpose-written application log lines call this logger; existing
+    // console output remains local and is not exported.
+    window.posthogLog = {
+      info(body, attributes) {
+        posthog.captureLog({ body, level: "info", attributes });
+      },
+    };
   }
 </script>
