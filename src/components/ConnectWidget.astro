@@ -368,6 +368,12 @@ const persist = inline ? undefined : "connect-widget";
         form.reset();
         form.hidden = true;
         thanks.hidden = false;
+        posthog?.capture("prayer_request_submitted", {
+          submission_surface: "connect_widget",
+        });
+        posthogLogger()?.info("prayer request submitted", {
+          submission_surface: "connect_widget",
+        });
         thanks.querySelector<HTMLElement>(".connect__title")?.focus();
       } catch {
         // Network failure: the request never reached the server
