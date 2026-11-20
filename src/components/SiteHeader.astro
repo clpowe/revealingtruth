@@ -24,7 +24,7 @@ const navigation: {
     heading: "New Here",
     links: [
       { label: "Home", href: "/" },
-      { label: "About Us", href: "#" },
+      { label: "About Us", href: "/about" },
       { label: "Our Values", href: "#" },
       { label: "Our Pastors", href: "#" },
     ],
@@ -134,7 +134,9 @@ const menuId = `site-menu`;
                     target={external ? "_blank" : undefined}
                     rel={external ? "noopener" : undefined}
                     aria-current={
-                      Astro.url.pathname === href ? "page" : undefined
+                      (Astro.url.pathname.replace(/\/$/, "") || "/") === href
+                        ? "page"
+                        : undefined
                     }
                   >
                     {label}

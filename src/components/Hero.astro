@@ -12,12 +12,14 @@ interface Props {
   image: ImageMetadata;
   alt: string;
   video?: VideoSource[];
+  /** "compact" gives interior pages a shorter opening band */
+  size?: "compact";
 }
 
-const { image, alt, video } = Astro.props;
+const { image, alt, video, size } = Astro.props;
 ---
 
-<section class="hero media-overlay" data-theme="dark">
+<section class="hero media-overlay" data-theme="dark" data-size={size}>
   {/* The image is the LCP element and the video's poster: priority makes it
       eager, high fetchpriority and responsive, which a poster attribute is not */}
   <Image class="media" src={image} alt={alt} layout="full-width" priority />
@@ -180,9 +182,17 @@ const { image, alt, video } = Astro.props;
     min-block-size: clamp(35rem, 56vw, 100svh);
   }
 
+  .hero[data-size="compact"] {
+    min-block-size: clamp(22rem, 37vw, 33.125rem);
+  }
+
   .hero__content {
     --repel-gap: var(--size-500) var(--size-700);
     padding-block: var(--size-1000) clamp(2.5rem, 1.5rem + 2.5vw, 4rem);
+  }
+
+  .hero[data-size="compact"] .hero__content {
+    padding-block: var(--size-900) clamp(2rem, 1.5rem + 1.5vw, 3.5rem);
   }
 
   .hero__title {

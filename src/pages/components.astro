@@ -3,6 +3,8 @@ import Tag from "../components/Tag.astro";
 import Button from "../components/Button.astro";
 import Statement from "../components/Statement.astro";
 import Citation from "../components/Citation.astro";
+import Milestone from "../components/Milestone.astro";
+import Ledger from "../components/Ledger.astro";
 import Icon from "../components/Icon.astro";
 import { type Item } from "../components/ListA/ListA.astro";
 import ListA from "../components/ListA/ListA.astro";
@@ -343,6 +345,37 @@ const listAData: Item[] = [
   <section class="section flow wrapper" data-padding="compact">
     <article class="flow">
       <header class="flow">
+        <h3 class="h3">Milestone</h3>
+        <code>.milestone</code>
+        <p style="max-inline-size: 34em;">
+          Hairline divider over a large serif-italic year or figure paired with
+          a short note in DM Sans.
+        </p>
+      </header>
+      <div class="equal-columns">
+        <figure class="flow">
+          <figcaption>Light</figcaption>
+          <div class="fig-content" data-theme="light">
+            <Milestone value="1991">
+              Founded in Tampa, FL by Pastors Greg &amp; Deborah Powe.
+            </Milestone>
+          </div>
+        </figure>
+        <figure class="flow">
+          <figcaption>Dark</figcaption>
+          <div class="fig-content" data-theme="dark">
+            <Milestone value="1991">
+              Founded in Tampa, FL by Pastors Greg &amp; Deborah Powe.
+            </Milestone>
+          </div>
+        </figure>
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
         <h3 class="h3">Icon</h3>
         <code>.icon</code>
         <p style="max-inline-size: 34em;">
@@ -495,6 +528,53 @@ const listAData: Item[] = [
   <section class="section flow wrapper" data-padding="compact">
     <article class="flow">
       <header class="flow">
+        <h3 class="h3">Ledger</h3>
+        <code>.ledger</code>
+        <p style="max-inline-size: 34em;">
+          Numbered pillars separated by hairline rules. Adapts from two columns
+          to four to a single horizontal strip based on its container width.
+        </p>
+      </header>
+      <div class="flow">
+        <figure class="flow">
+          <figcaption>Light</figcaption>
+          <div class="fig-content" data-theme="light">
+            <Ledger
+              items={[
+                "Peace",
+                "Prosperity",
+                "Security",
+                "Stability",
+                "Health",
+                "Healing",
+                "Truth",
+              ]}
+            />
+          </div>
+        </figure>
+        <figure class="flow">
+          <figcaption>Dark</figcaption>
+          <div class="fig-content" data-theme="dark">
+            <Ledger
+              items={[
+                "Peace",
+                "Prosperity",
+                "Security",
+                "Stability",
+                "Health",
+                "Healing",
+                "Truth",
+              ]}
+            />
+          </div>
+        </figure>
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
         <h3 class="h3">Media</h3>
         <code>.media</code>
         <p style="max-inline-size: 34em;">
@@ -556,20 +636,39 @@ const listAData: Item[] = [
           when given, fades in over it unless reduced motion or Save-Data is on.
         </p>
       </header>
-      <div class="fig-content-b">
-        <Hero image={pastorBryanImage} alt="">
-          Experience <br />
-          <span class="font-accent text-brand">new</span> life!
-          <SocialFollow
-            slot="aside"
-            links={[
-              { name: "youtube", label: "YouTube", href: "#" },
-              { name: "instagram", label: "Instagram", href: "#" },
-              { name: "facebook", label: "Facebook", href: "#" },
-            ]}
-          />
-        </Hero>
-      </div>
+      <figure class="flow">
+        <figcaption>Default</figcaption>
+        <div class="fig-content-b">
+          <Hero image={pastorBryanImage} alt="">
+            Experience <br />
+            <span class="font-accent text-brand">new</span> life!
+            <SocialFollow
+              slot="aside"
+              links={[
+                { name: "youtube", label: "YouTube", href: "#" },
+                { name: "instagram", label: "Instagram", href: "#" },
+                { name: "facebook", label: "Facebook", href: "#" },
+              ]}
+            />
+          </Hero>
+        </div>
+      </figure>
+      <figure class="flow">
+        <figcaption>size="compact"</figcaption>
+        <div class="fig-content-b">
+          <Hero image={testimonialImage} alt="" size="compact">
+            About <span class="font-accent text-brand">us</span>
+            <SocialFollow
+              slot="aside"
+              links={[
+                { name: "youtube", label: "YouTube", href: "#" },
+                { name: "instagram", label: "Instagram", href: "#" },
+                { name: "facebook", label: "Facebook", href: "#" },
+              ]}
+            />
+          </Hero>
+        </div>
+      </figure>
     </article>
   </section>
 

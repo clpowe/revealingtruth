@@ -1,0 +1,126 @@
+---
+export type LedgerItem = {
+  index?: string;
+  label: string;
+};
+
+interface Props {
+  items: (string | LedgerItem)[];
+}
+
+const { items } = Astro.props;
+const normalized = items.map((item, i) =>
+  typeof item === "string"
+    ? { index: String(i + 1).padStart(2, "0"), label: item }
+    : { index: item.index ?? String(i + 1).padStart(2, "0"), label: item.label },
+);
+---
+
+<div class="ledger">
+  <ol role="list" class="ledger__list">
+    {normalized.map(({ index, label }) => (
+      <li class="ledger__item">
+        <span class="ledger__index" aria-hidden="true">
+          {index}
+        </span>
+        <span class="ledger__label">{label}</span>
+      </li>
+    ))}
+  </ol>
+</div>
+
+<style>
+  .ledger {
+    container: ledger / inline-size;
+    border-block: var(--border-width-hairline) solid var(--border-subtle);
+    overflow: clip;
+  }
+
+  .ledger__list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-block-end: calc(var(--border-width-hairline) * -1);
+  }
+
+  .ledger__item {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: var(--size-200);
+    min-inline-size: 0;
+    padding-block: var(--size-400) var(--size-500);
+    border-block-end: var(--border-width-hairline) solid var(--border-subtle);
+  }
+
+  .ledger__item:nth-child(odd) {
+    padding-inline: 0 var(--size-400);
+  }
+
+  .ledger__item:nth-child(even) {
+    padding-inline: var(--size-400) 0;
+    border-inline-start: var(--border-width-hairline) solid var(--border-subtle);
+  }
+
+  @container ledger (inline-size >= 36rem) {
+    .ledger__list {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .ledger__item:nth-child(odd),
+    .ledger__item:nth-child(even) {
+      padding-inline: var(--size-400);
+      border-inline-start: var(--border-width-hairline) solid
+        var(--border-subtle);
+    }
+
+    .ledger__item:nth-child(4n + 1) {
+      padding-inline-start: 0;
+      border-inline-start: 0;
+    }
+
+    .ledger__item:nth-child(4n) {
+      padding-inline-end: 0;
+    }
+  }
+
+  @container ledger (inline-size >= 68rem) {
+    .ledger__list {
+      grid-template-columns: none;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(0, 1fr);
+    }
+
+    .ledger__item:nth-child(n) {
+      padding-inline: clamp(0.75rem, 1.5cqi, 1.25rem);
+      border-inline-start: var(--border-width-hairline) solid
+        var(--border-subtle);
+    }
+
+    .ledger__item:first-child {
+      padding-inline-start: 0;
+      border-inline-start: 0;
+    }
+
+    .ledger__item:last-child {
+      padding-inline-end: 0;
+    }
+  }
+
+  .ledger__index {
+    font-family: var(--ff-accent);
+    font-size: var(--font-size-md);
+    font-style: italic;
+    font-weight: var(--fw-regular);
+    font-variant-numeric: tabular-nums;
+    line-height: var(--lh-heading);
+    color: var(--text-brand);
+  }
+
+  .ledger__label {
+    font-family: var(--ff-heading);
+    font-size: var(--font-size-md);
+    font-weight: var(--fw-semi-bold);
+    line-height: var(--lh-heading);
+    color: var(--text-strong);
+  }
+</style>
