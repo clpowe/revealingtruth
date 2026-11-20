@@ -278,6 +278,14 @@ const persist = inline ? undefined : "connect-widget";
 
   const dismissedKey = "connect-dismissed";
   const sendFailed = "We couldn't send your message. Please try again.";
+  const posthogWindow = window as Window & {
+    posthog?: {
+      capture: (event: string, properties?: Record<string, string>) => void;
+      logger?: {
+        info: (body: string, attributes?: Record<string, string>) => void;
+      };
+    };
+  };
 
   function isDismissed() {
     try {
@@ -352,6 +360,12 @@ const persist = inline ? undefined : "connect-widget";
         form.reset();
         form.hidden = true;
         thanks.hidden = false;
+        posthogWindow.posthog?.capture("prayer_request_submitted", {
+          submission_surface: "connect_widget",
+        });
+        posthogWindow.posthog?.logger?.info("prayer request submitted", {
+          submission_surface: "connect_widget",
+        });
         thanks.querySelector<HTMLElement>(".connect__title")?.focus();
       } catch {
         // Network failure: the request never reached the server
