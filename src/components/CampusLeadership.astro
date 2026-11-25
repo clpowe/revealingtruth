@@ -1,0 +1,152 @@
+---
+import { Image } from "astro:assets";
+import logo from "../assets/logo/revealing-truth-logo.svg";
+import type { CampusPastor } from "../config/campus-pages";
+import Media from "./Media.astro";
+import Milestone from "./Milestone.astro";
+import Tag from "./Tag.astro";
+
+interface Props {
+  title: string;
+  pastors: CampusPastor[];
+}
+
+const { title, pastors } = Astro.props;
+---
+
+<section class="section campus-leadership" aria-labelledby="campus-leadership">
+  <div class="wrapper flow">
+    <header class="repel" data-align="end">
+      <h2
+        id="campus-leadership"
+        class="campus-leadership__heading font-display text-high-contrast"
+      >
+        {title} campus <span class="font-accent text-brand">leadership</span>
+      </h2>
+      <a class="campus-leadership__link" href="/about#leadership">
+        Meet Our Leadership <span aria-hidden="true">→</span>
+      </a>
+    </header>
+    <div class="campus-leadership__profiles equal-columns" data-align="start">
+      {pastors.map(({ name, role, bio, photo, milestones }) => (
+        <article class="campus-leadership__profile">
+          {photo ? (
+            <Media
+              src={photo.image}
+              alt={photo.alt}
+              shape="rounded"
+              sizes="(width > 1440px) 624px, (width > 720px) 50vw, 100vw"
+            />
+          ) : (
+            <div class="campus-leadership__photo-placeholder">
+              <Image src={logo} alt="" />
+            </div>
+          )}
+          <div class="campus-leadership__bio">
+            <div class="campus-leadership__identity flow">
+              <Tag>{role}</Tag>
+              <h3 class="campus-leadership__name text-high-contrast">
+                {name.before} <span class="font-accent">{name.accent}</span>
+                {name.after && ` ${name.after}`}
+              </h3>
+            </div>
+            <div class="campus-leadership__story flow">
+              {bio.map((paragraph) => (
+                <p>{paragraph}</p>
+              ))}
+              {milestones?.map(({ value, note }) => (
+                <Milestone value={value}>{note}</Milestone>
+              ))}
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .campus-leadership {
+    --flow-space: var(--size-600);
+    background-color: color-mix(
+      in srgb,
+      var(--border-subtle) 42%,
+      var(--background-main)
+    );
+  }
+
+  .campus-leadership__heading {
+    font-size: clamp(var(--fs-600), 3.4vw, var(--fs-800));
+    line-height: 1.1;
+  }
+
+  .campus-leadership__link {
+    color: var(--text-high-contrast);
+    font-family: var(--ff-ui);
+    font-size: var(--font-size-sm);
+    font-weight: var(--fw-bold);
+    text-decoration-thickness: var(--border-width-hairline);
+    text-underline-offset: 0.3em;
+  }
+
+  .campus-leadership__link:hover {
+    color: var(--text-brand);
+  }
+
+  .campus-leadership__link:focus-visible {
+    outline: var(--border-width-2) solid var(--text-brand);
+    outline-offset: var(--size-100);
+  }
+
+  .campus-leadership__profiles:has(> :only-child) {
+    --column-count: 1;
+  }
+
+  .campus-leadership__profile {
+    --media-ratio: 2.2;
+    display: grid;
+    gap: var(--size-500);
+  }
+
+  .campus-leadership__photo-placeholder {
+    display: grid;
+    place-items: center;
+    aspect-ratio: var(--media-ratio);
+    border-radius: var(--border-radius-2);
+    background-color: var(--clr-neutral-900);
+  }
+
+  .campus-leadership__photo-placeholder img {
+    inline-size: min(42%, 12rem);
+    block-size: auto;
+  }
+
+  .campus-leadership__bio {
+    display: grid;
+    gap: var(--size-400);
+  }
+
+  .campus-leadership__identity {
+    --flow-space: var(--size-300);
+  }
+
+  .campus-leadership__story {
+    --flow-space: var(--size-400);
+    max-inline-size: 65ch;
+  }
+
+  .campus-leadership__name {
+    font-size: var(--fs-700);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-heading);
+    text-wrap: wrap;
+  }
+
+  @media (width > 720px) {
+    .campus-leadership__profile:only-child {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+      gap: var(--size-600);
+      align-items: start;
+    }
+  }
+</style>

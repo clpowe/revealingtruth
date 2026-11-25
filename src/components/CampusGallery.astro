@@ -1,0 +1,245 @@
+---
+import type { ImageMetadata } from "astro";
+import Button from "./Button.astro";
+import Media from "./Media.astro";
+import Tag from "./Tag.astro";
+
+interface Props {
+  tag?: string;
+  tampa?: boolean;
+  photos: { image: ImageMetadata; caption: string; focus?: string }[];
+}
+
+const { tag, tampa, photos } = Astro.props;
+const pageSize = 4;
+const pages = Array.from(
+  { length: Math.ceil(photos.length / pageSize) },
+  (_, page) => photos.slice(page * pageSize, (page + 1) * pageSize),
+);
+const number = (index: number) => String(index).padStart(2, "0");
+---
+
+<section class="section" aria-labelledby="gallery-heading">
+  <div class="wrapper" data-campus-gallery data-tampa={tampa || undefined}>
+    <header class="repel">
+      <div class="gallery-title">
+        {tag && <Tag>{tag}</Tag>}
+        <h2 id="gallery-heading" class="font-display fs-800 text-high-contrast">
+          <slot name="title">
+            {tampa ? "Life at" : "Church &"}{" "}
+            <span class="font-accent text-brand">
+              {tampa ? "RTC Tampa" : "community"}
+            </span>
+          </slot>
+        </h2>
+      </div>
+      <div class="gallery-controls" hidden>
+        <span class="position" role="status" aria-atomic="true">
+          01 — {number(Math.min(pageSize, photos.length))}
+        </span>
+        <Button type="outline" shape="circle" label="Previous photo">
+          ←
+        </Button>
+        <Button type="outline" shape="circle" label="Next photo">
+          →
+        </Button>
+      </div>
+    </header>
+    <div class="gallery-track">
+      {pages.map((page, pageIndex) => (
+        <ul class="gallery-page" role="list">
+          {page.map(({ image, caption, focus }, index) => (
+            <li>
+              <figure>
+                <Media
+                  src={image}
+                  alt=""
+                  shape="rounded"
+                  style={`block-size: var(--photo-height); object-position: ${focus ?? "center"};`}
+                  sizes="(max-width: 720px) 100vw, (max-width: 1440px) 60vw, 763px"
+                />
+                <figcaption>
+                  <span class="photo-number font-accent text-brand">
+                    {number(pageIndex * pageSize + index + 1)}
+                  </span>
+                  {caption}
+                </figcaption>
+              </figure>
+            </li>
+          ))}
+        </ul>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  header {
+    align-items: flex-end;
+    margin-block-end: var(--size-600);
+  }
+
+  .gallery-title {
+    display: grid;
+    justify-items: start;
+    gap: var(--size-300);
+  }
+
+  h2 {
+    line-height: 1.08;
+  }
+
+  .gallery-controls:not([hidden]) {
+    display: flex;
+    align-items: center;
+    gap: var(--size-200);
+  }
+
+  .position {
+    margin-inline-end: var(--size-200);
+    font:
+      0.8125rem/1.4 ui-monospace,
+      monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .gallery-controls :global(button:last-child) {
+    border-color: var(--text-high-contrast);
+  }
+
+  .gallery-track {
+    --gap: var(--size-500);
+    position: relative;
+    display: flex;
+    gap: var(--gap);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    container-type: inline-size;
+  }
+
+  li {
+    min-inline-size: 0;
+  }
+
+  figcaption {
+    display: flex;
+    align-items: baseline;
+    gap: var(--size-300);
+    margin-block-start: var(--size-300);
+    color: var(--text-strong);
+    font: var(--fw-semi-bold) 0.875rem/1.43 var(--ff-ui);
+  }
+
+  .photo-number {
+    font-size: 1.25rem;
+    line-height: 1.2;
+  }
+
+  @media (width > 720px) {
+    .gallery-page {
+      flex: 0 0 100%;
+      display: flex;
+      align-content: start;
+      gap: var(--gap);
+      flex-wrap: wrap;
+      scroll-snap-align: start;
+      --narrow: calc((100% - var(--gap)) / 2.45);
+    }
+
+    li {
+      flex: 0 0 var(--narrow);
+      --photo-height: 28.66cqw;
+    }
+
+    li:nth-child(4n + 1),
+    [data-campus-gallery]:not([data-tampa]) li:nth-child(4n),
+    [data-tampa] li:nth-child(4n + 3) {
+      flex-basis: calc(100% - var(--gap) - var(--narrow));
+    }
+
+    li:nth-child(4n + 3),
+    li:nth-child(4n) {
+      --photo-height: var(--lower-row-height, 22.87cqw);
+    }
+
+    [data-tampa] {
+      --lower-row-height: 26.68cqw;
+    }
+  }
+
+  @media (width <= 720px) {
+    .gallery-page {
+      display: contents;
+    }
+
+    li {
+      flex: 0 0 100%;
+      scroll-snap-align: start;
+      --photo-height: 68cqw;
+    }
+  }
+</style>
+
+<script>
+  for (const gallery of document.querySelectorAll<HTMLElement>(
+    "[data-campus-gallery]",
+  )) {
+    const track = gallery.querySelector<HTMLElement>(".gallery-track")!;
+    const pages = Array.from(track.querySelectorAll("ul"));
+    const photos = Array.from(track.querySelectorAll("li"));
+    const controls = gallery.querySelector<HTMLElement>(".gallery-controls")!;
+    const position = controls.querySelector<HTMLElement>(".position")!;
+    const [previous, next] = controls.querySelectorAll("button");
+    const mobile = matchMedia("(max-width: 720px)");
+    const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+    const number = (index: number) => String(index).padStart(2, "0");
+
+    function stops() {
+      return mobile.matches ? photos : pages;
+    }
+
+    function visibleIndex() {
+      const items = stops();
+      const distance = items[1]?.offsetLeft - items[0]?.offsetLeft;
+      return distance
+        ? Math.max(
+            0,
+            Math.min(items.length - 1, Math.round(track.scrollLeft / distance)),
+          )
+        : 0;
+    }
+
+    function updatePosition() {
+      const index = visibleIndex();
+      controls.hidden = stops().length < 2;
+      if (!photos.length) return;
+      if (mobile.matches) {
+        position.textContent =
+          number(index + 1) + " / " + number(photos.length);
+      } else {
+        const first = photos.indexOf(
+          pages[index].firstElementChild as HTMLLIElement,
+        );
+        position.textContent =
+          number(first + 1) +
+          " — " +
+          number(first + pages[index].children.length);
+      }
+    }
+
+    function advance(step: number) {
+      const items = stops();
+      const index = (visibleIndex() + step + items.length) % items.length;
+      track.scrollTo({
+        left: items[index].offsetLeft,
+        behavior: reducedMotion.matches ? "instant" : "smooth",
+      });
+    }
+
+    previous.addEventListener("click", () => advance(-1));
+    next.addEventListener("click", () => advance(1));
+    track.addEventListener("scroll", updatePosition, { passive: true });
+    mobile.addEventListener("change", updatePosition);
+    updatePosition();
+  }
+</script>

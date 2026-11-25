@@ -1,4 +1,5 @@
 ---
+import type { ComponentProps } from "astro/types";
 import Tag from "../components/Tag.astro";
 import Button from "../components/Button.astro";
 import Statement from "../components/Statement.astro";
@@ -21,7 +22,12 @@ import SiteHeader from "../components/SiteHeader.astro";
 import MenuToggle from "../components/MenuToggle.astro";
 import Field from "../components/Field.astro";
 import Checkbox from "../components/Checkbox.astro";
+import ConnectForm from "../components/ConnectForm.astro";
 import ConnectWidget from "../components/ConnectWidget.astro";
+import CampusHero from "../components/CampusHero.astro";
+import CampusVisit from "../components/CampusVisit.astro";
+import CampusGallery from "../components/CampusGallery.astro";
+import SermonArchive from "../components/SermonArchive.astro";
 import SermonPlayer from "../components/SermonPlayer.astro";
 import WeekPanel, { type WeekPanelItem } from "../components/WeekPanel.astro";
 import WeekGrid, { type WeekGridWeek } from "../components/WeekGrid.astro";
@@ -30,7 +36,43 @@ import pastorBryanImage from "../assets/images/PastorBryan.jpg";
 import mediaimage from "../assets/images/media-strip.png";
 import testimonialImage from "../assets/images/testimonial.png";
 
+import { campusPages } from "../config/campus-pages";
+import { locations } from "../config/locations";
+import { seo } from "../config/seo";
+import type { Sermon } from "../config/sermons";
 import BaseLayout from "../layouts/BaseLayout.astro";
+
+const tampa = campusPages.tp;
+const tampaLocation = locations[0];
+const tampaDirections = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tampaLocation.metadata.location)}`;
+const socialLinks: ComponentProps<typeof SocialFollow>["links"] = [
+  { name: "youtube", label: "YouTube", href: seo.social.youtube },
+  { name: "instagram", label: "Instagram", href: seo.social.instagram },
+  { name: "facebook", label: "Facebook", href: seo.social.facebook },
+];
+
+const archiveSermons: Sermon[] = [
+  {
+    id: "s_ns8jEYAzk",
+    kind: "sunday",
+    date: "2026-09-06",
+    title: "Delightful Sunday",
+  },
+  {
+    id: "wednesday01",
+    kind: "wednesday",
+    date: "2026-09-02",
+    title: "Valuable Wednesday Night",
+    speaker: "Pastor Deborah Powe",
+  },
+  {
+    id: "sunday00001",
+    kind: "sunday",
+    date: "2026-08-30",
+    title: "Content in All Things",
+    speaker: "Pastor Rashida Powe",
+  },
+];
 
 // Data
 /* 2026 in weeks: uploads through early November, Easter as a special,
@@ -254,20 +296,59 @@ const listAData: Item[] = [
   <section class="section flow wrapper" data-padding="compact">
     <article class="flow">
       <header class="flow">
+        <h3 class="h3">Connect form</h3>
+        <code>.connect__form · .connect__thanks</code>
+        <p style="max-inline-size: 34em;">
+          The form used on the Connect page and in the Connect widget.
+          These previews show validation and confirmation.
+        </p>
+      </header>
+      <div class="equal-columns" data-align="start">
+        <figure class="flow">
+          <figcaption>Validation error</figcaption>
+          <fieldset class="demo-fieldset fig-content" data-theme="light" disabled>
+            <ConnectForm
+              titleId="connect-form-error-demo"
+              errors={["Enter a valid email address."]}
+              invalid={["email"]}
+              values={{
+                name: "Sam",
+                email: "sam",
+                message: "I'd like to learn more.",
+              }}
+            />
+          </fieldset>
+        </figure>
+        <figure class="flow">
+          <figcaption>Confirmation</figcaption>
+          <div class="fig-content" data-theme="light">
+            <ConnectForm titleId="connect-form-sent-demo" sent />
+          </div>
+        </figure>
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
         <h3 class="h3">Connect widget</h3>
         <code>.connect</code>
         <p style="max-inline-size: 34em;">
-          Pill fixed to the bottom corner of every page. It opens a contact card
-          as a native popover over a dimmed page; the pill's X hides it for the
-          rest of the session. The form logs its data to the console for now.
-          The live widget is in the corner; below, both parts in place.
+          The pill in the bottom corner opens a contact card over the page.
+          Its X dismisses the pill for the rest of the session. The preview
+          shows the pill and card together.
         </p>
       </header>
       <figure class="flow">
         <figcaption>Pill and card</figcaption>
-        <div class="fig-content" style="background-color: var(--clr-neutral-200);">
+        <fieldset
+          class="demo-fieldset fig-content"
+          style="background-color: var(--clr-neutral-200);"
+          disabled
+        >
           <ConnectWidget inline />
-        </div>
+        </fieldset>
       </figure>
     </article>
   </section>
@@ -308,6 +389,16 @@ const listAData: Item[] = [
           </div>
         </figure>
       </div>
+      <figure class="flow">
+        <figcaption>align="center"</figcaption>
+        <div class="fig-content" data-theme="light">
+          <Statement align="center">
+            At RTC Tampa, we gather to{" "}
+            <span class="font-accent text-brand">worship,</span> get into the
+            Word, and encourage one another as we follow Jesus.
+          </Statement>
+        </div>
+      </figure>
     </article>
   </section>
 
@@ -675,6 +766,85 @@ const listAData: Item[] = [
   <section class="section flow wrapper" data-padding="compact">
     <article class="flow">
       <header class="flow">
+        <h3 class="h3">Social follow</h3>
+        <code>.social-follow</code>
+        <p style="max-inline-size: 34em;">
+          Links to the church’s YouTube, Instagram, and Facebook pages.
+        </p>
+      </header>
+      <div class="fig-content" data-theme="dark">
+        <SocialFollow links={socialLinks} />
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Campus hero</h3>
+        <code>.campus-hero</code>
+        <p style="max-inline-size: 34em;">
+          Campus photo, name, gathering time, and an optional link to directions.
+        </p>
+      </header>
+      <div class="fig-content-b">
+        <CampusHero
+          image={tampa.hero}
+          focus={tampa.heroFocus}
+          tag="locations · tp"
+          title={tampaLocation.title}
+          gathering={tampa.heroGathering}
+          address={tampa.heroAddress}
+          addressHref={tampaDirections}
+        />
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Campus visit</h3>
+        <code>.campus-visit</code>
+        <p style="max-inline-size: 34em;">
+          Map, address, gathering times, and phone number for a campus.
+        </p>
+      </header>
+      <div class="fig-content-b">
+        <CampusVisit
+          title={tampaLocation.title}
+          name={`RTC ${tampaLocation.title}`}
+          map={tampa.map}
+          addressLines={tampa.addressLines}
+          gatheringLabel={tampa.gatheringLabel}
+          time={tampa.time}
+          phone={tampaLocation.metadata.phone}
+          telephone={seo.telephone}
+          directionsHref={tampaDirections}
+        />
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">Campus gallery</h3>
+        <code>[data-campus-gallery]</code>
+        <p style="max-inline-size: 34em;">
+          Captioned photos arranged in a grid on desktop and a swipeable row
+          on mobile.
+        </p>
+      </header>
+      <div class="fig-content-b">
+        <CampusGallery tag="inside the campus" tampa photos={tampa.gallery} />
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
         <h3 class="h3">Testimony</h3>
         <code>.media-overlay + .testimony</code>
         <p style="max-inline-size: 34em;">
@@ -786,6 +956,27 @@ const listAData: Item[] = [
   <section class="section flow wrapper" data-padding="compact">
     <article class="flow">
       <header class="flow">
+        <h3 class="h3">Sermon archive</h3>
+        <p style="max-inline-size: 34em;">
+          The year grid and monthly sermon lists, shown here with sample data.
+          <a href="/sermons">Browse the live sermon archive.</a>
+        </p>
+      </header>
+      <div class="fig-content-b" data-theme="dark">
+        <SermonArchive
+          sermons={archiveSermons}
+          years={["2026"]}
+          year="2026"
+          week="2026-08-30"
+          playingId="sunday00001"
+        />
+      </div>
+    </article>
+  </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
         <h3 class="h3">Site header</h3>
         <code>.site-header · .site-menu · .menu-toggle</code>
         <p style="max-inline-size: 34em;">
@@ -842,6 +1033,27 @@ const listAData: Item[] = [
       </div>
     </article>
   </section>
+
+  <section class="section flow wrapper" data-padding="compact">
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">SEO</h3>
+        <p style="max-inline-size: 34em;">
+          BaseLayout uses <code>SEO.astro</code> to set the page title, canonical
+          URL, robots directives, and social-sharing metadata in the document head.
+        </p>
+      </header>
+    </article>
+    <article class="flow">
+      <header class="flow">
+        <h3 class="h3">PostHog</h3>
+        <p style="max-inline-size: 34em;">
+          BaseLayout loads <code>posthog.astro</code> in the document head to
+          initialize browser analytics when the public token and host are configured.
+        </p>
+      </header>
+    </article>
+  </section>
 </BaseLayout>
 
 <style>
@@ -854,6 +1066,11 @@ const listAData: Item[] = [
     border-radius: var(--border-radius-2);
     border: 1px solid var(--clr-neutral-200);
     overflow: clip;
+  }
+
+  .demo-fieldset {
+    margin: 0;
+    min-inline-size: 0;
   }
 
   figcaption {

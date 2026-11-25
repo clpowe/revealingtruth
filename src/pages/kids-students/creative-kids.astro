@@ -1,0 +1,154 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Button from "../../components/Button.astro";
+import CampusGallery from "../../components/CampusGallery.astro";
+import Hero from "../../components/Hero.astro";
+import Media from "../../components/Media.astro";
+import Statement from "../../components/Statement.astro";
+import baptismImage from "../../assets/images/locations/baptism.webp";
+import worshipImage from "../../assets/images/locations/worship.webp";
+import creativeKidsImage from "../../assets/images/kids-students/creative-kids-placeholder.webp";
+import familyImage from "../../assets/images/locations/family.webp";
+import bibleImage from "../../assets/images/locations/placeholders/wesley-study.webp";
+import keysImage from "../../assets/images/locations/placeholders/tampa-keys.webp";
+
+const address = "5201 N. Armenia Avenue, Tampa, FL 33603";
+const directionsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+const gallery = [
+  { image: creativeKidsImage, caption: "Drawing together" },
+  {
+    image: familyImage,
+    caption: "Family at Revealing Truth",
+    focus: "50% 65%",
+  },
+  { image: bibleImage, caption: "An open Bible" },
+  { image: keysImage, caption: "At the keys" },
+];
+---
+
+<BaseLayout
+  title="Creative Kids"
+  description="Creative Kids welcomes children 6 weeks through 5th grade on Sundays at RTC Tampa. Learn about the program and find Sunday check-in times."
+>
+  <main>
+    <Hero image={baptismImage} alt="" size="compact">
+      Creative <span class="font-accent text-brand">Kids</span>
+      <p class="text-high-contrast" slot="aside">
+        Sundays at RTC Tampa · 6 weeks through 5th grade
+      </p>
+    </Hero>
+
+    <div class="section">
+      <div class="wrapper equal-columns" data-align="start" data-gap="wide">
+        <div class="flow">
+          <Statement>
+            At Creative Kids, we want every child to know three things.{" "}
+            <strong class="font-accent text-brand">
+              I belong to God. He made me. And He loves me.
+            </strong>
+          </Statement>
+          <p>
+            We help kids get to know Jesus and discover God’s Word in ways they
+            can understand and put into practice.
+          </p>
+          <p>
+            In <strong class="text-high-contrast">Seeds of Wonder</strong>, our
+            elementary experience, kids explore Bible stories through art, play,
+            and hands-on activities. We make room for praise and worship, too.
+            Sometimes we turn down the lights and make it glow!
+          </p>
+        </div>
+
+        <div class="flow">
+          <Media
+            src={worshipImage}
+            alt="The Revealing Truth Church worship team on stage"
+            shape="rounded"
+            sizes="(width > 720px) 50vw, 100vw"
+          />
+          <section class="flow" aria-labelledby="vip-experience">
+            <h2
+              class="font-display fs-700 text-high-contrast"
+              id="vip-experience"
+            >
+              The VIP <span class="font-accent text-brand">Experience</span>
+            </h2>
+            <p>
+              Kids{" "}
+              <strong class="text-high-contrast">
+                age 3 through 5th grade
+              </strong>{" "}
+              get to choose how they want to play. They can jump in the bounce
+              house, pick a game, grab a snack, or enjoy free play with music
+              and friends.
+            </p>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <section
+      class="section"
+      data-theme="dark"
+      aria-labelledby="sunday-check-in"
+    >
+      <div class="wrapper equal-columns" data-align="start" data-gap="wide">
+        <div class="flow">
+          <h2
+            class="font-display fs-800 text-high-contrast"
+            id="sunday-check-in"
+          >
+            Sunday <span class="font-accent text-brand">Check-In</span>
+          </h2>
+          <p>
+            Start in the{" "}
+            <strong class="text-high-contrast">Tampa campus lobby</strong>. Look
+            for the signs for{" "}
+            <strong class="text-high-contrast">Nursery Check-In</strong> and{" "}
+            <strong class="text-high-contrast">School-Age Check-In</strong>. Our
+            team will help you find the right desk for your child and show you
+            where to go next.
+          </p>
+        </div>
+        <div class="flow">
+          <dl class="flow">
+            <div>
+              <dt class="text-high-contrast">
+                <strong>9:00 AM gathering</strong>
+              </dt>
+              <dd>
+                Check-in from{" "}
+                <strong class="text-high-contrast">8:30 to 9:15 AM</strong>
+              </dd>
+            </div>
+            <div>
+              <dt class="text-high-contrast">
+                <strong>11:00 AM gathering</strong>
+              </dt>
+              <dd>
+                Check-in from{" "}
+                <strong class="text-high-contrast">10:30 to 11:15 AM</strong>
+              </dd>
+            </div>
+          </dl>
+          <p>{address}</p>
+          <Button type="accent" href={directionsHref}>
+            Get Directions to RTC Tampa
+          </Button>
+        </div>
+      </div>
+    </section>
+
+    <CampusGallery photos={gallery}>
+      <Fragment slot="title">
+        Creative Kids <span class="font-accent text-brand">gallery</span>
+      </Fragment>
+    </CampusGallery>
+  </main>
+</BaseLayout>
+
+<style>
+  strong:not(.font-accent) {
+    font-weight: var(--fw-bold);
+  }
+</style>
