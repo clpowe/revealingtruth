@@ -259,6 +259,24 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+
+  /* Inline links in running copy. Classed links (buttons, list rows, logos)
+     bring their own styles and are left alone */
+  a:not([class]) {
+    color: var(--text-strong);
+    text-decoration-color: var(--text-brand);
+    text-underline-offset: 0.2em;
+    transition: color var(--duration-fast) var(--ease-out);
+  }
+
+  a:not([class]):hover {
+    color: var(--text-brand);
+  }
+
+  a:not([class]):focus-visible {
+    outline: var(--border-width-2) solid var(--focus-ring);
+    outline-offset: 2px;
+  }
 }
 
 /* ==========================================================================

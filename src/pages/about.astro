@@ -1,0 +1,314 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Hero from "../components/Hero.astro";
+import SocialFollow from "../components/SocialFollow.astro";
+import Statement from "../components/Statement.astro";
+import Tag from "../components/Tag.astro";
+import Milestone from "../components/Milestone.astro";
+import MediaStrip from "../components/MediaStrip.astro";
+import Media from "../components/Media.astro";
+import Ledger from "../components/Ledger.astro";
+import ListA from "../components/ListA/ListA.astro";
+import ListB from "../components/ListB/ListB.astro";
+import ListBItem from "../components/ListB/ListBItem.astro";
+import { seo } from "../config/seo";
+import { locations } from "../config/locations";
+
+import testimonialImage from "../assets/images/testimonial.png";
+import mediaStripImage from "../assets/images/media-strip.png";
+import pastordeborahPowe from "../assets/images/pastordeborahpowe.png";
+import bryanandRashida from "../assets/images/bryan-rashida-powe.png";
+
+const pillars = [
+  "Peace",
+  "Prosperity",
+  "Security",
+  "Stability",
+  "Health",
+  "Healing",
+  "Truth",
+];
+---
+
+<BaseLayout
+  title="About Us"
+  description="We are Revealing Truth Church, founded in Tampa in 1991. Learn about our story, beliefs, vision rooted in Jeremiah 33:6, and pastoral leadership."
+>
+  <main>
+    <Hero image={testimonialImage} alt="" size="compact">
+      About <span class="font-accent text-brand">us</span>
+      <SocialFollow
+        slot="aside"
+        links={[
+          { name: "youtube", label: "YouTube", href: seo.social.youtube },
+          { name: "instagram", label: "Instagram", href: seo.social.instagram },
+          { name: "facebook", label: "Facebook", href: seo.social.facebook },
+        ]}
+      />
+    </Hero>
+
+    <section class="section">
+      <div class="wrapper equal-columns" data-align="start" data-gap="wide">
+        <div class="flow" style="--flow-space: var(--size-600);">
+          <Statement>
+            <Tag slot="tag" as="h2">
+              who we are
+            </Tag>{" "}
+            We are Revealing Truth Church, a community of believers who{" "}
+            <span class="font-accent text-brand">love God, love people,</span>{" "}
+            and are learning to live out His Word together.
+          </Statement>
+          <Milestone value="1991">
+            Founded in Tampa, FL by Pastors Greg &amp; Deborah Powe.
+          </Milestone>
+        </div>
+        <div class="flow" style="--flow-space: var(--size-500);">
+          <p>
+            We want people to see Jesus in the way we worship, the way we care
+            for one another, and the way we show up for our communities.
+          </p>
+          <p>
+            Pastors Greg and Deborah Powe founded the church in 1991. Pastor
+            Greg often said,{" "}
+            <strong class="text-high-contrast">
+              “When ME becomes WE, amazing things happen!”
+            </strong>{" "}
+            We see that every time someone uses a gift God gave them to serve,
+            comes alongside someone taking their next step with Jesus, or helps
+            a neighbor in need. That’s how we grow as disciples together, living
+            boldly in our faith and finding creative ways to share it.
+          </p>
+          <p>
+            Whether you’re getting to know Jesus, coming back to church, or
+            looking for a place to grow and serve, we’d love to welcome you.
+            Come worship with us, get into the Word, and see what it’s like to
+            be part of the RTC family.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <MediaStrip
+      src={mediaStripImage}
+      alt="Worship team singing on stage beneath an Infinitely More banner"
+    />
+
+    <section class="section" data-theme="dark">
+      <div class="wrapper">
+        <Statement>
+          <Tag slot="tag" as="h2">
+            what we believe
+          </Tag>{" "}
+          At Revealing Truth Church, we believe{" "}
+          <span class="font-accent text-brand">God’s Word is truth.</span> As we
+          live out His Word, we experience His abundance in every area of our
+          lives and grow into who He created us to be.
+        </Statement>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrapper flow" style="--flow-space: var(--size-700);">
+        <div class="equal-columns" data-align="start" data-gap="wide">
+          <Statement>
+            <Tag slot="tag" as="h2">
+              our vision
+            </Tag>{" "}
+            Rooted in <span class="font-accent text-brand">Jeremiah 33:6</span>
+          </Statement>
+          <div class="flow" style="--flow-space: var(--size-400);">
+            <p>
+              The vision of Revealing Truth Church is rooted in Jeremiah 33:6.
+              In that passage, God promises health and healing and says He will
+              reveal an abundance of peace and truth. We’re excited to hear,
+              see, and experience God’s promises in our lives, our families, and
+              our communities.
+            </p>
+            <p class="text-high-contrast">
+              Peace, prosperity, security, stability, health, healing, and truth
+              are the seven pillars of Revealing Truth Church.
+            </p>
+          </div>
+        </div>
+        <Ledger items={pillars} />
+      </div>
+    </section>
+
+    <section class="section flow" id="locations" data-divider="top">
+      <div class="wrapper">
+        <Statement>
+          <Tag slot="tag" as="h2">
+            gather with us
+          </Tag>{" "}
+          We’re <span class="font-accent">one church</span> gathering in Tampa,
+          Wesley Chapel, and the St. Petersburg area.
+        </Statement>
+      </div>
+      <ListA items={locations} />
+    </section>
+
+    <section class="section" id="leadership">
+      <div class="wrapper flow" style="--flow-space: var(--size-600);">
+        <h2 class="font-display fs-800 text-high-contrast">
+          Our <span class="font-accent text-brand">leadership</span>
+        </h2>
+        <div class="equal-columns" data-align="start">
+          <article class="flow">
+            <Media
+              src={pastordeborahPowe}
+              alt="Pastor Deborah H. Powe speaking at a pulpit"
+              shape="rounded"
+              style="--media-ratio: 2 / 1;"
+              sizes="(width > 720px) 50vw, 100vw"
+            />
+            <Statement>
+              <Tag slot="tag" as="h2">
+                co-founder &amp; overseer
+              </Tag>{" "}
+              Pastor <span class="font-accent">Deborah</span> H. Powe
+            </Statement>
+            <p>
+              Pastor Deborah H. Powe and her late husband, Pastor Greg Powe,
+              founded what is now Revealing Truth Church in 1991. She has served
+              as Overseer since 2017 and continues to teach God’s Word alongside
+              Senior Pastors Bryan and Rashida Powe. Her heart is to help people
+              know how deeply God loves them, understand His grace, and equip
+              women to walk in their God-given authority.
+            </p>
+          </article>
+          <article class="flow">
+            <Media
+              src={bryanandRashida}
+              alt="Pastors Bryan and Rashida Powe"
+              shape="rounded"
+              style="--media-ratio: 2 / 1;"
+              sizes="(width > 720px) 50vw, 100vw"
+            />
+            <Statement>
+              <Tag slot="tag" as="h2">
+                senior pastors
+              </Tag>{" "}
+              Pastors Bryan &amp; Rashida <span class="font-accent">Powe</span>
+            </Statement>
+            <p>
+              Pastors Bryan and Rashida Powe serve as the Senior Pastors of
+              Revealing Truth Church. They are the proud parents of their
+              daughter, Amber.
+            </p>
+            <p>
+              Their heart is to create space for people to know God personally
+              and experience the depth of His love, grace, and goodness. They’re
+              passionate about equipping people to express who God is through
+              the gifts He’s given them, in the church and wherever they go
+              throughout the week.
+            </p>
+            <p>
+              From Sunday gatherings to outreach, leadership development, and
+              creative ministry, Pastors Bryan and Rashida bring the same focus
+              to everything they lead. They want people to see Jesus, come to
+              know Him for themselves, and show others what His love looks like.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" data-theme="dark">
+      <div class="wrapper equal-columns" data-gap="wide">
+        <figure class="flow" style="--flow-space: var(--size-400);">
+          <blockquote>
+            <Statement>
+              <span class="font-accent text-high-contrast">
+                “If we limit how God can use us, we limit who God can reach.”
+              </span>
+            </Statement>
+          </blockquote>
+          <figcaption class="text-brand fs-200">
+            <cite>— Pastor Bryan Powe</cite>
+          </figcaption>
+        </figure>
+        <figure class="flow" style="--flow-space: var(--size-400);">
+          <blockquote>
+            <Statement>
+              <span class="font-accent text-high-contrast">
+                “God created us to be EXTRAORDINARY in the Kingdom of God!”
+              </span>
+            </Statement>
+          </blockquote>
+          <figcaption class="text-brand fs-200">
+            <cite>— Pastor Rashida Powe</cite>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section
+      class="section flow"
+      id="faq"
+      style="--flow-space: var(--size-600);"
+    >
+      <div class="wrapper">
+        <h2 class="font-display fs-800 text-high-contrast">
+          Frequently asked <span class="font-accent text-brand">questions</span>
+        </h2>
+      </div>
+      <ListB>
+        <ListBItem>
+          <Fragment slot="title">
+            Where and when does RTC <span class="font-accent">gather</span>?
+          </Fragment>
+          Tampa · Sundays at 9:00 AM &amp; 11:00 AM at{" "}
+          <a href="https://www.google.com/maps/search/5201+N.+Armenia+Avenue,+Tampa,+FL+33603">5201 N. Armenia Avenue, Tampa, FL 33603</a
+          >.<br />
+          Wesley Chapel · Sundays at 9:00 AM at{" "}
+          <a href="https://www.google.com/maps/search/2644+Cypress+Ridge+Blvd,+Suite+102,+Wesley+Chapel,+FL+33544">2644 Cypress Ridge Blvd, Suite 102, Wesley Chapel, FL 33544</a
+          >.<br />
+          St. Petersburg · Sundays at 11:00 AM. Our meeting location varies by
+          week.{" "}
+          <a href="mailto:Communications@revealingtruth.org">Ask where we’re meeting this Sunday</a
+          >.
+        </ListBItem>
+        <ListBItem>
+          <Fragment slot="title">
+            What can I expect on my <span class="font-accent">first</span>{" "}
+            Sunday?
+          </Fragment>
+          We’ll worship together, get into God’s Word, and spend time connecting
+          with one another. If it’s your first time, let us know when you
+          arrive. We’d love to meet you and help you find your way.
+        </ListBItem>
+        <ListBItem>
+          <Fragment slot="title">
+            What should I <span class="font-accent">wear</span>?
+          </Fragment>
+          Come in what you’re comfortable wearing. You’ll see people in jeans
+          and people who enjoy dressing up for church.
+        </ListBItem>
+        <ListBItem>
+          <Fragment slot="title">
+            Do you have something for my <span class="font-accent">kids</span>{" "}
+            or teens?
+          </Fragment>
+          Yes! Creative Kids serves children ages 6 weeks through 5th grade at
+          RTC Tampa during both Sunday gatherings. Start in the lobby and our
+          team will direct you to the right check-in desk.
+          <br />
+          <br />
+          Young Hearts Big Dreams is for middle schoolers, and Vision U is for
+          high schoolers. Both meet on Sundays at the Performance House on the
+          RTC Tampa Campus. Visit{" "}
+          <a href="/kids-students">Kids &amp; Students</a> to learn more.
+        </ListBItem>
+        <ListBItem>
+          <Fragment slot="title">
+            Can I join RTC during the <span class="font-accent">week</span>?
+          </Fragment>
+          Let’s get into the Word together, right where you are! Join RTC Tampa
+          Wednesdays at 7:00 PM for our fully online midweek service. Stream
+          live on <a href="https://www.youtube.com/@revealingtruth">YouTube</a>{" "}
+          or <a href={seo.social.facebook}>Facebook</a> at @revealingtruth.
+        </ListBItem>
+      </ListB>
+    </section>
+  </main>
+</BaseLayout>

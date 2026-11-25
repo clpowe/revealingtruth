@@ -1,0 +1,80 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Button from "../components/Button.astro";
+import CampusGallery from "../components/CampusGallery.astro";
+import Hero from "../components/Hero.astro";
+import Statement from "../components/Statement.astro";
+import cameraImage from "../assets/images/ministries/creative-camera-placeholder.webp";
+import fashionImage from "../assets/images/ministries/creative-fashion-placeholder.webp";
+import keysImage from "../assets/images/locations/placeholders/tampa-keys.webp";
+import rehearsalImage from "../assets/images/locations/placeholders/tampa-rehearsal.webp";
+import worshipImage from "../assets/images/locations/worship.webp";
+
+const gallery = [
+  { image: cameraImage, caption: "Behind the camera" },
+  { image: fashionImage, caption: "Fabric swatches and garment sketches" },
+  { image: rehearsalImage, caption: "Before rehearsal" },
+  { image: worshipImage, caption: "The RTC worship team on stage" },
+];
+---
+
+<BaseLayout
+  title="Creative Collective"
+  description="Creative Collective brings Tampa Bay creatives together to grow and share their work in music, writing, fashion, film, and photography."
+>
+  <main>
+    <Hero image={keysImage} alt="" size="compact">
+      Creative <span class="font-accent text-brand">Collective</span>
+    </Hero>
+
+    <div class="section">
+      <div class="wrapper equal-columns" data-align="start" data-gap="wide">
+        <Statement>
+          God has placed{" "}
+          <span class="font-accent text-brand">creative gifts</span> in people
+          all across Tampa Bay, and we believe He’s entrusted us to make room
+          for those gifts to be expressed.
+        </Statement>
+
+        <div class="flow">
+          <p>
+            Creative Collective brings creatives from Tampa Bay and the
+            surrounding areas together to connect, grow in their craft, and
+            share what God has placed in them.
+          </p>
+          <p>
+            Through{" "}
+            <strong class="text-high-contrast">
+              music, writing, fashion, film, and photography
+            </strong>
+            , we create opportunities for people to develop and share their
+            work. From creative gatherings to live productions in the community,
+            we use our gifts to put Christ on display.
+          </p>
+          <Button type="accent" href="mailto:info@mycreativecc.com">
+            Connect With Creative Collective
+          </Button>
+        </div>
+      </div>
+    </div>
+
+    <div class="gallery-frame">
+      <CampusGallery photos={gallery}>
+        <Fragment slot="title">
+          Creative Collective{" "}
+          <span class="font-accent text-brand">gallery</span>
+        </Fragment>
+      </CampusGallery>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  .gallery-frame {
+    border-block-start: var(--border-width-hairline) solid var(--border-subtle);
+  }
+
+  strong {
+    font-weight: var(--fw-bold);
+  }
+</style>

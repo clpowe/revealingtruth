@@ -1,0 +1,223 @@
+---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+import Button from "./Button.astro";
+import Tag from "./Tag.astro";
+
+interface Props {
+  title: string;
+  name: string;
+  map: ImageMetadata;
+  addressLines: [string, string];
+  gatheringLabel: string;
+  time: string;
+  phone: string;
+  telephone: string;
+  directionsHref: string;
+}
+
+const {
+  title,
+  name,
+  map,
+  addressLines,
+  gatheringLabel,
+  time,
+  phone,
+  telephone,
+  directionsHref,
+} = Astro.props;
+---
+
+<section
+  class="campus-visit section"
+  data-divider="top"
+  aria-labelledby="campus-visit-heading"
+>
+  <div class="wrapper campus-visit__inner">
+    <div class="campus-visit__info">
+      <header class="campus-visit__header">
+        <Tag>find us</Tag>
+        <h2
+          id="campus-visit-heading"
+          class="campus-visit__heading font-display text-high-contrast"
+        >
+          Visit{" "}
+          <span class="campus-visit__campus font-accent text-brand">
+            {title}
+          </span>
+        </h2>
+      </header>
+
+      <div class="campus-visit__card">
+        <dl class="campus-visit__details">
+          <div class="campus-visit__row">
+            <dt class="campus-visit__label">Address</dt>
+            <dd class="campus-visit__value">
+              {addressLines[0]}
+              <br />
+              {addressLines[1]}
+            </dd>
+          </div>
+          <div class="campus-visit__row">
+            <dt class="campus-visit__label">{gatheringLabel}</dt>
+            <dd class="campus-visit__value campus-visit__value--strong">
+              {time}
+            </dd>
+          </div>
+          <div class="campus-visit__row">
+            <dt class="campus-visit__label">Phone</dt>
+            <dd class="campus-visit__value">
+              <a class="campus-visit__phone" href={`tel:${telephone}`}>
+                {phone}
+              </a>
+            </dd>
+          </div>
+        </dl>
+
+        <div class="campus-visit__action">
+          <Button type="accent" href={directionsHref}>
+            Get Directions <span aria-hidden="true">→</span>
+          </Button>
+        </div>
+      </div>
+    </div>
+
+    <div class="campus-visit__map">
+      <Image
+        class="campus-visit__map-image"
+        src={map}
+        alt={`Map showing the location of ${name}`}
+        layout="full-width"
+        sizes="(width > 1440px) 768px, (width > 880px) 60vw, 100vw"
+      />
+    </div>
+  </div>
+</section>
+
+<style>
+  .campus-visit {
+    background-color: color-mix(
+      in srgb,
+      var(--border-subtle) 24%,
+      var(--background-main)
+    );
+  }
+
+  .campus-visit__inner,
+  .campus-visit__info {
+    display: grid;
+    gap: var(--size-500);
+  }
+
+  .campus-visit__header {
+    display: grid;
+    gap: var(--size-300);
+  }
+
+  .campus-visit__header :global(.tag) {
+    justify-self: start;
+  }
+
+  .campus-visit__heading {
+    font-size: clamp(1.75rem, 1.2rem + 2.2vw, 2.75rem);
+    font-variation-settings: "wdth" 125;
+    line-height: 1.05;
+  }
+
+  .campus-visit__campus {
+    font-size: 1.15em;
+    font-variation-settings: normal;
+    margin-inline-start: 0.1em;
+  }
+
+  .campus-visit__map {
+    overflow: clip;
+    border: var(--border-width-hairline) solid var(--border-subtle);
+    border-radius: var(--border-radius-2);
+    background-color: var(--background-main);
+  }
+
+  .campus-visit__map-image {
+    inline-size: 100%;
+    block-size: auto;
+  }
+
+  .campus-visit__card {
+    display: grid;
+    gap: var(--size-500);
+    padding: var(--size-500);
+    background-color: var(--background-main);
+    border: var(--border-width-hairline) solid var(--border-subtle);
+    border-radius: var(--border-radius-2);
+  }
+
+  .campus-visit__details {
+    display: grid;
+    gap: var(--size-300);
+  }
+
+  .campus-visit__row {
+    display: grid;
+    gap: var(--size-100);
+  }
+
+  .campus-visit__row + .campus-visit__row {
+    padding-block-start: var(--size-300);
+    border-block-start: var(--border-width-hairline) solid var(--border-subtle);
+  }
+
+  .campus-visit__label {
+    font-family: var(--ff-ui);
+    font-size: 0.75rem;
+    font-weight: var(--fw-semi-bold);
+    letter-spacing: 0.08em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    color: var(--text-main);
+  }
+
+  .campus-visit__value {
+    font-family: var(--ff-ui);
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+    color: var(--text-strong);
+  }
+
+  .campus-visit__value--strong {
+    font-weight: var(--fw-bold);
+    color: var(--text-high-contrast);
+  }
+
+  .campus-visit__phone {
+    color: inherit;
+    text-decoration: underline 0.08em transparent;
+    text-underline-offset: 0.25em;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      text-decoration-color var(--duration-fast) var(--ease-out);
+  }
+
+  .campus-visit__phone:hover {
+    color: var(--text-brand);
+    text-decoration-color: currentColor;
+  }
+
+  .campus-visit__phone:focus-visible {
+    outline: var(--border-width-2) solid var(--focus-ring);
+    outline-offset: 3px;
+    border-radius: var(--border-radius-1);
+  }
+
+  .campus-visit__action :global(.button) {
+    inline-size: 100%;
+  }
+
+  @media (width > 880px) {
+    .campus-visit__inner {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+      align-items: center;
+      gap: var(--size-600);
+    }
+  }
+</style>

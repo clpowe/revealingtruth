@@ -1,0 +1,275 @@
+---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+import Tag from "./Tag.astro";
+
+interface Props {
+  image: ImageMetadata;
+  focus: string;
+  /** Slight zoom when a source photo carries baked-in rounded corners */
+  scale?: number;
+  tag: string;
+  title: string;
+  gathering: string;
+  address: string;
+  addressHref?: string;
+}
+
+const { image, focus, scale, tag, title, gathering, address, addressHref } =
+  Astro.props;
+const mediaStyle = [
+  `--hero-focus: ${focus}`,
+  scale ? `--hero-media-scale: ${scale}` : null,
+]
+  .filter(Boolean)
+  .join("; ");
+---
+
+<section class="campus-hero" data-theme="dark">
+  <div class="campus-hero__media-frame">
+    {/* LCP element: priority emits eager loading, sync decoding, and fetchpriority="high" */}
+    <Image
+      class="campus-hero__media"
+      src={image}
+      alt=""
+      layout="full-width"
+      sizes="(width > 1080px) 72vw, 100vw"
+      style={mediaStyle}
+      priority
+    />
+  </div>
+
+  <div class="campus-hero__content wrapper">
+    <Tag>{tag}</Tag>
+    <h1 class="campus-hero__title">
+      RTC <span class="campus-hero__campus">{title}</span>
+    </h1>
+    <div class="campus-hero__meta">
+      <p class="campus-hero__gathering">{gathering}</p>
+      {addressHref ? (
+        <a
+          class="campus-hero__location"
+          href={addressHref}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {address}
+          <span class="visually-hidden"> (opens in a new tab)</span>
+        </a>
+      ) : (
+        <p class="campus-hero__location">{address}</p>
+      )}
+    </div>
+  </div>
+</section>
+
+<style>
+  .campus-hero {
+    --in-oklab: ;
+
+    position: relative;
+    display: grid;
+    align-items: end;
+    isolation: isolate;
+    min-block-size: clamp(27rem, 72vw, 34rem);
+    overflow: clip;
+    background-color: var(--background-dark);
+  }
+
+  @supports (background: linear-gradient(in oklab, white, black)) {
+    .campus-hero {
+      --in-oklab: in oklab;
+    }
+  }
+
+  .campus-hero__media-frame {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    overflow: clip;
+  }
+
+  .campus-hero__media {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    object-position: var(--hero-focus, 50% 50%);
+    scale: var(--hero-media-scale, 1);
+  }
+
+  /* Mobile & tablet scrim: full-bleed vertical + subtle horizontal fade so the
+     overlaid header and bottom-left lockup remain legible over any photo */
+  .campus-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      linear-gradient(
+        to top var(--in-oklab),
+        #000000 0%,
+        #000000e6 26%,
+        #0000008c 58%,
+        #0000004d 85%,
+        #00000073 100%
+      ),
+      linear-gradient(
+        90deg var(--in-oklab),
+        #00000099 0%,
+        #00000033 55%,
+        #00000000 100%
+      );
+  }
+
+  .campus-hero__content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--size-400);
+    padding-block: 8rem var(--size-700);
+  }
+
+  .campus-hero__title {
+    max-inline-size: 100%;
+    font-family: var(--ff-heading);
+    font-size: clamp(2.125rem, 1rem + 4.4vw, 4rem);
+    font-weight: var(--fw-black);
+    font-stretch: var(--font-stretch-display);
+    font-variation-settings: "wdth" 125;
+    line-height: 1.111;
+    letter-spacing: 0.005em;
+    text-transform: uppercase;
+    color: var(--clr-neutral-100);
+  }
+
+  .campus-hero__campus {
+    font-family: var(--ff-accent);
+    font-size: 1.1111em;
+    font-style: italic;
+    font-weight: var(--fw-regular);
+    font-stretch: normal;
+    font-variation-settings: normal;
+    line-height: 0.95;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--clr-brand-400);
+  }
+
+  .campus-hero__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    max-inline-size: 100%;
+  }
+
+  .campus-hero__gathering {
+    font-family: var(--ff-ui);
+    font-size: clamp(1rem, 0.92rem + 0.3vw, 1.125rem);
+    font-weight: 500;
+    line-height: 1.444;
+    color: var(--clr-neutral-100);
+  }
+
+  .campus-hero__location {
+    font-family: var(--ff-ui);
+    font-size: clamp(0.9375rem, 0.9rem + 0.15vw, 1rem);
+    font-weight: var(--fw-regular);
+    line-height: 1.5;
+    color: var(--clr-neutral-200);
+  }
+
+  a.campus-hero__location {
+    align-self: flex-start;
+    text-decoration: underline 0.08em transparent;
+    text-underline-offset: 0.25em;
+    transition:
+      color var(--duration-base) var(--ease-out),
+      text-decoration-color var(--duration-base) var(--ease-out);
+  }
+
+  a.campus-hero__location:hover {
+    color: var(--clr-neutral-100);
+    text-decoration-color: currentColor;
+  }
+
+  a.campus-hero__location:focus-visible {
+    outline: var(--border-width-2) solid var(--focus-ring);
+    outline-offset: 4px;
+    border-radius: var(--border-radius-1);
+  }
+
+  @media (width > 720px) {
+    .campus-hero {
+      min-block-size: 34rem;
+    }
+
+    .campus-hero__content {
+      gap: var(--size-500);
+      padding-block: 8.5rem 3.5rem;
+    }
+  }
+
+  @media (width > 1080px) {
+    .campus-hero {
+      min-block-size: 38rem;
+    }
+
+    .campus-hero__media-frame {
+      inset-inline-start: 28%;
+      inset-inline-end: 0;
+    }
+
+    .campus-hero::after {
+      inset-inline-start: 27%;
+      inset-inline-end: 0;
+      background: linear-gradient(
+        90deg var(--in-oklab),
+        #000000 0%,
+        #000000 6%,
+        #000000db 20%,
+        #00000059 44%,
+        #00000026 78%,
+        #00000055 100%
+      );
+    }
+
+    .campus-hero__content {
+      padding-block: 8.5rem 4.5rem;
+    }
+
+    .campus-hero__title {
+      font-size: 4.5rem;
+      line-height: 5rem;
+    }
+
+    .campus-hero__campus {
+      font-size: 5rem;
+      line-height: 4.75rem;
+    }
+
+    .campus-hero__gathering {
+      font-size: 1.125rem;
+      line-height: 1.625rem;
+    }
+
+    .campus-hero__location {
+      font-size: 1rem;
+      line-height: 1.5rem;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .campus-hero__media-frame {
+      visibility: hidden;
+    }
+
+    .campus-hero__content :global(.tag) {
+      border: 1px solid CanvasText;
+    }
+
+    a.campus-hero__location {
+      text-decoration: underline;
+    }
+  }
+</style>

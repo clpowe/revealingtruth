@@ -1,0 +1,124 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Button from "../components/Button.astro";
+import CampusGallery from "../components/CampusGallery.astro";
+import Hero from "../components/Hero.astro";
+import Statement from "../components/Statement.astro";
+import foodImage from "../assets/images/ministries/outreach-food-placeholder.webp";
+import parkImage from "../assets/images/ministries/outreach-park-placeholder.webp";
+import familyImage from "../assets/images/locations/family.webp";
+import picnicImage from "../assets/images/locations/placeholders/st-pete-picnic.webp";
+import welcomeImage from "../assets/images/locations/placeholders/tampa-coffee.webp";
+
+const gallery = [
+  { image: foodImage, caption: "Packing groceries", focus: "50% 30%" },
+  {
+    image: familyImage,
+    caption: "Family at Revealing Truth",
+    focus: "50% 65%",
+  },
+  {
+    image: parkImage,
+    caption: "Volunteers cleaning up a park",
+    focus: "50% 35%",
+  },
+  {
+    image: welcomeImage,
+    caption: "Coffee at the welcome table",
+    focus: "50% 30%",
+  },
+];
+---
+
+<BaseLayout
+  title="Outreach & Global Missions"
+  description="See how Revealing Truth Church serves locally and around the world, and get Outreach & Global Missions updates in the RTC App."
+>
+  <main>
+    <Hero image={picnicImage} alt="" size="compact">
+      Outreach <span class="font-accent text-brand">&amp; Global Missions</span>
+    </Hero>
+
+    <div class="section">
+      <div class="wrapper outreach-message" data-width="narrow">
+        <Statement>
+          Through Outreach &amp; Global Missions, we share the love of Jesus
+          beyond our church walls by serving people and meeting practical needs
+          locally and around the world.{" "}
+          <strong class="font-accent text-brand">Love Sealed by Action</strong>{" "}
+          is one of the ways we put that love into practice.
+        </Statement>
+      </div>
+    </div>
+
+    <section
+      class="section"
+      data-theme="dark"
+      aria-labelledby="outreach-updates"
+    >
+      <div class="wrapper equal-columns" data-align="start" data-gap="wide">
+        <h2
+          class="font-display fs-800 text-high-contrast"
+          id="outreach-updates"
+        >
+          Outreach <span class="font-accent text-brand">updates</span>
+        </h2>
+        <div class="flow">
+          <p>
+            Want to know what’s coming up and how you can be part of it? Turn on{" "}
+            <strong class="text-high-contrast">
+              Outreach &amp; Global Missions
+            </strong>{" "}
+            notifications in the RTC App.
+          </p>
+          <div class="cluster">
+            <Button
+              type="outline"
+              href="https://apps.apple.com/us/app/revealing-truth/id1445042097"
+            >
+              App Store
+            </Button>
+            <Button
+              type="outline"
+              href="https://play.google.com/store/apps/details?id=io.pushpay.revealingtruth"
+            >
+              Google Play
+            </Button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <CampusGallery photos={gallery}>
+      <Fragment slot="title">
+        Outreach <span class="font-accent text-brand">gallery</span>
+      </Fragment>
+    </CampusGallery>
+  </main>
+</BaseLayout>
+
+<style>
+  main :global(.hero)::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: linear-gradient(to bottom, rgb(0 0 0 / 0.6), transparent 10rem);
+  }
+
+  @media (width <= 720px) {
+    .outreach-message :global(.statement) {
+      font-size: var(--fs-600);
+    }
+  }
+
+  @media (width <= 360px) {
+    main :global(.hero__title) {
+      font-size: var(--fs-800);
+    }
+  }
+
+  p strong {
+    font-weight: var(--fw-bold);
+  }
+</style>

@@ -2,6 +2,7 @@
 import { Image } from "astro:assets";
 
 import Button from "./Button.astro";
+import { locations } from "../config/locations";
 import { seo } from "../config/seo";
 import MenuToggle from "./MenuToggle.astro";
 import logo from "../assets/logo/revealing-truth-logo.svg";
@@ -24,26 +25,24 @@ const navigation: {
     heading: "New Here",
     links: [
       { label: "Home", href: "/" },
-      { label: "About Us", href: "#" },
-      { label: "Our Values", href: "#" },
-      { label: "Our Pastors", href: "#" },
+      { label: "About Us", href: "/about" },
     ],
   },
   {
     heading: "Locations",
-    links: [
-      { label: "Tampa", href: "#" },
-      { label: "Wesley Chapel", href: "#" },
-      { label: "St. Petersburg", href: "#" },
-    ],
+    links: locations.map(({ title, href }) => ({ label: title, href })),
   },
   {
     heading: "Ministries",
     links: [
-      { label: "Creative Kids", href: "#" },
-      { label: "UR Student Ministries", href: "#" },
-      { label: "Creative Collective", href: "#" },
-      { label: "Outreach & Global Missions", href: "#" },
+      { label: "Kids & Students", href: "/kids-students" },
+      { label: "Creative Kids", href: "/kids-students/creative-kids" },
+      { label: "RTC Students", href: "/kids-students/students" },
+      { label: "Creative Collective", href: "/creative-collective" },
+      {
+        label: "Outreach & Global Missions",
+        href: "/outreach-global-missions",
+      },
     ],
   },
   {
@@ -134,7 +133,9 @@ const menuId = `site-menu`;
                     target={external ? "_blank" : undefined}
                     rel={external ? "noopener" : undefined}
                     aria-current={
-                      Astro.url.pathname === href ? "page" : undefined
+                      (Astro.url.pathname.replace(/\/$/, "") || "/") === href
+                        ? "page"
+                        : undefined
                     }
                   >
                     {label}
@@ -513,7 +514,8 @@ const menuId = `site-menu`;
     try {
       const res = await fetch(liveStatusUrl);
       const data = await res.json<{ title?: string; isLive?: boolean }>();
-      banner!.querySelector("[data-live-title]")!.textContent = data.title ?? "";
+      banner!.querySelector("[data-live-title]")!.textContent =
+        data.title ?? "";
       banner!.hidden = data.isLive !== true;
     } catch {
       banner!.hidden = true;

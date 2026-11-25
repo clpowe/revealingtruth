@@ -175,6 +175,12 @@ importers:
       '@formkit/tempo':
         specifier: ^1.1.0
         version: 1.1.0
+      '@splidejs/splide':
+        specifier: ^4.1.4
+        version: 4.1.4
+      '@splidejs/splide-extension-grid':
+        specifier: ^0.4.1
+        version: 0.4.1
       '@videojs/html':
         specifier: 10.3.0
         version: 10.3.0(@videojs/youtube-video@10.3.0)(react@19.3.1)
@@ -1084,6 +1090,12 @@ packages:
 
   '@speed-highlight/core@1.2.24':
     resolution: {integrity: sha512-qeW2e1l78afw8VhRPfPQ1Gjj+KU5XFQ/OFV5ti6eTa9bruO7mJyZtA4vw0ofqmA3tKCkROE9xLk3VZoeRc98nw==}
+
+  '@splidejs/splide-extension-grid@0.4.1':
+    resolution: {integrity: sha512-XM3pl5VKvmoybwZRrv4xE8Hff2mT6Chl9GnGd8nQogo4ZtTgxzqAZqBxLvhrl5UuUswIdmNoRmMeeEgx9twrvw==}
+
+  '@splidejs/splide@4.1.4':
+    resolution: {integrity: sha512-5I30evTJcAJQXt6vJ26g2xEkG+l1nXcpEw4xpKh0/FWQ8ozmAeTbtniVtVmz2sH1Es3vgfC4SS8B2X4o5JMptA==}
 
   '@svta/cml-error-codes@0.1.2':
     resolution: {integrity: sha512-q1xL8W9JR0Yj7h2kAyRWqb7iT7UlOb/rXMDSVpY5EcXUR5w0zHfl22YG4+dYVqtV9XpoIxhp+nXSqZkTo3TSTg==}
@@ -3232,6 +3244,10 @@ snapshots:
   '@sindresorhus/is@7.2.0': {}
 
   '@speed-highlight/core@1.2.24': {}
+
+  '@splidejs/splide-extension-grid@0.4.1': {}
+
+  '@splidejs/splide@4.1.4': {}
 
   '@svta/cml-error-codes@0.1.2(@svta/cml-utils@1.7.0)':
     dependencies:

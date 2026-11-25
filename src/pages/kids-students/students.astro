@@ -1,0 +1,163 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Button from "../../components/Button.astro";
+import CampusGallery from "../../components/CampusGallery.astro";
+import Hero from "../../components/Hero.astro";
+import Media from "../../components/Media.astro";
+import rehearsalImage from "../../assets/images/locations/placeholders/tampa-rehearsal.webp";
+import guitarImage from "../../assets/images/locations/placeholders/st-pete-guitar.webp";
+import bibleImage from "../../assets/images/locations/placeholders/wesley-study.webp";
+import youngHeartsImage from "../../assets/images/kids-students/young-hearts-placeholder.webp";
+import visionUImage from "../../assets/images/kids-students/vision-u-placeholder.webp";
+import teachingImage from "../../assets/images/locations/teaching.webp";
+import worshipImage from "../../assets/images/locations/worship.webp";
+
+const gallery = [
+  { image: youngHeartsImage, caption: "Making music together" },
+  { image: visionUImage, caption: "Bible study and conversation" },
+  {
+    image: teachingImage,
+    caption: "Teaching from the stage",
+    focus: "50% 30%",
+  },
+  { image: worshipImage, caption: "The RTC worship team" },
+];
+---
+
+<BaseLayout
+  title="RTC Students"
+  description="Explore Young Hearts Big Dreams for middle school and Vision U for high school. Both meet Sundays at the Performance House on the RTC Tampa Campus."
+>
+  <main>
+    <Hero image={rehearsalImage} alt="" size="compact">
+      RTC <span class="font-accent text-brand">Students</span>
+    </Hero>
+
+    <div class="section" data-padding="compact">
+      <div
+        class="wrapper equal-columns intro"
+        data-align="start"
+        data-gap="wide"
+      >
+        <p>
+          Middle school and high school are full of big questions about faith,
+          friendships, and who God created you to be. At RTC, we want students
+          to have a place to ask those questions, build real friendships, and
+          discover what following Jesus looks like in their everyday lives.
+        </p>
+        <p>
+          Our student ministry has grown from{" "}
+          <strong class="text-high-contrast">UR Student Ministries</strong> into{" "}
+          <strong class="text-high-contrast">Young Hearts Big Dreams</strong>{" "}
+          for middle schoolers and{" "}
+          <strong class="text-high-contrast">Vision U</strong> for high
+          schoolers.
+        </p>
+      </div>
+    </div>
+
+    <div class="section" data-divider="top">
+      <div class="wrapper equal-columns" data-align="start" data-gap="wide">
+        <section class="flow" aria-labelledby="young-hearts">
+          <Media
+            src={guitarImage}
+            alt=""
+            shape="rounded"
+            sizes="(width > 720px) 50vw, 100vw"
+          />
+          <h2 class="font-display fs-600 text-high-contrast" id="young-hearts">
+            Young Hearts <span class="font-accent text-brand">Big Dreams</span>
+          </h2>
+          <p class="text-high-contrast">
+            <strong>Middle school</strong>
+          </p>
+          <p>
+            Middle school is a time to try new things and discover what God has
+            placed in you. At Young Hearts Big Dreams, students can explore
+            their creativity, build friendships, and get to know Jesus for
+            themselves. We want them to see that the gifts God has given them
+            can make a difference right where they are.
+          </p>
+        </section>
+        <section class="flow" aria-labelledby="vision-u">
+          <Media
+            src={bibleImage}
+            alt=""
+            shape="rounded"
+            sizes="(width > 720px) 50vw, 100vw"
+          />
+          <h2 class="font-display fs-600 text-high-contrast" id="vision-u">
+            Vision <span class="font-accent text-brand">U</span>
+          </h2>
+          <p class="text-high-contrast">
+            <strong>High school</strong>
+          </p>
+          <p>
+            High school brings bigger decisions about friendships, priorities,
+            and what comes next. Vision U helps students get into God’s Word and
+            connect it to the choices they’re making now. We want them to grow
+            as disciples, lead with confidence, and live out their faith at
+            school, at home, and with their friends.
+          </p>
+        </section>
+      </div>
+    </div>
+
+    <section
+      class="section"
+      data-theme="dark"
+      aria-labelledby="performance-house"
+    >
+      <div class="wrapper equal-columns" data-align="start" data-gap="wide">
+        <h2
+          class="font-display fs-800 text-high-contrast"
+          id="performance-house"
+        >
+          Sundays at the{" "}
+          <span class="font-accent text-brand">Performance House</span>
+        </h2>
+        <div class="flow">
+          <p>
+            <strong class="text-high-contrast">Young Hearts Big Dreams</strong>{" "}
+            and <strong class="text-high-contrast">Vision U</strong> meet on
+            Sundays at the{" "}
+            <strong class="text-high-contrast">
+              Performance House on the RTC Tampa Campus
+            </strong>
+            . We’d love to meet your student! Email us for gathering details.
+          </p>
+          <Button type="accent" href="mailto:info@revealingtruth.org">
+            Ask About RTC Students
+          </Button>
+        </div>
+      </div>
+    </section>
+
+    <CampusGallery photos={gallery}>
+      <Fragment slot="title">
+        RTC Students <span class="font-accent text-brand">gallery</span>
+      </Fragment>
+    </CampusGallery>
+  </main>
+</BaseLayout>
+
+<style>
+  @media (width <= 720px) {
+    .intro {
+      --column-gap: var(--size-500);
+    }
+  }
+
+  strong {
+    font-weight: var(--fw-bold);
+  }
+
+  h2 {
+    text-wrap: wrap;
+  }
+
+  h2 .font-accent {
+    display: inline-block;
+    max-inline-size: 100%;
+  }
+</style>

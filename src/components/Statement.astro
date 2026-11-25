@@ -1,5 +1,18 @@
-<div class="statement">
-  <slot name="tag" />{" "}
+---
+interface Props {
+  align?: "center";
+}
+
+const { align } = Astro.props;
+const hasTag = Astro.slots.has("tag");
+---
+
+<div class="statement" data-align={align}>
+  {hasTag && (
+    <>
+      <slot name="tag" />{" "}
+    </>
+  )}
   <p>
     <slot />
   </p>
@@ -13,12 +26,21 @@
     line-height: var(--lh-heading);
     letter-spacing: -0.005em;
     color: var(--text-main);
-    max-width: 65ch;
+    max-inline-size: 65ch;
     text-wrap: balance;
+    overflow-wrap: break-word;
 
     h2 {
       transform: translateY(-0.25em);
     }
+  }
+
+  .statement[data-align="center"] {
+    inline-size: 100%;
+    max-inline-size: 28em;
+    margin-inline: auto;
+    text-align: center;
+    color: var(--text-strong);
   }
 
   /* Inline so the tag (often a heading) sits at the start of the sentence */

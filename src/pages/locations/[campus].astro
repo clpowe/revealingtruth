@@ -1,0 +1,378 @@
+---
+import CampusGallery from "../../components/CampusGallery.astro";
+import CampusHero from "../../components/CampusHero.astro";
+import CampusLeadership from "../../components/CampusLeadership.astro";
+import CampusVisit from "../../components/CampusVisit.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Tag from "../../components/Tag.astro";
+import Statement from "../../components/Statement.astro";
+import Button from "../../components/Button.astro";
+import Icon from "../../components/Icon.astro";
+import { campusPages } from "../../config/campus-pages";
+import { locations } from "../../config/locations";
+import { seo } from "../../config/seo";
+
+export function getStaticPaths() {
+  return locations.map((location) => ({
+    params: { campus: location.href.split("/").pop()! },
+    props: { location },
+  }));
+}
+
+const { location } = Astro.props;
+const campus = campusPages[location.index];
+const otherCampuses = locations.filter(
+  (other) => other.index !== location.index,
+);
+const tampa = location.index === "tp";
+const weeklyLocation = location.index === "sp";
+const visitHref = weeklyLocation
+  ? "mailto:info@revealingtruth.org"
+  : "https://www.google.com/maps/search/?api=1&query=" +
+    encodeURIComponent(location.metadata.location);
+const visitLabel = weeklyLocation
+  ? "Ask where we’re meeting this Sunday"
+  : "Get directions";
+const name = "RTC " + location.title;
+const description =
+  campus.welcome.before + campus.welcome.accent + campus.welcome.after;
+---
+
+<BaseLayout title={name} description={description}>
+  <main>
+    <CampusHero
+      image={campus.hero}
+      focus={campus.heroFocus}
+      scale={campus.heroScale}
+      tag={`locations · ${location.index}`}
+      title={location.title}
+      gathering={campus.heroGathering}
+      address={campus.heroAddress}
+      addressHref={weeklyLocation ? undefined : visitHref}
+    />
+    <section class="section" data-padding="compact">
+      <div class="wrapper welcome equal-columns" data-align="start">
+        <div class="flow welcome-intro">
+          <Statement>
+            {campus.welcome.before}
+            <span class="font-accent text-brand">{campus.welcome.accent}</span>
+            {campus.welcome.after}
+          </Statement>
+          <p>{campus.invitation}</p>
+          {!weeklyLocation && (
+            <div class="cluster">
+              <Button href={visitHref}>{visitLabel}</Button>
+              {tampa && (
+                <Button type="outline" href="/kids-students/creative-kids">
+                  Explore Creative Kids
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+        <div class="flow welcome-note" id={tampa ? "creative-kids" : undefined}>
+          <Tag>
+            {tampa
+              ? "creative kids"
+              : weeklyLocation
+                ? "weekly updates"
+                : "campus pastors"}
+          </Tag>
+          <h2 class="font-display text-high-contrast">{campus.noteTitle}</h2>
+          <p>{campus.note}</p>
+          {weeklyLocation && <Button href={visitHref}>{visitLabel}</Button>}
+        </div>
+      </div>
+    </section>
+
+    {!weeklyLocation && campus.map && campus.addressLines && (
+      <CampusVisit
+        title={location.title}
+        name={name}
+        map={campus.map}
+        addressLines={campus.addressLines}
+        gatheringLabel={campus.gatheringLabel ?? "Sunday gathering"}
+        time={campus.time}
+        phone={location.metadata.phone}
+        telephone={seo.telephone}
+        directionsHref={visitHref}
+      />
+    )}
+
+    <CampusGallery
+      tampa={tampa}
+      tag={tampa ? "inside the campus" : location.title}
+      photos={campus.gallery}
+    />
+
+    <CampusLeadership title={location.title} pastors={campus.pastors} />
+
+    <section class="section" data-theme="dark" aria-labelledby="campus-callout">
+      <div class="wrapper campus-callout-layout">
+        <div class="flow campus-callout-intro">
+          <Tag>{tampa ? "midweek online" : "Sunday at " + campus.time}</Tag>
+          <h2
+            class="font-display text-high-contrast campus-callout-heading"
+            id="campus-callout"
+          >
+            {tampa ? "Wednesdays at" : "Join us"}{" "}
+            <span class="font-accent text-brand">
+              {tampa ? "7:00 PM" : "this Sunday"}
+            </span>
+          </h2>
+          <p class="campus-callout-description text-high-contrast">
+            {tampa
+              ? "Let’s get into the Word together, right where you are! Join RTC Tampa Wednesdays at 7:00 PM for our fully online midweek service."
+              : weeklyLocation
+                ? "Reach out to find out where we’re gathering this Sunday at 11:00 AM in St. Petersburg and the surrounding area."
+                : "Pastors Benjamin and Greta look forward to welcoming you at 9:00 AM at " +
+                  location.metadata.location +
+                  "."}
+          </p>
+        </div>
+        <div class="cluster campus-callout-actions">
+          {tampa ? (
+            <>
+              <Button type="accent" href={seo.social.youtube}>
+                <Icon name="youtube" /> YouTube
+              </Button>
+              <Button type="outline" href={seo.social.facebook}>
+                <Icon name="facebook" /> Facebook
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button type="accent" href={visitHref}>
+                {visitLabel}
+              </Button>
+              {!weeklyLocation && (
+                <Button type="outline" href="/live">
+                  Watch online
+                </Button>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </section>
+
+    <nav class="campus-directory" aria-labelledby="campus-directory-heading">
+      <div class="wrapper flow">
+        <h2 class="campus-directory-heading" id="campus-directory-heading">
+          More Revealing Truth campuses
+        </h2>
+        <ul class="campus-directory-list equal-columns" role="list">
+          {otherCampuses.map((other) => {
+            const { time, addressLines } = campusPages[other.index];
+
+            return (
+              <li>
+                <a class="campus-directory-link" href={other.href}>
+                  <span
+                    class="campus-directory-index font-accent"
+                    aria-hidden="true"
+                  >
+                    {other.index}
+                  </span>
+                  <span class="campus-directory-details">
+                    <span class="campus-directory-name font-display text-high-contrast">
+                      {other.title}
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path d="M2 8h11M8 3l5 5-5 5" />
+                      </svg>
+                    </span>
+                    <span class="campus-directory-meta">
+                      {other.index === "tp" ? "Sundays" : "Sunday"} · {time} ·{" "}
+                      {addressLines?.[0] ?? other.metadata.location}
+                    </span>
+                  </span>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </nav>
+  </main>
+</BaseLayout>
+
+<style>
+  .welcome {
+    --column-gap: var(--size-600);
+  }
+
+  .welcome-intro {
+    --flow-space: var(--size-500);
+  }
+
+  .welcome-intro > p,
+  .welcome-note > p {
+    max-inline-size: 65ch;
+  }
+
+  .welcome-note {
+    --flow-space: var(--size-300);
+    padding-block-start: var(--size-500);
+    border-block-start: var(--border-width-hairline) solid var(--border-subtle);
+  }
+
+  .welcome :global(.button) {
+    text-align: center;
+  }
+
+  .campus-callout-layout {
+    display: grid;
+    align-items: center;
+    gap: var(--size-500);
+  }
+
+  .campus-callout-intro {
+    --flow-space: var(--size-400);
+  }
+
+  .campus-callout-heading {
+    font-size: clamp(var(--fs-600), 8.5vw, var(--fs-800));
+    text-wrap: balance;
+  }
+
+  .campus-callout-description {
+    max-inline-size: 65ch;
+  }
+
+  .campus-callout-actions {
+    --cluster-gap: var(--size-300);
+    --icon-size: 1rem;
+
+    padding-block-start: var(--size-500);
+    border-block-start: var(--border-width-hairline) solid var(--border-subtle);
+  }
+
+  .campus-callout-actions :global(.button) {
+    padding-inline: 1.75em;
+    text-align: center;
+  }
+
+  .campus-directory {
+    --flow-space: var(--size-400);
+    padding-block: clamp(var(--size-600), 3.25vw, var(--size-700));
+  }
+
+  .campus-directory > .wrapper {
+    --wrapper-padding: clamp(var(--size-500), 4.5vw, var(--size-800));
+  }
+
+  .campus-directory-heading {
+    color: var(--text-main);
+    font-family: var(--ff-ui);
+    font-size: 0.625rem;
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .campus-directory-list {
+    --column-gap: 0;
+  }
+
+  .campus-directory-list li + li {
+    margin-block-start: var(--size-400);
+    padding-block-start: var(--size-400);
+    border-block-start: var(--border-width-hairline) solid var(--border-subtle);
+  }
+
+  .campus-directory-link {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: var(--size-400);
+    align-items: baseline;
+    color: var(--text-high-contrast);
+    text-decoration: none;
+  }
+
+  .campus-directory-link:is(:hover, :focus-visible) .campus-directory-name {
+    color: var(--text-brand);
+  }
+
+  .campus-directory-link:focus-visible {
+    outline: var(--border-width-2) solid var(--text-brand);
+    outline-offset: var(--size-100);
+  }
+
+  .campus-directory-index {
+    font-size: var(--font-size-regular);
+  }
+
+  .campus-directory-details {
+    display: grid;
+    gap: var(--size-200);
+  }
+
+  .campus-directory-name {
+    display: flex;
+    align-items: center;
+    gap: var(--size-100);
+    font-size: clamp(1.125rem, 5.5vw, 1.25rem);
+    line-height: var(--lh-heading);
+  }
+
+  .campus-directory-name svg {
+    flex-shrink: 0;
+    inline-size: 0.85em;
+    block-size: 0.85em;
+  }
+
+  .campus-directory-meta {
+    color: var(--text-main);
+    font-family: var(--ff-ui);
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+
+  @media (width > 720px) {
+    .campus-directory-list li:first-child {
+      padding-inline-end: var(--size-500);
+    }
+
+    .campus-directory-list li + li {
+      margin-block-start: 0;
+      padding-block-start: 0;
+      padding-inline-start: var(--size-500);
+      border-block-start: 0;
+      border-inline-start: var(--border-width-hairline) solid
+        var(--border-subtle);
+    }
+
+    .welcome {
+      --column-gap: clamp(var(--size-600), 5vw, var(--size-900));
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    }
+
+    .welcome-note {
+      padding-block-start: 0;
+      padding-inline-start: var(--size-500);
+      border-block-start: 0;
+      border-inline-start: var(--border-width-hairline) solid
+        var(--border-subtle);
+    }
+  }
+
+  @media (width > 1080px) {
+    .campus-callout-layout {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+      gap: var(--size-700);
+    }
+
+    .campus-callout-actions {
+      padding-block: var(--size-200);
+      padding-inline-start: var(--size-600);
+      border-block-start: 0;
+      border-inline-start: var(--border-width-hairline) solid var(--text-brand);
+    }
+  }
+</style>
